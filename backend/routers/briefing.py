@@ -9,6 +9,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import selectinload
 
 from backend.database import get_session
 from backend.models import Company, Deal
@@ -72,7 +73,7 @@ async def _generate_ai_summary(
         )
 
         message = client.messages.create(
-            model="claude-haiku-4-5",
+            model="claude-haiku-4-5-20251001",
             max_tokens=256,
             messages=[{"role": "user", "content": prompt}],
         )
@@ -95,7 +96,7 @@ async def get_latest_briefing(
     # Fetch all deals from the last 7 days
     stmt = (
         select(Deal)
-        .outerjoin(Company, Deal.company_id == Company.id)
+        .options(selectinload(Deal.company))
         .where(Deal.announced_date >= week_start)
         .where(Deal.announced_date <= week_end)
     )
