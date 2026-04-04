@@ -186,9 +186,19 @@ async def run_ingestion(
             source=source_name,
             status=status,
             deals_found=info["found"],
-            deals_added=write_result["added"],
+            deals_added=0,  # per-source add count not tracked; see "pipeline" summary row
             error_log="; ".join(info["errors"]) if info["errors"] else None,
         )
+
+    # One summary row for the full pipeline run
+    await _log_ingestion_run(
+        db=db_session,
+        source="pipeline",
+        status="success" if not write_result.get("errors") else "partial",
+        deals_found=len(all_deals),
+        deals_added=write_result["added"],
+        error_log="; ".join(str(e) for e in write_result.get("errors", [])) or None,
+    )
 
     # --- Step 8: Return summary ---
     summary = {
