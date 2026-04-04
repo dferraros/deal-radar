@@ -1,12 +1,39 @@
+import logging
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.routing import APIRouter
+from sqlalchemy.ext.asyncio import AsyncSession
 
-app = FastAPI(title="Deal Radar API", version="1.0.0")
+from backend.database import get_session
+from backend.scheduler import scheduler, start_scheduler, daily_ingestion_job
+
+logger = logging.getLogger(__name__)
+
+
+# ---------------------------------------------------------------------------
+# Lifespan — startup / shutdown hooks
+# ---------------------------------------------------------------------------
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Start APScheduler on startup; shut it down on shutdown."""
+    start_scheduler()
+    yield
+    if scheduler.running:
+        scheduler.shutdown(wait=False)
+        logger.info("[Lifespan] APScheduler stopped")
+
+
+# ---------------------------------------------------------------------------
+# FastAPI app
+# ---------------------------------------------------------------------------
+
+app = FastAPI(title="Deal Radar API", version="1.0.0", lifespan=lifespan)
 
 api_router = APIRouter(prefix="/api")
 
@@ -14,6 +41,22 @@ api_router = APIRouter(prefix="/api")
 @api_router.get("/health")
 async def health():
     return {"status": "ok", "version": "1.0.0"}
+
+
+@api_router.post("/ingest/run")
+async def trigger_ingestion(db: AsyncSession = Depends(get_session)):
+    """
+    Manually trigger the daily ingestion pipeline.
+
+    Runs synchronously within the request (may take 30-120s depending on sources).
+    Returns the pipeline summary dict.
+    """
+    from backend.ingestion.pipeline import run_ingestion
+    from datetime import date
+
+    logger.info("[API] Manual ingestion triggered via POST /api/ingest/run")
+    result = await run_ingestion(db, date.today())
+    return result
 
 
 app.include_router(api_router)

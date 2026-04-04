@@ -4,11 +4,11 @@ Ingestion pipeline orchestrator.
 run_ingestion() ties all fetchers together:
   1. Run RSSFetcher + TavilyFetcher concurrently
   2. Enrich short raw_text entries via FirecrawlFetcher
-  3. Log an ingestion_run DB record per source
-  4. Return a summary dict: { source: { found, added, errors } }
-
-Note: AI extraction + deduplication + final DB insert happen in Plans 02-04 / 02-05.
-This plan returns raw deals in the summary for testing.
+  3. AI extraction (Claude Haiku / GPT-4o-mini)
+  4. Deduplication (fuzzy name + date + amount proximity)
+  5. DB write — create Company + Deal records
+  6. Log an ingestion_run DB record per source
+  7. Return a summary dict: { source: { found, added, errors }, total_found, added, skipped }
 """
 
 import asyncio
@@ -21,6 +21,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.ingestion.ai_extractor import AIExtractor
 from backend.ingestion.base import RawDeal
+from backend.ingestion.db_writer import write_deals
+from backend.ingestion.deduplicator import Deduplicator
 from backend.ingestion.firecrawl import FirecrawlFetcher
 from backend.ingestion.rss import RSSFetcher
 from backend.ingestion.tavily import TavilyFetcher
@@ -86,12 +88,13 @@ async def run_ingestion(
         "sources": {
             "<source_name>": {
                 "found": int,
-                "added": int,   # always 0 until 02-05 dedup/insert lands
-                "errors": []    # list of error strings
+                "added": int,
+                "errors": []
             }
         },
         "total_found": int,
-        "raw_deals": [...]  # list of RawDeal objects (for testing / 02-04 handoff)
+        "added": int,
+        "skipped": int,
     }
     """
     if target_date is None:
@@ -149,7 +152,33 @@ async def run_ingestion(
         logger.error("AI extraction step failed: %s", exc, exc_info=True)
         # Non-fatal: continue with empty extracted_deals list
 
-    # --- Step 5: Log ingestion_run records per source ---
+    # --- Step 5: Deduplication ---
+    deduped_deals = []
+    try:
+        deduped_deals = Deduplicator().deduplicate(extracted_deals)
+        logger.info(
+            "Deduplication complete: %d deals after dedup (from %d extracted)",
+            len(deduped_deals),
+            len(extracted_deals),
+        )
+    except Exception as exc:
+        logger.error("Deduplication step failed: %s", exc, exc_info=True)
+        deduped_deals = extracted_deals  # fall back to undeduped list
+
+    # --- Step 6: Write to DB ---
+    write_result: dict[str, Any] = {"added": 0, "skipped_duplicates": 0, "errors": []}
+    try:
+        write_result = await write_deals(db_session, deduped_deals, all_deals)
+        logger.info(
+            "DB write complete: added=%d, skipped=%d, errors=%d",
+            write_result["added"],
+            write_result["skipped_duplicates"],
+            len(write_result["errors"]),
+        )
+    except Exception as exc:
+        logger.error("DB write step failed: %s", exc, exc_info=True)
+
+    # --- Step 7: Log ingestion_run records per source ---
     for source_name, info in source_summary.items():
         status = "failed" if info["errors"] else "success"
         await _log_ingestion_run(
@@ -157,23 +186,25 @@ async def run_ingestion(
             source=source_name,
             status=status,
             deals_found=info["found"],
-            deals_added=info["added"],
+            deals_added=write_result["added"],
             error_log="; ".join(info["errors"]) if info["errors"] else None,
         )
 
-    # --- Step 6: Return summary ---
+    # --- Step 8: Return summary ---
     summary = {
         "date": target_date.isoformat(),
         "sources": source_summary,
         "total_found": len(all_deals),
-        "raw_deals": all_deals,
-        "extracted_deals": extracted_deals,  # ExtractedDeal list — handed off to 02-05 dedup/insert
+        "added": write_result["added"],
+        "skipped": write_result["skipped_duplicates"],
     }
 
     logger.info(
-        "Ingestion pipeline complete for %s: %d total deals found",
+        "Ingestion pipeline complete for %s: %d total found, %d added, %d skipped",
         target_date,
         len(all_deals),
+        write_result["added"],
+        write_result["skipped_duplicates"],
     )
 
     return summary
