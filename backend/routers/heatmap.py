@@ -43,7 +43,7 @@ async def get_heatmap(
         JOIN companies c ON d.company_id = c.id
         WHERE d.announced_date >= :date_from
           AND d.announced_date <= :date_to
-          AND (:deal_type IS NULL OR d.deal_type = :deal_type)
+          AND (:deal_type::TEXT IS NULL OR d.deal_type = :deal_type::TEXT)
           AND d.amount_usd IS NOT NULL
         GROUP BY sector_value, c.geo
         ORDER BY total_capital_usd DESC
