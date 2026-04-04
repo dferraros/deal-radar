@@ -5,6 +5,7 @@ const mainLinks = [
   { to: "/", label: "Deal Feed" },
   { to: "/heatmap", label: "Heatmap" },
   { to: "/trends", label: "Trends" },
+  { to: "/investors", label: "Investors" },
   { to: "/watchlist", label: "Watchlist" },
 ];
 

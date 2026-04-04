@@ -28,6 +28,18 @@ interface KPIResponse {
   top_sector_this_week: string;
 }
 
+interface BriefingResponse {
+  week_start: string;
+  week_end: string;
+  deal_count: number;
+  total_capital_usd: number;
+  top_company: string | null;
+  top_amount_usd: number | null;
+  top_sector: string | null;
+  ai_summary: string | null;
+  generated_at: string | null;
+}
+
 // ---- Format helpers ----
 
 function formatDate(dateStr: string | null): string {
@@ -88,6 +100,7 @@ export default function DealFeed() {
   const [sectors, setSectors] = useState<string[]>([]);
   const [search, setSearch] = useState("");
   const [lastSync, setLastSync] = useState<string | null>(null);
+  const [briefing, setBriefing] = useState<BriefingResponse | null>(null);
 
   const fetchDeals = useCallback(async (f: FilterState) => {
     setLoading(true);
@@ -150,6 +163,10 @@ export default function DealFeed() {
         }
       })
       .catch(() => {});
+    axios
+      .get("/api/briefing/latest")
+      .then((r) => setBriefing(r.data))
+      .catch(() => {});
     fetchDeals(defaultFilters);
   }, [fetchDeals]);
 
@@ -201,6 +218,19 @@ export default function DealFeed() {
           </p>
           <h1 className="text-lg font-semibold text-slate-200">Deal Feed</h1>
         </div>
+
+        {/* Weekly briefing banner — only shown when AI summary is available */}
+        {briefing?.ai_summary && (
+          <div className="bg-[#0f1629] border border-blue-500/30 rounded px-4 py-3 mb-4 text-sm">
+            <span className="text-xs uppercase tracking-widest text-blue-400 font-mono mr-2">
+              WEEKLY BRIEFING
+            </span>
+            <span className="text-slate-300">{briefing.ai_summary}</span>
+            <span className="text-xs text-slate-500 ml-2 font-mono">
+              {briefing.deal_count} deals · {formatCapital(briefing.total_capital_usd)}
+            </span>
+          </div>
+        )}
 
         {/* KPI row */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">

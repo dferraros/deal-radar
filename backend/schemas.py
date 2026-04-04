@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import uuid
 from datetime import date, datetime
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel, ConfigDict
 
@@ -183,3 +183,36 @@ class ManualIngestPreview(BaseModel):
     source_url: Optional[str] = None
     raw_text: str
     confidence: float = 0.0
+
+
+# ---------------------------------------------------------------------------
+# Investor Leaderboard endpoint schemas
+# ---------------------------------------------------------------------------
+
+class InvestorLeaderboardEntry(BaseModel):
+    investor_name: str
+    deal_count: int
+    total_capital_usd: int
+
+
+class InvestorLeaderboardResponse(BaseModel):
+    period: str
+    date_from: date
+    date_to: date
+    investors: List[InvestorLeaderboardEntry]
+
+
+# ---------------------------------------------------------------------------
+# Weekly Briefing endpoint schema
+# ---------------------------------------------------------------------------
+
+class BriefingResponse(BaseModel):
+    week_start: date
+    week_end: date
+    deal_count: int
+    total_capital_usd: int
+    top_company: Optional[str] = None
+    top_amount_usd: Optional[int] = None
+    top_sector: Optional[str] = None
+    ai_summary: Optional[str] = None
+    generated_at: Optional[datetime] = None

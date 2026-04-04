@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import csv
+import io
 import math
 from datetime import date
 from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi.responses import StreamingResponse
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -97,6 +100,76 @@ async def list_deals(
         total=total,
         page=page,
         pages=pages,
+    )
+
+
+@router.get("/deals/export")
+async def export_deals_csv(
+    date_from: Optional[date] = Query(None),
+    date_to: Optional[date] = Query(None),
+    deal_type: Optional[str] = Query(None, description="vc | ma | crypto | ipo"),
+    sector: Optional[str] = Query(None, description="Filter by sector tag"),
+    geo: Optional[str] = Query(None, description="Exact match on company geo"),
+    amount_min: Optional[int] = Query(None, description="Minimum amount_usd"),
+    db: AsyncSession = Depends(get_session),
+) -> StreamingResponse:
+    """Export filtered deals as a CSV file download."""
+
+    stmt = (
+        select(Deal)
+        .outerjoin(Company, Deal.company_id == Company.id)
+        .options(selectinload(Deal.company))
+    )
+
+    if date_from is not None:
+        stmt = stmt.where(Deal.announced_date >= date_from)
+    if date_to is not None:
+        stmt = stmt.where(Deal.announced_date <= date_to)
+    if deal_type is not None:
+        stmt = stmt.where(Deal.deal_type == deal_type)
+    if sector is not None:
+        stmt = stmt.where(Company.sector.any(sector))
+    if geo is not None:
+        stmt = stmt.where(Company.geo == geo)
+    if amount_min is not None:
+        stmt = stmt.where(Deal.amount_usd >= amount_min)
+
+    stmt = stmt.order_by(Deal.announced_date.desc().nullslast(), Deal.created_at.desc())
+    result = await db.execute(stmt)
+    deals = result.scalars().all()
+
+    def generate_csv():
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow([
+            "date", "company", "round", "deal_type", "amount_usd",
+            "sector", "geo", "lead_investor", "source_url", "ai_summary",
+        ])
+        for deal in deals:
+            company = deal.company
+            writer.writerow([
+                deal.announced_date or "",
+                company.name if company else "",
+                deal.round_label or "",
+                deal.deal_type or "",
+                deal.amount_usd if deal.amount_usd is not None else "",
+                "|".join(company.sector or []) if company else "",
+                company.geo if company else "",
+                deal.lead_investor or "",
+                deal.source_url or "",
+                (deal.ai_summary or "").replace("\n", " "),
+            ])
+        output.seek(0)
+        yield output.read()
+
+    today_str = date.today().isoformat()
+    headers = {
+        "Content-Disposition": f'attachment; filename="deals-{today_str}.csv"',
+    }
+    return StreamingResponse(
+        generate_csv(),
+        media_type="text/csv",
+        headers=headers,
     )
 
 
