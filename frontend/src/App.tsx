@@ -5,6 +5,7 @@ import Heatmap from "./views/Heatmap";
 import CompanyProfile from "./views/CompanyProfile";
 import Trends from "./views/Trends";
 import Watchlist from "./views/Watchlist";
+import Admin from "./views/Admin";
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
           <Route path="/company/:id" element={<CompanyProfile />} />
           <Route path="/trends" element={<Trends />} />
           <Route path="/watchlist" element={<Watchlist />} />
+          <Route path="/admin" element={<Admin />} />
         </Routes>
       </main>
     </div>
