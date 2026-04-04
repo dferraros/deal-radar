@@ -19,6 +19,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from backend.ingestion.ai_extractor import AIExtractor
 from backend.ingestion.base import RawDeal
 from backend.ingestion.firecrawl import FirecrawlFetcher
 from backend.ingestion.rss import RSSFetcher
@@ -138,7 +139,17 @@ async def run_ingestion(
         logger.error("Firecrawl enrichment step failed: %s", exc, exc_info=True)
         # Non-fatal: continue with un-enriched deals
 
-    # --- Step 4: Log ingestion_run records per source ---
+    # --- Step 4: AI extraction ---
+    extracted_deals = []
+    try:
+        extractor = AIExtractor()
+        extracted_deals = await extractor.extract_batch(all_deals)
+        logger.info("AI extraction complete: %d deals extracted", len(extracted_deals))
+    except Exception as exc:
+        logger.error("AI extraction step failed: %s", exc, exc_info=True)
+        # Non-fatal: continue with empty extracted_deals list
+
+    # --- Step 5: Log ingestion_run records per source ---
     for source_name, info in source_summary.items():
         status = "failed" if info["errors"] else "success"
         await _log_ingestion_run(
@@ -150,12 +161,13 @@ async def run_ingestion(
             error_log="; ".join(info["errors"]) if info["errors"] else None,
         )
 
-    # --- Step 5: Return summary ---
+    # --- Step 6: Return summary ---
     summary = {
         "date": target_date.isoformat(),
         "sources": source_summary,
         "total_found": len(all_deals),
-        "raw_deals": all_deals,  # handed off to 02-04 AI extraction
+        "raw_deals": all_deals,
+        "extracted_deals": extracted_deals,  # ExtractedDeal list — handed off to 02-05 dedup/insert
     }
 
     logger.info(
