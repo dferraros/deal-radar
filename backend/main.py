@@ -10,6 +10,11 @@ from fastapi.routing import APIRouter
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.database import get_session
+from backend.routers import deals as deals_router
+from backend.routers import companies as companies_router
+from backend.routers import heatmap as heatmap_router
+from backend.routers import trends as trends_router
+from backend.routers import kpi as kpi_router
 from backend.scheduler import scheduler, start_scheduler, daily_ingestion_job
 
 logger = logging.getLogger(__name__)
@@ -60,6 +65,11 @@ async def trigger_ingestion(db: AsyncSession = Depends(get_session)):
 
 
 app.include_router(api_router)
+app.include_router(deals_router.router, prefix="/api")
+app.include_router(companies_router.router, prefix="/api")
+app.include_router(heatmap_router.router, prefix="/api")
+app.include_router(trends_router.router, prefix="/api")
+app.include_router(kpi_router.router, prefix="/api")
 
 # Serve React build as static files — must come AFTER API routes
 FRONTEND_DIST = Path(__file__).parent.parent / "frontend" / "dist"
