@@ -194,7 +194,7 @@ export default function Watchlist() {
                               item._companyName
                             )
                           }
-                          className="text-red-400 hover:underline font-medium"
+                          className="text-red-400 hover:underline font-bold"
                         >
                           Yes, remove
                         </button>
@@ -237,7 +237,7 @@ export default function Watchlist() {
                   <TableCell className="text-sm text-gray-400">
                     {dateStr}
                   </TableCell>
-                  <TableCell className="text-sm font-medium text-gray-100">
+                  <TableCell className="text-sm text-gray-100">
                     {item._companyName}
                   </TableCell>
                   <TableCell>

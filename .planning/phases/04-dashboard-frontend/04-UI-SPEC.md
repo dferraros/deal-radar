@@ -56,15 +56,17 @@ All sizes in px. Font family: Tailwind default sans (Inter/system-ui). Tabular n
 | Role | Size | Tailwind | Weight | Tailwind | Line Height |
 |------|------|----------|--------|----------|-------------|
 | Body | 14px | text-sm | 400 regular | font-normal | 1.5 (leading-normal) |
-| Label | 12px | text-xs | 500 medium | font-medium | 1.4 (leading-tight) |
+| Label | 12px | text-xs | 700 bold | font-bold | 1.4 (leading-tight) |
 | Heading | 20px | text-xl | 700 bold | font-bold | 1.2 (leading-tight) |
 | Display | 28px | text-2xl | 700 bold | font-bold | 1.2 (leading-tight) |
+
+**Font weights: 2 total — font-normal (400) for body text, font-bold (700) for labels/headings/display. No font-medium (500) used anywhere. Visual hierarchy for labels comes from font-size (12px) + uppercase + tracking-wide, not weight.**
 
 Rules:
 - Page titles (Deal Feed, Heatmap, etc.): Display — 28px bold, `text-gray-100`
 - KPI card metric values: Heading — 20px bold, `text-gray-100`, tabular-nums
-- KPI card labels: Label — 12px medium, `text-gray-400`
-- Table column headers: Label — 12px medium, `text-gray-400 uppercase tracking-wide`
+- KPI card labels: Label — 12px bold, `text-gray-400`
+- Table column headers: Label — 12px bold, `text-gray-400 uppercase tracking-wide`
 - Table cell data: Body — 14px regular, `text-gray-100` for primary, `text-gray-400` for secondary/muted
 - Filter bar labels: Body — 14px regular, `text-gray-400`
 - Empty state headings: Heading — 20px bold, `text-gray-300`
@@ -118,6 +120,8 @@ Base: Tailwind dark palette. No custom hex tokens — use Tailwind class names t
 ## View-by-View Interaction Contract
 
 ### View 1: Deal Feed (/)
+
+**Primary focal point:** KPI card row — first visual anchor. Draws the eye before the filter bar and table.
 
 **Layout:**
 - KPI row: 3 Tremor KPI cards in a 3-column grid (grid-cols-1 sm:grid-cols-3), gap-4
@@ -224,7 +228,7 @@ Base: Tailwind dark palette. No custom hex tokens — use Tailwind class names t
 - Same filter bar structure as Deal Feed (type, sector, geo, amount) — but no date range picker (watchlist shows all time)
 - Same Tremor Table as Deal Feed, plus:
   - Extra column at end: "Notes" — text-sm text-gray-300 italic, truncated to 1 line, click to open inline edit
-  - Remove button per row: icon-only button (X icon), text-gray-400 hover:text-red-400, rightmost column
+  - Remove button per row: icon-only button (X icon), text-gray-400 hover:text-red-400, rightmost column, `aria-label="Remove from watchlist"` required
 - Inline notes edit: clicking note text shows a Tremor TextInput inline, pressing Enter or blur saves via PUT, pressing Escape cancels
 - Empty state: "Your watchlist is empty." heading + "Visit a company profile and click 'Add to Watchlist'." body (see copywriting contract)
 

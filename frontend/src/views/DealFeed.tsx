@@ -145,7 +145,7 @@ export default function DealFeed() {
       {/* KPI row */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
         <Card className="bg-gray-900 border-gray-800">
-          <Text className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+          <Text className="text-xs font-bold text-gray-400 uppercase tracking-wide">
             Deals This Week
           </Text>
           <Metric className="text-gray-100 tabular-nums">
@@ -153,7 +153,7 @@ export default function DealFeed() {
           </Metric>
         </Card>
         <Card className="bg-gray-900 border-gray-800">
-          <Text className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+          <Text className="text-xs font-bold text-gray-400 uppercase tracking-wide">
             Capital Raised (7d)
           </Text>
           <Metric className="text-gray-100 tabular-nums">
@@ -161,7 +161,7 @@ export default function DealFeed() {
           </Metric>
         </Card>
         <Card className="bg-gray-900 border-gray-800">
-          <Text className="text-xs font-medium text-gray-400 uppercase tracking-wide">
+          <Text className="text-xs font-bold text-gray-400 uppercase tracking-wide">
             Top Sector
           </Text>
           <Metric className="text-gray-100">
@@ -210,7 +210,7 @@ export default function DealFeed() {
                   ].map((h) => (
                     <TableHeaderCell
                       key={h}
-                      className="text-xs font-medium text-gray-400 uppercase tracking-wide"
+                      className="text-xs font-bold text-gray-400 uppercase tracking-wide"
                     >
                       {h}
                     </TableHeaderCell>
@@ -232,7 +232,7 @@ export default function DealFeed() {
                       <TableCell className="text-sm text-gray-400">
                         {formatDate(deal.announced_date)}
                       </TableCell>
-                      <TableCell className="text-sm font-medium text-gray-100">
+                      <TableCell className="text-sm text-gray-100">
                         {deal.company_name ?? "—"}
                       </TableCell>
                       <TableCell>

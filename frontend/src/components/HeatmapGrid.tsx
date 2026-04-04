@@ -44,7 +44,7 @@ export default function HeatmapGrid({ cells, sectors, geos }: HeatmapGridProps) 
       {/* Header row */}
       <div />
       {geos.map(geo => (
-        <div key={geo} className="text-xs text-gray-400 uppercase text-center pb-1 font-medium">
+        <div key={geo} className="text-xs text-gray-400 uppercase text-center pb-1 font-bold">
           {geo}
         </div>
       ))}
@@ -76,7 +76,7 @@ export default function HeatmapGrid({ cells, sectors, geos }: HeatmapGridProps) 
                 title={tooltipText}
               >
                 {cell && dealCount > 0 && (
-                  <span className="absolute inset-0 flex items-center justify-center text-xs text-white/70 font-medium">
+                  <span className="absolute inset-0 flex items-center justify-center text-xs text-white/70 font-bold">
                     {dealCount}
                   </span>
                 )}
