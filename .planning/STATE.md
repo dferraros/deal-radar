@@ -80,7 +80,7 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 |------|--------|-------------|
 | 04-01 | DONE | 2d9f252 + fc1f768 + 368bb33 |
 | 04-02 | DONE | c6e160a |
-| 04-03 | PENDING | — |
+| 04-03 | DONE | 3a1dc67 |
 | 04-04 | DONE | c7ea1d8 |
 
 ## What Was Built in Phase 4 Plan 01
@@ -101,6 +101,13 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 - Responsive two-column grid (lg:grid-cols-2), stacked on mobile
 - Loading, error, and per-chart empty states all handled
 
+## What Was Built in Phase 4 Plan 03
+
+- frontend/src/components/WatchlistToggle.tsx — optimistic star toggle (POST/DELETE /api/watchlist), reverts on error
+- frontend/src/components/InlineNoteEditor.tsx — click-to-edit note field, Enter/blur saves via PUT, Escape cancels, 3s inline error
+- frontend/src/views/CompanyProfile.tsx — full company profile: header card (badges, geo, website, description show-more), WatchlistToggle, deal history list, known investors, 404 state
+- frontend/src/views/Watchlist.tsx — watchlist table: 9 columns (Date/Company/Round/Amount/Sector/Geo/Investors/Notes/Remove), client-side FilterBar, inline remove confirm, empty state
+
 ## Next Action
 
-Execute Phase 4 Plan 04-03 (Company Profile + Watchlist) — the last remaining Wave 2 plan
+Phase 4 COMPLETE (all 4 plans done). Execute Phase 5 (Polish & Deploy).
