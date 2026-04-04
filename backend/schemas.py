@@ -146,3 +146,40 @@ class KPIResponse(BaseModel):
     capital_this_week_usd: int
     top_sector_this_week: str
     total_companies_tracked: int
+
+
+# ---------------------------------------------------------------------------
+# Watchlist endpoint schemas
+# ---------------------------------------------------------------------------
+
+class WatchlistResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    company_id: uuid.UUID
+    company_name: str
+    company_sector: list[str] = []
+    company_geo: Optional[str] = None
+    notes: Optional[str] = None
+    added_at: datetime
+    recent_deals: list[DealResponse] = []
+
+
+# ---------------------------------------------------------------------------
+# Manual ingest endpoint schemas
+# ---------------------------------------------------------------------------
+
+class ManualIngestPreview(BaseModel):
+    company_name: str
+    deal_type: str
+    amount_usd: Optional[int] = None
+    round_label: Optional[str] = None
+    announced_date: Optional[date] = None
+    sector: list[str] = []
+    geo: Optional[str] = None
+    lead_investor: Optional[str] = None
+    all_investors: list[str] = []
+    ai_summary: str = ""
+    source_url: Optional[str] = None
+    raw_text: str
+    confidence: float = 0.0
