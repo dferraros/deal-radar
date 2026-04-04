@@ -11,7 +11,7 @@
 | 1 | Foundation | Working skeleton deployed on Railway | DEPLOY-01, DEPLOY-02 | done |
 | 2 | Ingestion Pipeline | Daily deal ingestion from all sources | INGEST-01 to INGEST-07 | pending |
 | 3 | API Layer | All FastAPI endpoints serving deal data | MANUAL-01, MANUAL-02 | pending |
-| 4 | Dashboard Frontend | Full React UI with all 5 views | FEED-01 to FEED-03, HEAT-01, HEAT-02, COMP-01 to COMP-03, TREND-01, TREND-02, WATCH-01, WATCH-02 | pending |
+| 4 | Dashboard Frontend | Full React UI with all 5 views | FEED-01 to FEED-03, HEAT-01, HEAT-02, COMP-01 to COMP-03, TREND-01, TREND-02, WATCH-01, WATCH-02 | planned |
 | 5 | Polish & Deploy | Production-ready, DEPLOY-03 live | DEPLOY-03 | pending |
 
 ---
@@ -79,11 +79,12 @@
 
 **Goal:** All 5 React views render correctly with real data from the API.
 
-**Plans:**
-- Plan 04-01: Deal Feed view (Tremor Table, filter bar, column sorting)
-- Plan 04-02: Sector Heatmap view (color-scaled grid, period toggle)
-- Plan 04-03: Company Profile page + Watchlist view
-- Plan 04-04: Trend Charts page (Recharts line + bar via Tremor)
+**Plans:** 4 plans
+
+- [ ] 04-01-PLAN.md — Deal Feed view: KPI row + FilterBar + Tremor Table + load-more
+- [ ] 04-02-PLAN.md — Sector Heatmap: custom CSS grid + color scale + period toggle
+- [ ] 04-03-PLAN.md — Company Profile + Watchlist: deal history + WatchlistToggle + InlineNoteEditor
+- [ ] 04-04-PLAN.md — Trend Charts: Tremor LineChart (4 deal types) + BarChart (top sectors)
 
 **Success criteria:**
 1. Deal Feed loads, filters work, clicking row navigates to company profile
@@ -91,7 +92,7 @@
 3. Watchlist persists pinned companies and shows their deals
 4. Trend charts show multi-week data with correct deal type breakdown
 
-**Wave:** 04-01 and 04-02 in parallel, then 04-03 and 04-04 in parallel
+**Wave:** Wave 1: 04-01 + 04-02 in parallel | Wave 2: 04-03 + 04-04 in parallel
 
 ---
 
@@ -113,4 +114,4 @@
 
 ---
 *Roadmap created: 2026-04-04*
-*Last updated: 2026-04-04 after initialization*
+*Last updated: 2026-04-04 after phase 4 planning*
