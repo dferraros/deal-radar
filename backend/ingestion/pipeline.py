@@ -177,6 +177,15 @@ async def run_ingestion(
     except Exception as exc:
         logger.error("DB write step failed: %s", exc, exc_info=True)
 
+    # --- Step 6b: Check alert rules against newly added deals ---
+    try:
+        from backend.ingestion.alert_checker import check_alerts
+        alerts_fired = await check_alerts(db_session, write_result.get("new_deal_ids", []))
+        if alerts_fired:
+            logger.info("Alert checker: %d alerts fired", alerts_fired)
+    except Exception as exc:
+        logger.warning("Alert checker failed (non-fatal): %s", exc)
+
     # --- Step 7: Log ingestion_run records per source ---
     for source_name, info in source_summary.items():
         status = "failed" if info["errors"] else "success"

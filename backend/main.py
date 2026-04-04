@@ -20,6 +20,7 @@ from backend.routers import ingest as ingest_router
 from backend.routers import admin as admin_router
 from backend.routers import investors_leaderboard as investors_leaderboard_router
 from backend.routers import briefing as briefing_router
+from backend.routers import alerts as alerts_router
 from backend.scheduler import scheduler, start_scheduler, daily_ingestion_job
 
 logger = logging.getLogger(__name__)
@@ -88,6 +89,7 @@ app.include_router(ingest_router.router, prefix="/api")
 app.include_router(admin_router.router, prefix="/api")
 app.include_router(investors_leaderboard_router.router, prefix="/api")
 app.include_router(briefing_router.router, prefix="/api")
+app.include_router(alerts_router.router, prefix="/api")
 
 # Serve React build as static files — must come AFTER API routes
 FRONTEND_DIST = Path(__file__).parent.parent / "frontend" / "dist"

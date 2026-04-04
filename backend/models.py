@@ -1,8 +1,9 @@
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 
 from sqlalchemy import (
     BigInteger,
+    Boolean,
     Column,
     Date,
     ForeignKey,
@@ -90,3 +91,22 @@ class IngestionRun(Base):
     deals_added = Column(Integer)
     run_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
     error_log = Column(Text)
+
+
+class AlertRule(Base):
+    __tablename__ = "alert_rules"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    # Filter criteria (all optional — null means "any")
+    min_amount_usd = Column(BigInteger, nullable=True)      # e.g. 10_000_000 = $10M+
+    deal_type = Column(String, nullable=True)               # vc/ma/crypto/ipo
+    sector = Column(String, nullable=True)                  # single sector filter
+    geo = Column(String, nullable=True)                     # latam/spain/europe/us/asia/global
+    investor_name = Column(String, nullable=True)           # e.g. "Sequoia Capital"
+    # Notification config
+    webhook_url = Column(String, nullable=True)             # POST JSON payload here
+    label = Column(String, nullable=True)                   # user-defined name for rule
+    # State
+    last_triggered_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    is_active = Column(Boolean, default=True)

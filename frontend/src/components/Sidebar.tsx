@@ -6,6 +6,7 @@ import {
   TrendingUp,
   Users,
   Star,
+  Bell,
   Settings,
   Activity,
 } from 'lucide-react'
@@ -16,6 +17,7 @@ const navItems = [
   { to: '/heatmap', label: 'Heatmap', icon: Grid3X3 },
   { to: '/trends', label: 'Trends', icon: TrendingUp },
   { to: '/investors', label: 'Investors', icon: Users },
+  { to: '/alerts', label: 'Alerts', icon: Bell },
   { to: '/watchlist', label: 'Watchlist', icon: Star },
 ]
 

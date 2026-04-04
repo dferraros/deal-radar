@@ -54,6 +54,7 @@ async def write_deals(
     added = 0
     skipped_duplicates = 0
     errors: list[str] = []
+    new_deal_ids: list = []
 
     for idx, extracted in enumerate(extracted_deals):
         # --- Confidence gate ---
@@ -107,6 +108,7 @@ async def write_deals(
             db_session.add(deal)
             await db_session.commit()
             added += 1
+            new_deal_ids.append(deal.id)
 
             logger.info(
                 "db_writer: added deal for %r (%s, %s)",
@@ -135,6 +137,7 @@ async def write_deals(
         "added": added,
         "skipped_duplicates": skipped_duplicates,
         "errors": errors,
+        "new_deal_ids": new_deal_ids,
     }
 
 
