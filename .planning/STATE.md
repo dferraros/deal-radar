@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Surface every relevant deal from the last 24 hours -- normalized, deduplicated, and queryable in one dashboard.
-**Current focus:** Phase 4 -- Dashboard Frontend
+**Current focus:** Phase 5 -- Polish & Deploy
 
 ## Current Position
 
 - Phase 1 (Foundation): COMPLETE (3/3 plans done, commits 248e92f + 9f53212 + bd98b9e)
 - Phase 2 (Ingestion Pipeline): COMPLETE (5/5 plans done, last commit ee68219)
 - Phase 3 (API Layer): COMPLETE (all routers built: deals, companies, heatmap, trends, kpi, watchlist, ingest)
-- Phase 4 (Dashboard Frontend): IN PROGRESS — 04-01 DONE (commits 2d9f252, fc1f768, 368bb33); 04-02 DONE (commit c6e160a); 04-03 pending; 04-04 DONE (commit c7ea1d8)
+- Phase 4 (Dashboard Frontend): COMPLETE — all 4 plans done (04-01..04-04, commits 2d9f252 → 75626fb)
 - Phase 5 (Polish & Deploy): Pending
 
 ## Decisions Made
