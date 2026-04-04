@@ -38,6 +38,7 @@ class ExtractedDeal(BaseModel):
     round_label: Optional[str] = None         # 'Series A', 'Seed', 'Acquisition', etc.
     announced_date: Optional[date] = None
     sector: list[str] = []                    # e.g. ['crypto', 'fintech']
+    tech_stack: list[str] = []               # e.g. ['Python', 'AWS', 'Solidity']
     geo: Optional[str] = None                 # 'latam', 'spain', 'europe', 'us', 'global', etc.
     lead_investor: Optional[str] = None
     all_investors: list[str] = []
@@ -73,6 +74,17 @@ class ExtractedDeal(BaseModel):
             return max(0.0, min(1.0, float(v)))
         except (ValueError, TypeError):
             return 0.0
+
+    @field_validator("tech_stack", mode="before")
+    @classmethod
+    def ensure_tech_stack_list(cls, v):
+        if v is None:
+            return []
+        if isinstance(v, list):
+            return v
+        if isinstance(v, str):
+            return [v] if v else []
+        return []
 
     @field_validator("sector", "all_investors", mode="before")
     @classmethod
@@ -120,6 +132,7 @@ Return a single JSON object with these fields:
 - geo (one of: latam / spain / europe / us / asia / global, or null)
 - lead_investor (string or null)
 - all_investors (array of strings, empty if none)
+- tech_stack (array of strings: technologies, frameworks, languages, or platforms used by the company, e.g. ["Python", "AWS", "React"] or ["Solidity", "EVM"] or ["Rust", "Kubernetes"]. Empty array if unknown)
 - ai_summary (string, 2-3 sentences)
 - confidence (float 0.0-1.0, your extraction confidence)\
 """

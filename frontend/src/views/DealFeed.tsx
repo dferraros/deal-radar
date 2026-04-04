@@ -20,6 +20,7 @@ interface DealResponse {
   source_name: string | null
   sector: string[]
   geo: string | null
+  tech_stack?: string[]
   confidence?: number
   created_at?: string | null
 }
@@ -347,6 +348,9 @@ export default function DealFeed() {
                         Sector
                       </th>
                       <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
+                        Tech
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
                         Geo
                       </th>
                       <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
@@ -411,6 +415,19 @@ export default function DealFeed() {
                         {/* Sector */}
                         <td className="px-4 py-3 text-xs text-zinc-400">
                           {(deal.sector || []).join(', ') || '—'}
+                        </td>
+                        {/* Tech Stack */}
+                        <td className="px-4 py-3">
+                          <div className="flex flex-wrap gap-1">
+                            {(deal.tech_stack || []).slice(0, 3).map(tech => (
+                              <span key={tech} className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700 font-mono">
+                                {tech}
+                              </span>
+                            ))}
+                            {(deal.tech_stack || []).length > 3 && (
+                              <span className="text-[10px] text-zinc-600">+{deal.tech_stack!.length - 3}</span>
+                            )}
+                          </div>
                         </td>
                         {/* Geo */}
                         <td className="px-4 py-3 text-xs text-zinc-400 uppercase">

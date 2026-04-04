@@ -26,6 +26,7 @@ class Company(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(Text, nullable=False)
     sector = Column(ARRAY(Text))          # e.g. ['crypto', 'fintech']
+    tech_stack = Column(ARRAY(Text))      # e.g. ['Python', 'AWS', 'React']
     geo = Column(Text)                    # e.g. 'latam', 'spain', 'global'
     description = Column(Text)
     crunchbase_url = Column(Text)

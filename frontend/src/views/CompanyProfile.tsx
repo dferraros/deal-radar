@@ -22,6 +22,7 @@ interface CompanyResponse {
   id: string
   name: string
   sector: string[]
+  tech_stack: string[]
   geo: string | null
   description: string | null
   website: string | null
@@ -91,6 +92,20 @@ export default function CompanyProfile() {
                 </Badge>
               ))}
             </div>
+
+            {/* Tech stack pills */}
+            {(company.tech_stack || []).length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-2">
+                {company.tech_stack.map((tech) => (
+                  <span
+                    key={tech}
+                    className="text-[11px] px-2 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700 font-mono"
+                  >
+                    {tech}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {/* Geo + Website */}
             {company.geo && <p className="text-sm text-zinc-400 mt-1">{company.geo}</p>}

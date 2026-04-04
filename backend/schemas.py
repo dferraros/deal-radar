@@ -24,6 +24,7 @@ class DealResponse(BaseModel):
     ai_summary: Optional[str] = None
     sector: list[str] = []                  # from company
     geo: Optional[str] = None               # from company
+    tech_stack: list[str] = []             # company's tech stack
 
     # Kept for backwards-compat with any existing consumers
     currency: Optional[str] = None
@@ -37,6 +38,7 @@ class CompanyResponse(BaseModel):
     id: uuid.UUID
     name: str
     sector: list[str] = []
+    tech_stack: list[str] = []
     geo: Optional[str] = None
     description: Optional[str] = None
     website: Optional[str] = None

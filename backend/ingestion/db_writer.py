@@ -156,6 +156,9 @@ async def _get_or_create_company(
     company = result.scalars().first()
 
     if company:
+        # Update tech_stack if we have new data and existing is empty
+        if extracted.tech_stack and not company.tech_stack:
+            company.tech_stack = extracted.tech_stack
         return company
 
     # Create new Company
@@ -163,6 +166,7 @@ async def _get_or_create_company(
         id=uuid.uuid4(),
         name=extracted.company_name,
         sector=extracted.sector or [],
+        tech_stack=extracted.tech_stack or [],
         geo=extracted.geo,
         description=extracted.company_description,
         website=extracted.company_website,
