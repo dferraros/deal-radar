@@ -10,7 +10,7 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 ## Current Position
 
 - Phase 1 (Foundation): COMPLETE (3/3 plans done, commits 248e92f + 9f53212 + bd98b9e)
-- Phase 2 (Ingestion Pipeline): READY TO START
+- Phase 2 (Ingestion Pipeline): COMPLETE (5/5 plans done, last commit ee68219)
 - Phases 3-5: Pending
 
 ## Decisions Made
@@ -42,7 +42,27 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 - alembic/: async migrations env, script template, versions dir
 - Procfile + railway.json + .env.example + .gitignore
 
+## What Was Built in Phase 2
+
+- backend/ingestion/base.py: RawDeal dataclass + BaseFetcher ABC
+- backend/ingestion/rss.py: RSSFetcher (6 feeds: TechCrunch, VentureBeat, etc.)
+- backend/ingestion/tavily.py: TavilyFetcher (Tavily Search API)
+- backend/ingestion/firecrawl.py: FirecrawlFetcher (Firecrawl enrichment)
+- backend/ingestion/ai_extractor.py: AIExtractor (Claude Haiku / GPT-4o-mini, ExtractedDeal Pydantic model)
+- backend/ingestion/deduplicator.py: Deduplicator (fuzzy name + date + amount, fuzzywuzzy)
+- backend/ingestion/db_writer.py: write_deals() — Company upsert + Deal insert, confidence gate
+- backend/ingestion/pipeline.py: run_ingestion() — full 8-step pipeline
+- backend/scheduler.py: APScheduler daily job at 07:00 UTC
+- backend/main.py: lifespan startup hook + POST /api/ingest/run endpoint
+
+## Decisions Made (Phase 2 additions)
+
+- Dedup thresholds: name ratio>=85, date within 5d, amount within 15%
+- Confidence gate at 0.3 for DB writes
+- Per-deal commit (not batch) for partial failure safety
+- Lazy imports in scheduler job to avoid circular imports
+- FastAPI lifespan replaces deprecated on_event handlers
+
 ## Next Action
 
-Start Phase 2 -- Plan 02-01: RawDeal dataclass + base fetcher interface + RSSFetcher
-Note: Plans 02-01, 02-02, 02-03 can run in parallel (independent fetchers)
+Start Phase 3 -- API + Dashboard (deals query endpoints + React data tables)
