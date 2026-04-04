@@ -3,7 +3,7 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Depends
+from fastapi import BackgroundTasks, FastAPI, Depends
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.routing import APIRouter
@@ -53,20 +53,28 @@ async def health():
     return {"status": "ok", "version": "1.0.0"}
 
 
-@api_router.post("/ingest/run")
-async def trigger_ingestion(db: AsyncSession = Depends(get_session)):
+@api_router.post("/ingest/run", status_code=202)
+async def trigger_ingestion(background_tasks: BackgroundTasks):
     """
     Manually trigger the daily ingestion pipeline.
 
-    Runs synchronously within the request (may take 30-120s depending on sources).
-    Returns the pipeline summary dict.
+    Returns 202 immediately; pipeline runs in the background (2-5 min).
+    Check /api/admin/runs for status.
     """
-    from backend.ingestion.pipeline import run_ingestion
-    from datetime import date
+    async def _run():
+        from datetime import date
+        from backend.database import AsyncSessionFactory as AsyncSessionLocal
+        from backend.ingestion.pipeline import run_ingestion
 
-    logger.info("[API] Manual ingestion triggered via POST /api/ingest/run")
-    result = await run_ingestion(db, date.today())
-    return result
+        async with AsyncSessionLocal() as db:
+            try:
+                await run_ingestion(db, date.today())
+            except Exception as exc:
+                logger.error("[API] Background ingestion failed: %s", exc, exc_info=True)
+
+    logger.info("[API] Manual ingestion queued via POST /api/ingest/run")
+    background_tasks.add_task(_run)
+    return {"status": "accepted", "message": "Ingestion started in background. Check /api/admin/runs for results."}
 
 
 app.include_router(api_router)
