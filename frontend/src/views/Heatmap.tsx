@@ -20,12 +20,11 @@ interface HeatmapResponse {
 
 type Period = 'weekly' | 'monthly' | 'quarterly';
 
-// Inline spinner — LoadingSpinner component may not exist yet (plans run in parallel)
 function Spinner() {
   return (
     <div className="flex justify-center items-center py-16">
       <svg
-        className="animate-spin h-8 w-8 text-amber-400"
+        className="animate-spin h-6 w-6 text-blue-400"
         xmlns="http://www.w3.org/2000/svg"
         fill="none"
         viewBox="0 0 24 24"
@@ -41,6 +40,15 @@ function Spinner() {
   );
 }
 
+function totalCapital(cells: HeatmapCell[]): number {
+  return cells.reduce((sum, c) => sum + c.total_capital_usd, 0);
+}
+
+function fmtCapital(usd: number): string {
+  const m = usd / 1_000_000;
+  return m >= 1000 ? `$${(m / 1000).toFixed(1)}B` : `$${m.toFixed(0)}M`;
+}
+
 export default function Heatmap() {
   const [period, setPeriod] = useState<Period>('weekly');
   const [data, setData] = useState<HeatmapResponse | null>(null);
@@ -52,30 +60,34 @@ export default function Heatmap() {
     setError(null);
     axios
       .get(`/api/heatmap?period=${period}`)
-      .then(r => setData(r.data))
+      .then((r) => setData(r.data))
       .catch(() =>
         setError('Could not load data. Check your connection or try refreshing the page.')
       )
       .finally(() => setLoading(false));
   }, [period]);
 
-  return (
-    <div>
-      {/* Page header */}
-      <h1 className="text-2xl font-bold text-gray-100 mb-2">Sector Heatmap</h1>
-      <p className="text-sm text-gray-400 mb-6">Capital raised by sector and geography</p>
+  const grandTotal = data ? totalCapital(data.cells) : 0;
 
-      {/* Period toggle — right aligned */}
-      <div className="flex justify-end mb-4">
-        <div className="flex gap-1 bg-gray-900 border border-gray-800 rounded-lg p-1">
-          {(['weekly', 'monthly', 'quarterly'] as Period[]).map(p => (
+  return (
+    <div className="px-6 py-4">
+      {/* Page title */}
+      <div className="mb-4 flex items-end justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-widest text-slate-500">Analytics</p>
+          <h1 className="text-lg font-semibold text-slate-200">Sector Heatmap</h1>
+        </div>
+
+        {/* Period toggle — Bloomberg tabs */}
+        <div className="flex border border-[#1e2d4a] rounded overflow-hidden">
+          {(['weekly', 'monthly', 'quarterly'] as Period[]).map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
-              className={`px-4 py-1.5 text-sm rounded-md font-bold capitalize transition-colors ${
+              className={`px-4 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors ${
                 period === p
-                  ? 'bg-gray-800 text-gray-100 border border-gray-700'
-                  : 'text-gray-400 hover:text-gray-100'
+                  ? 'bg-blue-600 text-white'
+                  : 'text-slate-400 hover:text-white bg-transparent'
               }`}
             >
               {p.charAt(0).toUpperCase() + p.slice(1)}
@@ -84,18 +96,33 @@ export default function Heatmap() {
         </div>
       </div>
 
+      {/* Total capital tracked stat */}
+      {data && grandTotal > 0 && (
+        <div className="mb-4 flex items-center gap-2">
+          <span className="text-xs uppercase tracking-widest text-slate-500">
+            Total Capital Tracked:
+          </span>
+          <span className="font-mono text-sm font-semibold text-white">
+            {fmtCapital(grandTotal)}
+          </span>
+          <span className="text-xs text-slate-500">
+            across {data.cells.reduce((s, c) => s + c.deal_count, 0)} deals
+          </span>
+        </div>
+      )}
+
       {/* Content area */}
       {loading && <Spinner />}
 
       {!loading && error && (
-        <div className="bg-red-900/20 border border-red-800 rounded-md px-4 py-3">
+        <div className="bg-red-900/20 border border-red-800/50 rounded px-4 py-3">
           <span className="text-sm text-red-400">{error}</span>
         </div>
       )}
 
       {!loading && !error && data && (
         <>
-          <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 overflow-x-auto">
+          <div className="bg-[#0f1629] border border-[#1e2d4a] rounded-lg p-6 overflow-x-auto">
             <HeatmapGrid
               cells={data.cells}
               sectors={data.sectors}
@@ -103,9 +130,8 @@ export default function Heatmap() {
             />
           </div>
 
-          {/* Date range subtitle */}
-          <p className="text-xs text-gray-500 mt-3">
-            Showing {data.period} data: {data.date_from} &rarr; {data.date_to}
+          <p className="text-xs text-slate-600 mt-3 font-mono">
+            {data.period} · {data.date_from} &rarr; {data.date_to}
           </p>
         </>
       )}

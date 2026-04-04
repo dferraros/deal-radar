@@ -117,6 +117,39 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 - frontend/src/components/Navbar.tsx: Admin link after divider, font-bold throughout (no font-medium)
 - frontend/src/App.tsx: /admin route added
 
+## Phase 5 Deploy Status (2026-04-04)
+
+### Railway Deployment
+- **URL:** https://deal-radar-app-production.up.railway.app
+- **Service:** deal-radar-app (d7fa3e67-ad9a-4788-8df5-df19e061b278)
+- **Project:** 1e9483fe-35f5-4c30-908b-fe38e1c6b77a
+- **DB:** Railway managed PostgreSQL (auto-provisioned volume)
+
+### API Keys set in Railway
+- ANTHROPIC_API_KEY ✓
+- TAVILY_API_KEY ✓
+- FIRECRAWL_API_KEY ✓
+- DATABASE_URL ✓ (auto-injected by Railway Postgres addon)
+
+### Bugs Fixed During Deploy
+- `TIMESTAMPTZ` not a valid SQLAlchemy import → `DateTime(timezone=True)`
+- Alembic path: `python -m alembic` in startCommand (adds CWD to sys.path)
+- Claude Haiku JSON wrapped in markdown fences → strip before json.loads()
+- Heatmap AmbiguousParameterError on NULL deal_type → conditional SQL (omit param when None)
+
+### Verified Endpoints (2026-04-04)
+- GET /api/health → 200
+- GET /api/deals → 200
+- GET /api/heatmap → 200 (all filters working)
+- GET /api/trends → 200
+- GET /api/watchlist → 200
+- GET /api/admin/runs → 200
+
+### DB State
+- First ingestion run: 70 deals found, 37 added (Claude Haiku primary extractor)
+- Rate limiting (429) on large batches is acceptable — non-blocking, daily runs stay well under limit
+
 ## Next Action
 
-Phase 5 Plan 01 COMPLETE. Continue Phase 5 remaining plans.
+Phase 5 COMPLETE. App is live. Share URL with cousin:
+https://deal-radar-app-production.up.railway.app

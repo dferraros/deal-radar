@@ -1,17 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import {
-  Card,
-  Table,
-  TableHead,
-  TableHeaderCell,
-  TableBody,
-  TableRow,
-  TableCell,
-  Metric,
-  Text,
-} from "@tremor/react";
 import FilterBar, { defaultFilters } from "../components/FilterBar";
 import type { FilterState } from "../components/FilterBar";
 import DealTypeBadge from "../components/DealTypeBadge";
@@ -48,19 +37,21 @@ function formatDate(dateStr: string | null): string {
 }
 
 function formatAmount(usd: number | null): { text: string; muted: boolean } {
-  if (usd === null) return { text: "Undisclosed", muted: true };
+  if (usd === null || usd === undefined) return { text: "Undisclosed", muted: true };
+  if (isNaN(usd)) return { text: "Undisclosed", muted: true };
   const m = usd / 1_000_000;
   const formatted = m >= 100 ? `$${Math.round(m)}M` : `$${m.toFixed(1)}M`;
   return { text: formatted, muted: false };
 }
 
 function formatInvestors(all: string[]): string {
-  if (all.length === 0) return "—";
+  if (!all || all.length === 0) return "—";
   if (all.length === 1) return all[0];
-  return `${all[0]} +${all.length - 1} more`;
+  return `${all[0]} +${all.length - 1}`;
 }
 
-function formatCapital(usd: number): string {
+function formatCapital(usd: number | null | undefined): string {
+  if (usd === null || usd === undefined || isNaN(usd)) return "--";
   const m = usd / 1_000_000;
   return m >= 1000 ? `$${(m / 1000).toFixed(1)}B` : `$${Math.round(m)}M`;
 }
@@ -74,6 +65,11 @@ function buildParams(f: FilterState): Record<string, string> {
   if (f.dateFrom) params.date_from = f.dateFrom.toISOString().slice(0, 10);
   if (f.dateTo) params.date_to = f.dateTo.toISOString().slice(0, 10);
   return params;
+}
+
+function getTodayDeals(deals: DealResponse[]): DealResponse[] {
+  const today = new Date().toISOString().slice(0, 10);
+  return deals.filter((d) => d.announced_date?.slice(0, 10) === today);
 }
 
 // ---- Component ----
@@ -90,6 +86,8 @@ export default function DealFeed() {
   const [error, setError] = useState<string | null>(null);
   const [kpis, setKpis] = useState<KPIResponse | null>(null);
   const [sectors, setSectors] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
+  const [lastSync, setLastSync] = useState<string | null>(null);
 
   const fetchDeals = useCallback(async (f: FilterState) => {
     setLoading(true);
@@ -120,7 +118,7 @@ export default function DealFeed() {
       setPage(nextPage);
       setHasMore(nextPage < res.data.pages);
     } catch {
-      // silently fail on load-more; user already has data
+      // silently fail on load-more
     } finally {
       setLoadingMore(false);
     }
@@ -135,148 +133,225 @@ export default function DealFeed() {
       .get("/api/deals/sectors")
       .then((r) => setSectors(r.data.sectors ?? []))
       .catch(() => {});
+    fetch("/api/admin/runs?limit=1")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0 && data[0].run_at) {
+          const d = new Date(data[0].run_at);
+          setLastSync(
+            d.toLocaleString("en-US", {
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: false,
+            })
+          );
+        }
+      })
+      .catch(() => {});
     fetchDeals(defaultFilters);
   }, [fetchDeals]);
 
+  // Client-side search filter
+  const visibleDeals = deals.filter(
+    (d) =>
+      !search ||
+      d.company_name?.toLowerCase().includes(search.toLowerCase()) ||
+      d.lead_investor?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  const todayDeals = getTodayDeals(deals);
+  const todayCapital = todayDeals.reduce(
+    (sum, d) => sum + (d.amount_usd ?? 0),
+    0
+  );
+
+  // KPI card values with NaN guards
+  const totalCapitalThisWeek = kpis?.capital_this_week_usd ?? 0;
+  const capitalDisplay =
+    !kpis || deals.length === 0 ? "--" : formatCapital(totalCapitalThisWeek);
+
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-100 mb-6">Deal Feed</h1>
-
-      {/* KPI row */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <Card className="bg-gray-900 border-gray-800">
-          <Text className="text-xs font-bold text-gray-400 uppercase tracking-wide">
-            Deals This Week
-          </Text>
-          <Metric className="text-gray-100 tabular-nums">
-            {kpis?.deals_this_week ?? "—"}
-          </Metric>
-        </Card>
-        <Card className="bg-gray-900 border-gray-800">
-          <Text className="text-xs font-bold text-gray-400 uppercase tracking-wide">
-            Capital Raised (7d)
-          </Text>
-          <Metric className="text-gray-100 tabular-nums">
-            {kpis ? formatCapital(kpis.capital_this_week_usd) : "—"}
-          </Metric>
-        </Card>
-        <Card className="bg-gray-900 border-gray-800">
-          <Text className="text-xs font-bold text-gray-400 uppercase tracking-wide">
-            Top Sector
-          </Text>
-          <Metric className="text-gray-100">
-            {kpis?.top_sector_this_week ?? "—"}
-          </Metric>
-        </Card>
+      {/* Ticker / status bar */}
+      <div className="bg-[#0f1629] border-b border-[#1e2d4a] px-6 py-1.5 flex items-center gap-6 text-xs font-mono text-slate-400">
+        <span>
+          DEALS TODAY:{" "}
+          <span className="text-white">{todayDeals.length}</span>
+        </span>
+        <span>
+          CAPITAL TODAY:{" "}
+          <span className="text-green-400">
+            {todayCapital > 0 ? formatCapital(todayCapital) : "--"}
+          </span>
+        </span>
+        {lastSync && (
+          <span>
+            LAST UPDATED: <span className="text-white">{lastSync}</span>
+          </span>
+        )}
       </div>
 
-      {/* Filter bar */}
-      <FilterBar
-        filters={filters}
-        sectors={sectors}
-        onFilterChange={(f) => {
-          setFilters(f);
-          fetchDeals(f);
-        }}
-      />
+      <div className="px-6 py-4">
+        {/* Page title */}
+        <div className="mb-4">
+          <p className="text-xs uppercase tracking-widest text-slate-500">
+            Overview
+          </p>
+          <h1 className="text-lg font-semibold text-slate-200">Deal Feed</h1>
+        </div>
 
-      {/* Table area */}
-      <div className="mt-2">
-        {loading ? (
-          <LoadingSpinner />
-        ) : error ? (
-          <ErrorBanner message={error} />
-        ) : deals.length === 0 ? (
-          <div className="text-center py-16">
-            <p className="text-xl font-bold text-gray-300">No deals found</p>
-            <p className="text-sm text-gray-400 mt-2">
-              Try adjusting your filters, or check back after the next ingestion
-              at 7am UTC.
+        {/* KPI row */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+          <div className="bg-[#0f1629] border border-[#1e2d4a] rounded px-4 py-3">
+            <p className="text-xs uppercase tracking-widest text-slate-500">
+              Deals This Week
+            </p>
+            <p className="font-mono text-xl font-bold text-white mt-1">
+              {kpis?.deals_this_week ?? "--"}
             </p>
           </div>
-        ) : (
-          <>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  {[
-                    "Date",
-                    "Company",
-                    "Round",
-                    "Amount",
-                    "Sector",
-                    "Geo",
-                    "Investors",
-                  ].map((h) => (
-                    <TableHeaderCell
-                      key={h}
-                      className="text-xs font-bold text-gray-400 uppercase tracking-wide"
-                    >
-                      {h}
-                    </TableHeaderCell>
-                  ))}
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {deals.map((deal) => {
-                  const amt = formatAmount(deal.amount_usd);
-                  return (
-                    <TableRow
-                      key={deal.id}
-                      className="cursor-pointer hover:bg-gray-800 transition-colors"
-                      onClick={() =>
-                        deal.company_id &&
-                        navigate(`/company/${deal.company_id}`)
-                      }
-                    >
-                      <TableCell className="text-sm text-gray-400">
-                        {formatDate(deal.announced_date)}
-                      </TableCell>
-                      <TableCell className="text-sm text-gray-100">
-                        {deal.company_name ?? "—"}
-                      </TableCell>
-                      <TableCell>
-                        <DealTypeBadge
-                          dealType={deal.deal_type}
-                          label={deal.round_label ?? undefined}
-                        />
-                      </TableCell>
-                      <TableCell
-                        className={`text-sm tabular-nums ${
-                          amt.muted ? "text-gray-400 italic" : "text-gray-100"
-                        }`}
-                      >
-                        {amt.text}
-                      </TableCell>
-                      <TableCell className="text-sm text-gray-400">
-                        {deal.sector.join(", ") || "—"}
-                      </TableCell>
-                      <TableCell className="text-sm text-gray-400">
-                        {deal.geo ?? "—"}
-                      </TableCell>
-                      <TableCell className="text-sm text-gray-400">
-                        {formatInvestors(deal.all_investors)}
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-              </TableBody>
-            </Table>
+          <div className="bg-[#0f1629] border border-[#1e2d4a] rounded px-4 py-3">
+            <p className="text-xs uppercase tracking-widest text-slate-500">
+              Capital Raised
+            </p>
+            <p className="font-mono text-xl font-bold text-white mt-1">
+              {capitalDisplay}
+            </p>
+          </div>
+          <div className="bg-[#0f1629] border border-[#1e2d4a] rounded px-4 py-3">
+            <p className="text-xs uppercase tracking-widest text-slate-500">
+              Top Sector
+            </p>
+            <p className="font-mono text-xl font-bold text-white mt-1">
+              {kpis?.top_sector_this_week ?? "--"}
+            </p>
+          </div>
+        </div>
 
-            {/* Load more */}
-            {hasMore && (
-              <div className="mt-4 text-center">
-                <button
-                  onClick={loadMore}
-                  disabled={loadingMore}
-                  className="text-sm text-amber-400 underline hover:text-amber-300 disabled:opacity-50"
-                >
-                  {loadingMore ? "Loading..." : "Load more deals"}
-                </button>
-              </div>
-            )}
-          </>
-        )}
+        {/* Search */}
+        <input
+          placeholder="Search companies, investors..."
+          className="w-full bg-[#0f1629] border border-[#1e2d4a] rounded px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 mb-2"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+        />
+
+        {/* Filter bar */}
+        <FilterBar
+          filters={filters}
+          sectors={sectors}
+          onFilterChange={(f) => {
+            setFilters(f);
+            fetchDeals(f);
+          }}
+        />
+
+        {/* Table area */}
+        <div className="mt-2">
+          {loading ? (
+            <LoadingSpinner />
+          ) : error ? (
+            <ErrorBanner message={error} />
+          ) : visibleDeals.length === 0 ? (
+            <div className="text-center py-16">
+              <p className="text-base font-semibold text-slate-300">
+                No deals found
+              </p>
+              <p className="text-sm text-slate-500 mt-2">
+                Try adjusting your filters, or check back after the next
+                ingestion at 7am UTC.
+              </p>
+            </div>
+          ) : (
+            <>
+              <table className="w-full text-sm border-collapse">
+                <thead>
+                  <tr>
+                    {[
+                      "Date",
+                      "Company",
+                      "Round",
+                      "Amount",
+                      "Sector",
+                      "Geo",
+                      "Investors",
+                    ].map((h) => (
+                      <th
+                        key={h}
+                        className="text-left text-xs uppercase tracking-widest text-slate-500 pb-2 border-b border-[#1e2d4a] font-normal px-2"
+                      >
+                        {h}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {visibleDeals.map((deal) => {
+                    const amt = formatAmount(deal.amount_usd);
+                    return (
+                      <tr
+                        key={deal.id}
+                        className="border-b border-[#1e2d4a]/50 hover:bg-[#0f1629] cursor-pointer transition-colors"
+                        onClick={() =>
+                          deal.company_id &&
+                          navigate(`/company/${deal.company_id}`)
+                        }
+                      >
+                        <td className="py-2 px-2 font-mono text-slate-400 text-xs whitespace-nowrap">
+                          {formatDate(deal.announced_date)}
+                        </td>
+                        <td className="py-2 px-2 font-semibold text-white">
+                          {deal.company_name ?? "—"}
+                        </td>
+                        <td className="py-2 px-2">
+                          <DealTypeBadge
+                            dealType={deal.deal_type}
+                            label={deal.round_label ?? undefined}
+                          />
+                        </td>
+                        <td className="py-2 px-2">
+                          {amt.muted ? (
+                            <span className="text-slate-500 italic text-xs">
+                              {amt.text}
+                            </span>
+                          ) : (
+                            <span className="font-mono text-green-400 font-semibold">
+                              {amt.text}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-2 px-2 text-slate-400 text-xs">
+                          {deal.sector.join(", ") || "—"}
+                        </td>
+                        <td className="py-2 px-2 text-slate-400 text-xs uppercase">
+                          {deal.geo ?? "—"}
+                        </td>
+                        <td className="py-2 px-2 text-slate-400 text-xs">
+                          {formatInvestors(deal.all_investors)}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              {/* Load more */}
+              {hasMore && (
+                <div className="mt-4 text-center">
+                  <button
+                    onClick={loadMore}
+                    disabled={loadingMore}
+                    className="text-xs text-blue-400 hover:text-blue-300 underline disabled:opacity-50 font-mono"
+                  >
+                    {loadingMore ? "Loading..." : "Load more deals"}
+                  </button>
+                </div>
+              )}
+            </>
+          )}
+        </div>
       </div>
     </div>
   );

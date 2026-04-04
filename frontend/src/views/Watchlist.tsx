@@ -1,14 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import {
-  Table,
-  TableHead,
-  TableHeaderCell,
-  TableBody,
-  TableRow,
-  TableCell,
-} from "@tremor/react";
 import FilterBar, { defaultFilters, FilterState } from "../components/FilterBar";
 import DealTypeBadge from "../components/DealTypeBadge";
 import InlineNoteEditor from "../components/InlineNoteEditor";
@@ -33,7 +25,7 @@ interface DealResponse {
 }
 
 interface WatchlistItem {
-  id: string; // watchlist item UUID
+  id: string;
   company_id: string;
   company_name: string;
   company_sector: string[];
@@ -75,12 +67,10 @@ export default function Watchlist() {
       .finally(() => setLoading(false));
   }, []);
 
-  // Compute distinct sectors from loaded watchlist
   const watchlistSectors = [
     ...new Set(watchlist.flatMap((w) => w.company_sector)),
   ];
 
-  // Client-side filtering
   const filteredDeals: FlatDeal[] = watchlist.flatMap((item) =>
     item.recent_deals
       .filter((d) => {
@@ -104,7 +94,10 @@ export default function Watchlist() {
       }))
   );
 
-  const handleRemoveConfirmed = async (watchlistItemId: string, companyName: string) => {
+  const handleRemoveConfirmed = async (
+    watchlistItemId: string,
+    companyName: string
+  ) => {
     try {
       await axios.delete(`/api/watchlist/${watchlistItemId}`);
       setWatchlist((prev) => prev.filter((w) => w.id !== watchlistItemId));
@@ -115,11 +108,14 @@ export default function Watchlist() {
   };
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-100 mb-2">Watchlist</h1>
-      <p className="text-sm text-gray-400 mb-6">
-        Deals from your pinned companies
-      </p>
+    <div className="px-6 py-4">
+      {/* Page title */}
+      <div className="mb-4">
+        <p className="text-xs uppercase tracking-widest text-slate-500">
+          Monitoring
+        </p>
+        <h1 className="text-lg font-semibold text-slate-200">Watchlist</h1>
+      </div>
 
       <FilterBar
         filters={filters}
@@ -132,10 +128,10 @@ export default function Watchlist() {
       {!loading && error && <ErrorBanner message={error} />}
       {!loading && !error && watchlist.length === 0 && (
         <div className="text-center py-16">
-          <p className="text-xl font-bold text-gray-300">
+          <p className="text-base font-semibold text-slate-300">
             Your watchlist is empty
           </p>
-          <p className="text-sm text-gray-400 mt-2">
+          <p className="text-sm text-slate-500 mt-2">
             Visit a company profile and click &apos;Add to Watchlist&apos; to
             track their deals here.
           </p>
@@ -143,47 +139,38 @@ export default function Watchlist() {
       )}
 
       {!loading && !error && watchlist.length > 0 && (
-        <Table>
-          <TableHead>
-            <TableRow>
-              <TableHeaderCell className="text-xs text-gray-400 uppercase tracking-wide">
-                Date
-              </TableHeaderCell>
-              <TableHeaderCell className="text-xs text-gray-400 uppercase tracking-wide">
-                Company
-              </TableHeaderCell>
-              <TableHeaderCell className="text-xs text-gray-400 uppercase tracking-wide">
-                Round
-              </TableHeaderCell>
-              <TableHeaderCell className="text-xs text-gray-400 uppercase tracking-wide">
-                Amount
-              </TableHeaderCell>
-              <TableHeaderCell className="text-xs text-gray-400 uppercase tracking-wide">
-                Sector
-              </TableHeaderCell>
-              <TableHeaderCell className="text-xs text-gray-400 uppercase tracking-wide">
-                Geo
-              </TableHeaderCell>
-              <TableHeaderCell className="text-xs text-gray-400 uppercase tracking-wide">
-                Investors
-              </TableHeaderCell>
-              <TableHeaderCell className="text-xs text-gray-400 uppercase tracking-wide">
-                Notes
-              </TableHeaderCell>
-              <TableHeaderCell className="text-xs text-gray-400 uppercase tracking-wide w-8">
-                {/* Remove */}
-              </TableHeaderCell>
-            </TableRow>
-          </TableHead>
-          <TableBody>
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr>
+              {[
+                "Date",
+                "Company",
+                "Round",
+                "Amount",
+                "Sector",
+                "Geo",
+                "Investors",
+                "Notes",
+                "",
+              ].map((h, i) => (
+                <th
+                  key={i}
+                  className="text-left text-xs uppercase tracking-widest text-slate-500 pb-2 border-b border-[#1e2d4a] font-normal px-2"
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
             {filteredDeals.map((item) => {
               // Inline confirmation row
               if (confirmRemove === item._watchlistItemId) {
                 return (
-                  <TableRow key={`${item.id}-confirm`}>
-                    <TableCell colSpan={9}>
-                      <div className="flex items-center gap-3 text-sm">
-                        <span className="text-gray-300">
+                  <tr key={`${item.id}-confirm`}>
+                    <td colSpan={9} className="py-2 px-2">
+                      <div className="flex items-center gap-3 text-xs">
+                        <span className="text-slate-300">
                           Remove {item._companyName}? This will delete your
                           notes for this company.
                         </span>
@@ -194,25 +181,28 @@ export default function Watchlist() {
                               item._companyName
                             )
                           }
-                          className="text-red-400 hover:underline font-bold"
+                          className="text-red-400 hover:text-red-300 font-semibold"
                         >
                           Yes, remove
                         </button>
                         <button
                           onClick={() => setConfirmRemove(null)}
-                          className="text-gray-400 hover:text-gray-100"
+                          className="text-slate-400 hover:text-slate-200"
                         >
                           Cancel
                         </button>
                       </div>
-                    </TableCell>
-                  </TableRow>
+                    </td>
+                  </tr>
                 );
               }
 
-              const amt = item.amount_usd
-                ? `$${(item.amount_usd / 1_000_000).toFixed(1)}M`
-                : "Undisclosed";
+              const amt =
+                item.amount_usd != null && !isNaN(item.amount_usd)
+                  ? `$${(item.amount_usd / 1_000_000).toFixed(1)}M`
+                  : "Undisclosed";
+              const hasAmount = item.amount_usd != null && !isNaN(item.amount_usd);
+
               const dateStr = item.announced_date
                 ? new Date(
                     item.announced_date + "T00:00:00"
@@ -221,84 +211,73 @@ export default function Watchlist() {
                     day: "numeric",
                   })
                 : "\u2014";
+
               const investorDisplay =
                 item.all_investors.length > 0
                   ? item.all_investors.length === 1
                     ? item.all_investors[0]
-                    : `${item.all_investors[0]} +${item.all_investors.length - 1} more`
+                    : `${item.all_investors[0]} +${item.all_investors.length - 1}`
                   : "\u2014";
 
               return (
-                <TableRow
+                <tr
                   key={item.id}
-                  className="cursor-pointer hover:bg-gray-800"
+                  className="border-b border-[#1e2d4a]/50 hover:bg-[#0f1629] cursor-pointer transition-colors"
                   onClick={() => navigate(`/company/${item._companyId}`)}
                 >
-                  <TableCell className="text-sm text-gray-400">
+                  <td className="py-2 px-2 font-mono text-slate-400 text-xs whitespace-nowrap">
                     {dateStr}
-                  </TableCell>
-                  <TableCell className="text-sm text-gray-100">
+                  </td>
+                  <td className="py-2 px-2 font-semibold text-white">
                     {item._companyName}
-                  </TableCell>
-                  <TableCell>
+                  </td>
+                  <td className="py-2 px-2">
                     <DealTypeBadge
                       dealType={item.deal_type}
                       label={item.round_label ?? undefined}
                     />
-                  </TableCell>
-                  <TableCell
-                    className={`text-sm tabular-nums ${
-                      item.amount_usd
-                        ? "text-gray-100"
-                        : "text-gray-400 italic"
-                    }`}
-                  >
-                    {amt}
-                  </TableCell>
-                  <TableCell className="text-sm text-gray-400">
+                  </td>
+                  <td className="py-2 px-2">
+                    {hasAmount ? (
+                      <span className="font-mono text-green-400 font-semibold">
+                        {amt}
+                      </span>
+                    ) : (
+                      <span className="text-slate-500 italic text-xs">
+                        Undisclosed
+                      </span>
+                    )}
+                  </td>
+                  <td className="py-2 px-2 text-slate-400 text-xs">
                     {item.sector.join(", ") || "\u2014"}
-                  </TableCell>
-                  <TableCell className="text-sm text-gray-400">
+                  </td>
+                  <td className="py-2 px-2 text-slate-400 text-xs uppercase">
                     {item.geo ?? "\u2014"}
-                  </TableCell>
-                  <TableCell className="text-sm text-gray-400">
+                  </td>
+                  <td className="py-2 px-2 text-slate-400 text-xs">
                     {investorDisplay}
-                  </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
+                  </td>
+                  <td className="py-2 px-2" onClick={(e) => e.stopPropagation()}>
                     <InlineNoteEditor
                       watchlistItemId={item._watchlistItemId}
                       initialNote={item._notes}
                     />
-                  </TableCell>
-                  <TableCell onClick={(e) => e.stopPropagation()}>
+                  </td>
+                  <td className="py-2 px-2" onClick={(e) => e.stopPropagation()}>
                     <button
-                      onClick={() =>
-                        setConfirmRemove(item._watchlistItemId)
-                      }
-                      className="text-gray-400 hover:text-red-400 p-1 transition-colors"
+                      onClick={() => setConfirmRemove(item._watchlistItemId)}
+                      className="text-slate-500 hover:text-red-400 transition-colors text-base leading-none"
                       aria-label="Remove from watchlist"
                       title="Remove from watchlist"
                     >
-                      <svg
-                        className="h-4 w-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M6 18L18 6M6 6l12 12"
-                        />
-                      </svg>
+                      ✕
                     </button>
-                  </TableCell>
-                </TableRow>
+                  </td>
+                </tr>
               );
             })}
-          </TableBody>
-        </Table>
+          </tbody>
+        </table>
       )}
     </div>
   );

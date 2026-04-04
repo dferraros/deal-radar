@@ -1,5 +1,3 @@
-import { Select, SelectItem, NumberInput, DateRangePicker } from "@tremor/react";
-
 export interface FilterState {
   dealType: string;
   sector: string;
@@ -38,7 +36,6 @@ function hasActiveFilters(filters: FilterState): boolean {
   if (filters.sector !== "") return true;
   if (filters.geo !== "") return true;
   if (filters.amountMin !== "") return true;
-  // Check date range — compare date strings to avoid reference equality issues
   const fromChanged =
     filters.dateFrom?.toISOString().slice(0, 10) !==
     defaults.dateFrom?.toISOString().slice(0, 10);
@@ -48,6 +45,9 @@ function hasActiveFilters(filters: FilterState): boolean {
   if (fromChanged || toChanged) return true;
   return false;
 }
+
+const selectClass =
+  "bg-[#0f1629] border border-[#1e2d4a] text-slate-300 text-xs px-2 py-1.5 rounded focus:outline-none focus:border-blue-500";
 
 export default function FilterBar({
   filters,
@@ -59,93 +59,86 @@ export default function FilterBar({
     onFilterChange({ ...filters, ...partial });
 
   return (
-    <div className="flex flex-wrap gap-3 items-end py-4">
+    <div className="flex flex-wrap gap-2 items-center py-3">
       {/* Deal Type */}
-      <div className="w-36">
-        <label className="block text-xs text-gray-400 mb-1">Deal Type</label>
-        <Select
-          value={filters.dealType}
-          onValueChange={(v) => update({ dealType: v })}
-        >
-          <SelectItem value="">All</SelectItem>
-          <SelectItem value="vc">VC</SelectItem>
-          <SelectItem value="ma">M&amp;A</SelectItem>
-          <SelectItem value="crypto">Crypto</SelectItem>
-          <SelectItem value="ipo">IPO</SelectItem>
-        </Select>
-      </div>
+      <select
+        value={filters.dealType}
+        onChange={(e) => update({ dealType: e.target.value })}
+        className={selectClass}
+      >
+        <option value="">All Types</option>
+        <option value="vc">VC</option>
+        <option value="ma">M&A</option>
+        <option value="crypto">Crypto</option>
+        <option value="ipo">IPO</option>
+      </select>
 
       {/* Sector */}
-      <div className="w-36">
-        <label className="block text-xs text-gray-400 mb-1">Sector</label>
-        <Select
-          value={filters.sector}
-          onValueChange={(v) => update({ sector: v })}
-        >
-          <SelectItem value="">All</SelectItem>
-          {sectors.map((s) => (
-            <SelectItem key={s} value={s}>
-              {s}
-            </SelectItem>
-          ))}
-        </Select>
-      </div>
+      <select
+        value={filters.sector}
+        onChange={(e) => update({ sector: e.target.value })}
+        className={selectClass}
+      >
+        <option value="">All Sectors</option>
+        {sectors.map((s) => (
+          <option key={s} value={s}>
+            {s}
+          </option>
+        ))}
+      </select>
 
       {/* Geo */}
-      <div className="w-36">
-        <label className="block text-xs text-gray-400 mb-1">Geo</label>
-        <Select
-          value={filters.geo}
-          onValueChange={(v) => update({ geo: v })}
-        >
-          <SelectItem value="">All</SelectItem>
-          <SelectItem value="latam">LatAm</SelectItem>
-          <SelectItem value="spain">Spain</SelectItem>
-          <SelectItem value="europe">Europe</SelectItem>
-          <SelectItem value="global">Global</SelectItem>
-        </Select>
-      </div>
+      <select
+        value={filters.geo}
+        onChange={(e) => update({ geo: e.target.value })}
+        className={selectClass}
+      >
+        <option value="">All Geos</option>
+        <option value="latam">LatAm</option>
+        <option value="spain">Spain</option>
+        <option value="europe">Europe</option>
+        <option value="global">Global</option>
+      </select>
 
       {/* Min Amount */}
-      <div>
-        <label className="block text-xs text-gray-400 mb-1">Min Amount</label>
-        <NumberInput
-          className="w-32"
-          placeholder="Min $USD"
-          value={filters.amountMin !== "" ? Number(filters.amountMin) : undefined}
-          onValueChange={(v) =>
-            update({ amountMin: v !== undefined ? String(v) : "" })
-          }
-        />
-      </div>
+      <input
+        type="number"
+        placeholder="Min $USD"
+        value={filters.amountMin}
+        onChange={(e) => update({ amountMin: e.target.value })}
+        className={`${selectClass} w-28`}
+      />
 
       {/* Date Range */}
       {showDateRange !== false && (
-        <div>
-          <label className="block text-xs text-gray-400 mb-1">Date Range</label>
-          <DateRangePicker
-            enableSelect={false}
-            value={{
-              from: filters.dateFrom ?? undefined,
-              to: filters.dateTo ?? undefined,
-            }}
-            onValueChange={(range) =>
-              update({
-                dateFrom: range.from ?? null,
-                dateTo: range.to ?? null,
-              })
+        <>
+          <input
+            type="date"
+            value={filters.dateFrom?.toISOString().slice(0, 10) ?? ""}
+            onChange={(e) =>
+              update({ dateFrom: e.target.value ? new Date(e.target.value) : null })
             }
+            className={selectClass}
           />
-        </div>
+          <span className="text-slate-500 text-xs">to</span>
+          <input
+            type="date"
+            value={filters.dateTo?.toISOString().slice(0, 10) ?? ""}
+            onChange={(e) =>
+              update({ dateTo: e.target.value ? new Date(e.target.value) : null })
+            }
+            className={selectClass}
+          />
+        </>
       )}
 
       {/* Clear filters */}
       {hasActiveFilters(filters) && (
         <button
           onClick={() => onFilterChange(defaultFilters)}
-          className="text-sm text-amber-400 hover:underline self-end pb-1"
+          className="text-xs text-blue-400 hover:text-blue-300 hover:underline ml-1"
         >
-          Clear filters
+          Clear
         </button>
       )}
     </div>

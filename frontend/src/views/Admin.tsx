@@ -1,16 +1,4 @@
 import { useEffect, useState } from "react";
-import {
-  Table,
-  TableHead,
-  TableHeaderCell,
-  TableBody,
-  TableRow,
-  TableCell,
-  Badge,
-  Card,
-  Title,
-  Text,
-} from "@tremor/react";
 
 interface IngestionRun {
   id: string;
@@ -22,12 +10,17 @@ interface IngestionRun {
   error_log: string | null;
 }
 
-function StatusBadge({ status }: { status: string | null }) {
-  if (!status) return <Badge color="gray">unknown</Badge>;
-  if (status === "success") return <Badge color="green">success</Badge>;
-  if (status === "failed") return <Badge color="red">failed</Badge>;
-  if (status === "partial") return <Badge color="yellow">partial</Badge>;
-  return <Badge color="gray">{status}</Badge>;
+function StatusText({ status }: { status: string | null }) {
+  if (!status) return <span className="text-slate-500">unknown</span>;
+  if (status === "success")
+    return <span className="text-green-400 font-mono text-xs">SUCCESS</span>;
+  if (status === "failed")
+    return <span className="text-red-400 font-mono text-xs">FAILED</span>;
+  if (status === "partial")
+    return <span className="text-yellow-400 font-mono text-xs">PARTIAL</span>;
+  return (
+    <span className="text-slate-400 font-mono text-xs uppercase">{status}</span>
+  );
 }
 
 function formatRunAt(runAt: string | null): string {
@@ -76,7 +69,7 @@ export default function Admin() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24 text-gray-400">
+      <div className="flex items-center justify-center py-24 text-slate-500 font-mono text-sm">
         Loading run history...
       </div>
     );
@@ -84,82 +77,108 @@ export default function Admin() {
 
   if (error) {
     return (
-      <div className="rounded-md bg-red-950 border border-red-800 text-red-300 px-4 py-3 text-sm">
+      <div className="rounded bg-red-950/30 border border-red-800/50 text-red-300 px-4 py-3 text-sm font-mono">
         Failed to load ingestion runs: {error}
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="px-6 py-4 space-y-4">
+      {/* Page title */}
       <div>
-        <Title className="text-gray-100">Ingestion Run Log</Title>
-        <Text className="text-gray-400 mt-1">
-          Last {runs.length} ingestion pipeline runs — newest first.
-        </Text>
+        <p className="text-xs uppercase tracking-widest text-slate-500">
+          Operations
+        </p>
+        <h1 className="text-lg font-semibold text-slate-200">
+          Ingestion Run Log
+        </h1>
+        <p className="text-xs text-slate-500 mt-0.5 font-mono">
+          Last {runs.length} pipeline runs — newest first
+        </p>
       </div>
 
       {runs.length === 0 ? (
-        <Card className="bg-gray-900 border-gray-800">
-          <Text className="text-gray-400 text-center py-8">
-            No ingestion runs yet. Trigger a run via POST /api/ingest/run.
-          </Text>
-        </Card>
+        <div className="bg-[#0f1629] border border-[#1e2d4a] rounded p-8 text-center">
+          <p className="text-sm text-slate-400 font-mono">
+            No ingestion runs yet. Trigger via POST /api/ingest/run
+          </p>
+        </div>
       ) : (
-        <Card className="bg-gray-900 border-gray-800 p-0 overflow-hidden">
-          <Table>
-            <TableHead>
-              <TableRow className="border-b border-gray-800">
-                <TableHeaderCell className="text-gray-400 font-bold">Run Time</TableHeaderCell>
-                <TableHeaderCell className="text-gray-400 font-bold">Source</TableHeaderCell>
-                <TableHeaderCell className="text-gray-400 font-bold">Status</TableHeaderCell>
-                <TableHeaderCell className="text-gray-400 font-bold text-right">Found</TableHeaderCell>
-                <TableHeaderCell className="text-gray-400 font-bold text-right">Added</TableHeaderCell>
-                <TableHeaderCell className="text-gray-400 font-bold">Error</TableHeaderCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
+        <div className="bg-[#0f1629] border border-[#1e2d4a] rounded overflow-hidden">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="border-b border-[#1e2d4a]">
+                {["Run Time", "Source", "Status", "Found", "Added", "Error"].map(
+                  (h) => (
+                    <th
+                      key={h}
+                      className="text-left text-xs uppercase tracking-widest text-slate-500 py-2 px-3 font-normal"
+                    >
+                      {h}
+                    </th>
+                  )
+                )}
+              </tr>
+            </thead>
+            <tbody>
               {runs.map((run) => (
-                <TableRow
-                  key={run.id}
-                  className="border-b border-gray-800 hover:bg-gray-800/50 transition-colors"
-                >
-                  <TableCell className="text-gray-300 text-sm whitespace-nowrap">
-                    {formatRunAt(run.run_at)}
-                  </TableCell>
-                  <TableCell>
-                    <span className="font-mono text-xs bg-gray-800 text-amber-300 px-2 py-0.5 rounded">
-                      {run.source ?? "—"}
-                    </span>
-                  </TableCell>
-                  <TableCell>
-                    <StatusBadge status={run.status} />
-                  </TableCell>
-                  <TableCell className="text-gray-300 text-sm text-right">
-                    {run.deals_found ?? "—"}
-                  </TableCell>
-                  <TableCell className="text-gray-300 text-sm text-right">
-                    {run.deals_added ?? "—"}
-                  </TableCell>
-                  <TableCell className="max-w-xs">
-                    {run.error_log ? (
-                      <button
-                        onClick={() => toggleExpand(run.id)}
-                        className="text-left text-xs text-red-400 hover:text-red-300 transition-colors"
-                      >
-                        {expanded.has(run.id)
-                          ? run.error_log
-                          : run.error_log.slice(0, 60) + (run.error_log.length > 60 ? "…" : "")}
-                      </button>
-                    ) : (
-                      <span className="text-gray-600 text-xs">—</span>
-                    )}
-                  </TableCell>
-                </TableRow>
+                <>
+                  <tr
+                    key={run.id}
+                    className="border-b border-[#1e2d4a]/50 hover:bg-[#0a0e1a]/50 transition-colors"
+                  >
+                    <td className="py-2 px-3 font-mono text-xs text-slate-500 whitespace-nowrap">
+                      {formatRunAt(run.run_at)}
+                    </td>
+                    <td className="py-2 px-3">
+                      <span className="font-mono text-xs text-slate-300">
+                        {run.source ?? "—"}
+                      </span>
+                    </td>
+                    <td className="py-2 px-3">
+                      <StatusText status={run.status} />
+                    </td>
+                    <td className="py-2 px-3 font-mono text-xs text-slate-400 text-right">
+                      {run.deals_found ?? "—"}
+                    </td>
+                    <td className="py-2 px-3 font-mono text-xs text-slate-400 text-right">
+                      {run.deals_added ?? "—"}
+                    </td>
+                    <td className="py-2 px-3 max-w-xs">
+                      {run.error_log ? (
+                        <button
+                          onClick={() => toggleExpand(run.id)}
+                          className="text-left text-xs text-red-400 hover:text-red-300 transition-colors font-mono"
+                        >
+                          {expanded.has(run.id)
+                            ? "▲ hide"
+                            : run.error_log.slice(0, 50) +
+                              (run.error_log.length > 50 ? "…" : "")}
+                        </button>
+                      ) : (
+                        <span className="text-slate-700 text-xs font-mono">—</span>
+                      )}
+                    </td>
+                  </tr>
+                  {/* Expanded error row */}
+                  {expanded.has(run.id) && run.error_log && (
+                    <tr
+                      key={`${run.id}-expanded`}
+                      className="border-b border-[#1e2d4a]/50"
+                    >
+                      <td colSpan={6} className="px-3 pb-2">
+                        <pre className="font-mono text-xs text-red-300 bg-[#1a0a0a] p-2 rounded mt-1 overflow-x-auto whitespace-pre-wrap">
+                          {run.error_log}
+                        </pre>
+                      </td>
+                    </tr>
+                  )}
+                </>
               ))}
-            </TableBody>
-          </Table>
-        </Card>
+            </tbody>
+          </table>
+        </div>
       )}
     </div>
   );

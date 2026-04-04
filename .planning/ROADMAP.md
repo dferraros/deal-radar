@@ -100,9 +100,10 @@
 
 **Goal:** Production-ready, APScheduler live on Railway, cousin has the URL.
 
-**Plans:**
-- Plan 05-01: Error isolation in ingestion (failed source doesn't block others), /admin run log route
-- Plan 05-02: Manual pipeline trigger from UI + final Railway deploy + URL shared
+**Plans:** 2 plans
+
+- [ ] 05-01-PLAN.md — Error isolation + /admin ingestion log (backend router + Admin.tsx view)
+- [ ] 05-02-PLAN.md — Alembic initial migration + railway.json releaseCommand + README deploy guide
 
 **Success criteria:**
 1. Pipeline runs with one source erroring -- other sources still complete successfully
@@ -114,4 +115,4 @@
 
 ---
 *Roadmap created: 2026-04-04*
-*Last updated: 2026-04-04 after phase 4 planning*
+*Last updated: 2026-04-04 after phase 5 planning*
