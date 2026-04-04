@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 - Phase 1 (Foundation): COMPLETE (3/3 plans done, commits 248e92f + 9f53212 + bd98b9e)
 - Phase 2 (Ingestion Pipeline): COMPLETE (5/5 plans done, last commit ee68219)
 - Phase 3 (API Layer): COMPLETE (all routers built: deals, companies, heatmap, trends, kpi, watchlist, ingest)
-- Phase 4 (Dashboard Frontend): IN PROGRESS — 04-01 DONE (commits 2d9f252, fc1f768, 368bb33); 04-02 DONE (commit c6e160a); 04-03 and 04-04 pending
+- Phase 4 (Dashboard Frontend): IN PROGRESS — 04-01 DONE (commits 2d9f252, fc1f768, 368bb33); 04-02 DONE (commit c6e160a); 04-03 pending; 04-04 DONE (commit c7ea1d8)
 - Phase 5 (Polish & Deploy): Pending
 
 ## Decisions Made
@@ -81,7 +81,7 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 | 04-01 | DONE | 2d9f252 + fc1f768 + 368bb33 |
 | 04-02 | DONE | c6e160a |
 | 04-03 | PENDING | — |
-| 04-04 | PENDING | — |
+| 04-04 | DONE | c7ea1d8 |
 
 ## What Was Built in Phase 4 Plan 01
 
@@ -91,6 +91,16 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 - frontend/src/components/FilterBar.tsx — reusable filter row (type, sector, geo, amount, date); exports FilterState + defaultFilters
 - frontend/src/views/DealFeed.tsx — full Deal Feed: KPI row + FilterBar + Table + all 4 states + load-more
 
+## What Was Built in Phase 4 Plan 04
+
+- frontend/src/views/Trends.tsx — full Trends view with Tremor LineChart + BarChart
+- buildLineData(): pivots WeekPoint[] (long format) into Tremor-ready wide-format objects per week
+- buildBarData(): maps SectorBar[] to { sector, Deals } for BarChart
+- formatWeekLabel(): formats ISO date as "Mar W1", "Apr W2" etc.
+- fmtCapital(): formats USD as $XM / $XB for Y-axis
+- Responsive two-column grid (lg:grid-cols-2), stacked on mobile
+- Loading, error, and per-chart empty states all handled
+
 ## Next Action
 
-Execute Phase 4 Wave 2 — run 04-03 (Company Profile + Watchlist) + 04-04 (Trend Charts) in parallel
+Execute Phase 4 Plan 04-03 (Company Profile + Watchlist) — the last remaining Wave 2 plan
