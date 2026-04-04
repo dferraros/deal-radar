@@ -265,6 +265,12 @@ class AIExtractor:
             system=_SYSTEM_PROMPT,
         )
         raw_json = response.content[0].text.strip()
+        # Strip markdown code fences if present (Haiku sometimes wraps JSON)
+        if raw_json.startswith("```"):
+            raw_json = raw_json.split("```", 2)[1]
+            if raw_json.startswith("json"):
+                raw_json = raw_json[4:]
+            raw_json = raw_json.strip()
         return self._parse_response(raw_json, raw)
 
     # ------------------------------------------------------------------
