@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface HeatmapCell {
   sector: string;
@@ -42,6 +43,7 @@ function colTotal(cells: HeatmapCell[], geo: string): number {
 
 export default function HeatmapGrid({ cells, sectors, geos }: HeatmapGridProps) {
   const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
+  const navigate = useNavigate();
 
   if (sectors.length === 0) {
     return (
@@ -89,7 +91,10 @@ export default function HeatmapGrid({ cells, sectors, geos }: HeatmapGridProps) 
               return (
                 <div
                   key={`${sector}-${geo}`}
-                  className={`${colorClass} rounded border border-zinc-800 min-h-[70px] flex flex-col items-center justify-center cursor-default relative group transition-opacity hover:opacity-90`}
+                  className={`${colorClass} rounded border border-zinc-800 min-h-[70px] flex flex-col items-center justify-center relative group transition-opacity hover:opacity-90 ${dealCount > 0 ? 'cursor-pointer hover:ring-2 hover:ring-blue-400' : 'cursor-default'}`}
+                  onClick={() => {
+                    if (dealCount > 0) navigate(`/?sector=${encodeURIComponent(sector)}&geo=${encodeURIComponent(geo)}`)
+                  }}
                   onMouseEnter={(e) => {
                     const rect = (e.target as HTMLElement)
                       .closest('[class*="rounded"]')!

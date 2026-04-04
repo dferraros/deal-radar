@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import FilterBar, { defaultFilters } from '../components/FilterBar'
 import type { FilterState } from '../components/FilterBar'
@@ -20,6 +20,8 @@ interface DealResponse {
   source_name: string | null
   sector: string[]
   geo: string | null
+  confidence?: number
+  created_at?: string | null
 }
 
 interface BriefingResponse {
@@ -88,8 +90,21 @@ function exportCSV(deals: DealResponse[]) {
 
 export default function DealFeed() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
 
-  const [filters, setFilters] = useState<FilterState>(defaultFilters)
+  const [filters, setFilters] = useState<FilterState>(() => {
+    // Pre-populate filters from URL params (e.g. heatmap drill-down)
+    const urlSector = searchParams.get('sector')
+    const urlGeo = searchParams.get('geo')
+    if (urlSector || urlGeo) {
+      return {
+        ...defaultFilters,
+        ...(urlSector ? { sector: urlSector } : {}),
+        ...(urlGeo ? { geo: urlGeo } : {}),
+      }
+    }
+    return defaultFilters
+  })
   const [deals, setDeals] = useState<DealResponse[]>([])
   const [page, setPage] = useState(1)
   const [hasMore, setHasMore] = useState(false)
@@ -100,6 +115,8 @@ export default function DealFeed() {
   const [search, setSearch] = useState('')
   const [lastSync, setLastSync] = useState<string | null>(null)
   const [briefing, setBriefing] = useState<BriefingResponse | null>(null)
+  const [lastVisit, setLastVisit] = useState<Date | null>(null)
+  const [newCount, setNewCount] = useState(0)
 
   const fetchDeals = useCallback(async (f: FilterState) => {
     setLoading(true)
@@ -134,6 +151,23 @@ export default function DealFeed() {
     }
   }
 
+  // Feature: last-visit tracking
+  useEffect(() => {
+    const stored = localStorage.getItem('dealRadarLastVisit')
+    if (stored) setLastVisit(new Date(stored))
+    localStorage.setItem('dealRadarLastVisit', new Date().toISOString())
+  }, [])
+
+  // Feature: compute new-since-last-visit count when deals load
+  useEffect(() => {
+    if (lastVisit && deals.length > 0) {
+      const count = deals.filter(d =>
+        d.created_at && new Date(d.created_at) > lastVisit
+      ).length
+      setNewCount(count)
+    }
+  }, [deals, lastVisit])
+
   useEffect(() => {
     axios
       .get('/api/deals/sectors')
@@ -160,8 +194,8 @@ export default function DealFeed() {
       .get('/api/briefing/latest')
       .then((r) => setBriefing(r.data))
       .catch(() => {})
-    fetchDeals(defaultFilters)
-  }, [fetchDeals])
+    fetchDeals(filters)
+  }, [fetchDeals]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Client-side search filter
   const visibleDeals = deals.filter(
@@ -217,8 +251,13 @@ export default function DealFeed() {
         <div>
           <h1 className="text-lg font-semibold text-zinc-50">Deal Feed</h1>
           {!loading && (
-            <p className="text-xs text-zinc-500 mt-0.5">
+            <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-2">
               {deals.length} deals loaded
+              {newCount > 0 && (
+                <span className="text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full px-2 py-0.5 font-mono">
+                  {newCount} new
+                </span>
+              )}
             </p>
           )}
         </div>
@@ -325,15 +364,32 @@ export default function DealFeed() {
                         onClick={() =>
                           deal.company_id && navigate(`/company/${deal.company_id}`)
                         }
-                        className="border-b border-zinc-800/50 hover:bg-zinc-800/30 cursor-pointer transition-colors group"
+                        className={`border-b border-zinc-800/50 hover:bg-zinc-800/30 cursor-pointer transition-colors group ${
+                          lastVisit && deal.created_at && new Date(deal.created_at) > lastVisit
+                            ? 'border-l-2 border-l-blue-500'
+                            : ''
+                        }`}
                       >
                         {/* Company */}
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             <CompanyAvatar name={deal.company_name ?? '?'} size={28} />
-                            <span className="text-sm font-medium text-zinc-100 group-hover:text-white truncate max-w-[130px]">
-                              {deal.company_name ?? '—'}
-                            </span>
+                            <div className="flex items-center gap-1 min-w-0">
+                              <span className="text-sm font-medium text-zinc-100 group-hover:text-white truncate max-w-[130px]">
+                                {deal.company_name ?? '—'}
+                              </span>
+                              {deal.source_name && (
+                                <span className="text-[10px] text-zinc-600 font-mono ml-1 shrink-0">
+                                  {deal.source_name}
+                                </span>
+                              )}
+                              {deal.confidence !== undefined && deal.confidence < 0.5 && (
+                                <span
+                                  title={`AI confidence: ${(deal.confidence * 100).toFixed(0)}%`}
+                                  className="w-1.5 h-1.5 rounded-full bg-amber-500/60 inline-block ml-1 shrink-0"
+                                />
+                              )}
+                            </div>
                           </div>
                         </td>
                         {/* Round */}
