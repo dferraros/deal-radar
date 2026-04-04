@@ -36,15 +36,8 @@ async def daily_ingestion_job() -> None:
 
 def start_scheduler() -> None:
     """
-    Register the daily ingestion job and start the APScheduler instance.
-
-    Safe to call multiple times — uses replace_existing=True.
+    Start the APScheduler instance without registering any automatic jobs.
+    Ingestion is triggered manually via POST /api/ingest/run.
     """
-    scheduler.add_job(
-        daily_ingestion_job,
-        CronTrigger(hour=7, minute=0, timezone="UTC"),
-        id="daily_ingestion",
-        replace_existing=True,
-    )
     scheduler.start()
-    logger.info("[Scheduler] APScheduler started — daily ingestion at 07:00 UTC")
+    logger.info("[Scheduler] APScheduler started — manual ingestion only (no auto-run)")

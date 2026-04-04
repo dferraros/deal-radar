@@ -41,6 +41,7 @@ interface BriefingResponse {
 
 function formatAmount(usd: number): string {
   const m = usd / 1_000_000
+  if (m >= 1000) return `$${(m / 1000).toFixed(1)}B`
   return m >= 100 ? `$${Math.round(m)}M` : `$${m.toFixed(1)}M`
 }
 
@@ -124,7 +125,7 @@ export default function DealFeed() {
     setError(null)
     setPage(1)
     try {
-      const params = { ...buildParams(f), page: '1', limit: '25' }
+      const params = { ...buildParams(f), page: '1', limit: '50' }
       const res = await axios.get('/api/deals', { params })
       setDeals(res.data.deals)
       setHasMore(res.data.page < res.data.pages)
@@ -140,7 +141,7 @@ export default function DealFeed() {
     try {
       const nextPage = page + 1
       const res = await axios.get('/api/deals', {
-        params: { ...buildParams(filters), page: String(nextPage), limit: '25' },
+        params: { ...buildParams(filters), page: String(nextPage), limit: '50' },
       })
       setDeals((prev) => [...prev, ...res.data.deals])
       setPage(nextPage)
