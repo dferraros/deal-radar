@@ -149,7 +149,17 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 - First ingestion run: 70 deals found, 37 added (Claude Haiku primary extractor)
 - Rate limiting (429) on large batches is acceptable — non-blocking, daily runs stay well under limit
 
+## Phase 6 Status
+
+Phase 6 plan written to .planning/PHASE6_PLAN.md (2026-04-05).
+Three tracks: A (Company Enrichment), B (Investor Intelligence), C (Data Quality).
+Current focus: Wave 1 — Track A1 + B1 + C1 (all parallel, no dependencies).
+Blocker: C4 (Crunchbase) blocked on paid API key — defer to Wave 3.
+
 ## Next Action
 
 Phase 5 COMPLETE. App is live. Share URL with cousin:
 https://deal-radar-app-production.up.railway.app
+
+Phase 6 ready to start. Begin Wave 1: run A1 + B1 + C1 in parallel.
+Confirm Crunchbase API key availability before executing C4 (Wave 3).
