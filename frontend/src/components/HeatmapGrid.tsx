@@ -14,13 +14,13 @@ interface HeatmapGridProps {
 }
 
 function getColorClass(capital: number, max: number): string {
-  if (max === 0 || capital === 0) return 'bg-[#0f1629]';
+  if (max === 0 || capital === 0) return 'bg-zinc-900';
   const ratio = capital / max;
-  if (ratio < 0.1) return 'bg-blue-900/30';
-  if (ratio < 0.3) return 'bg-blue-800/50';
-  if (ratio < 0.5) return 'bg-blue-700/60';
-  if (ratio < 0.75) return 'bg-blue-600/75';
-  return 'bg-blue-500/80';
+  if (ratio < 0.1) return 'bg-blue-500/10';
+  if (ratio < 0.3) return 'bg-blue-500/30';
+  if (ratio < 0.5) return 'bg-blue-500/50';
+  if (ratio < 0.75) return 'bg-blue-500/70';
+  return 'bg-blue-500/90';
 }
 
 function fmtM(usd: number): string {
@@ -89,7 +89,7 @@ export default function HeatmapGrid({ cells, sectors, geos }: HeatmapGridProps) 
               return (
                 <div
                   key={`${sector}-${geo}`}
-                  className={`${colorClass} rounded border border-[#1e2d4a]/40 min-h-[70px] flex flex-col items-center justify-center cursor-default relative group transition-opacity hover:opacity-90`}
+                  className={`${colorClass} rounded border border-zinc-800 min-h-[70px] flex flex-col items-center justify-center cursor-default relative group transition-opacity hover:opacity-90`}
                   onMouseEnter={(e) => {
                     const rect = (e.target as HTMLElement)
                       .closest('[class*="rounded"]')!
@@ -121,7 +121,7 @@ export default function HeatmapGrid({ cells, sectors, geos }: HeatmapGridProps) 
         ))}
 
         {/* TOTAL row */}
-        <div className="text-xs text-slate-500 uppercase tracking-widest text-right pr-3 pt-2 border-t border-[#1e2d4a] mt-1">
+        <div className="text-xs text-slate-500 uppercase tracking-widest text-right pr-3 pt-2 border-t border-zinc-800 mt-1">
           Total
         </div>
         {geos.map((geo) => {
@@ -129,7 +129,7 @@ export default function HeatmapGrid({ cells, sectors, geos }: HeatmapGridProps) 
           return (
             <div
               key={`total-${geo}`}
-              className="text-xs font-mono text-slate-300 text-center pt-2 border-t border-[#1e2d4a] mt-1"
+              className="text-xs font-mono text-slate-300 text-center pt-2 border-t border-zinc-800 mt-1"
             >
               {total > 0 ? fmtM(total) : '—'}
             </div>
@@ -140,7 +140,7 @@ export default function HeatmapGrid({ cells, sectors, geos }: HeatmapGridProps) 
       {/* Tooltip */}
       {tooltip && (
         <div
-          className="fixed z-50 bg-[#0a0e1a] border border-[#1e2d4a] rounded px-3 py-2 text-xs font-mono text-slate-200 pointer-events-none whitespace-pre shadow-lg"
+          className="fixed z-50 bg-zinc-950 border border-zinc-700 rounded px-3 py-2 text-xs font-mono text-zinc-200 pointer-events-none whitespace-pre shadow-lg"
           style={{
             left: tooltip.x,
             top: tooltip.y,

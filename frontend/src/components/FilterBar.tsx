@@ -47,7 +47,7 @@ function hasActiveFilters(filters: FilterState): boolean {
 }
 
 const selectClass =
-  "bg-[#0f1629] border border-[#1e2d4a] text-slate-300 text-xs px-2 py-1.5 rounded focus:outline-none focus:border-blue-500";
+  "bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs px-2 py-1.5 rounded focus:outline-none focus:border-blue-500";
 
 export default function FilterBar({
   filters,

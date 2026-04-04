@@ -1,174 +1,167 @@
-import { useEffect, useState, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import FilterBar, { defaultFilters } from "../components/FilterBar";
-import type { FilterState } from "../components/FilterBar";
-import DealTypeBadge from "../components/DealTypeBadge";
-import LoadingSpinner from "../components/LoadingSpinner";
-import ErrorBanner from "../components/ErrorBanner";
+import { useEffect, useState, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
+import FilterBar, { defaultFilters } from '../components/FilterBar'
+import type { FilterState } from '../components/FilterBar'
+import LoadingSpinner from '../components/LoadingSpinner'
+import ErrorBanner from '../components/ErrorBanner'
+import CompanyAvatar from '../components/CompanyAvatar'
 
 interface DealResponse {
-  id: string;
-  company_id: string | null;
-  company_name: string | null;
-  deal_type: string | null;
-  amount_usd: number | null;
-  round_label: string | null;
-  announced_date: string | null;
-  lead_investor: string | null;
-  all_investors: string[];
-  source_name: string | null;
-  sector: string[];
-  geo: string | null;
-}
-
-interface KPIResponse {
-  deals_this_week: number;
-  capital_this_week_usd: number;
-  top_sector_this_week: string;
+  id: string
+  company_id: string | null
+  company_name: string | null
+  deal_type: string | null
+  amount_usd: number | null
+  round_label: string | null
+  announced_date: string | null
+  lead_investor: string | null
+  all_investors: string[]
+  source_name: string | null
+  sector: string[]
+  geo: string | null
 }
 
 interface BriefingResponse {
-  week_start: string;
-  week_end: string;
-  deal_count: number;
-  total_capital_usd: number;
-  top_company: string | null;
-  top_amount_usd: number | null;
-  top_sector: string | null;
-  ai_summary: string | null;
-  generated_at: string | null;
+  week_start: string
+  week_end: string
+  deal_count: number
+  total_capital_usd: number
+  top_company: string | null
+  top_amount_usd: number | null
+  top_sector: string | null
+  ai_summary: string | null
+  generated_at: string | null
 }
 
 // ---- Format helpers ----
 
-function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "—";
-  const d = new Date(dateStr + "T00:00:00");
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
-}
-
-function formatAmount(usd: number | null): { text: string; muted: boolean } {
-  if (usd === null || usd === undefined) return { text: "Undisclosed", muted: true };
-  if (isNaN(usd)) return { text: "Undisclosed", muted: true };
-  const m = usd / 1_000_000;
-  const formatted = m >= 100 ? `$${Math.round(m)}M` : `$${m.toFixed(1)}M`;
-  return { text: formatted, muted: false };
-}
-
-function formatInvestors(all: string[]): string {
-  if (!all || all.length === 0) return "—";
-  if (all.length === 1) return all[0];
-  return `${all[0]} +${all.length - 1}`;
+function formatAmount(usd: number): string {
+  const m = usd / 1_000_000
+  return m >= 100 ? `$${Math.round(m)}M` : `$${m.toFixed(1)}M`
 }
 
 function formatCapital(usd: number | null | undefined): string {
-  if (usd === null || usd === undefined || isNaN(usd)) return "--";
-  const m = usd / 1_000_000;
-  return m >= 1000 ? `$${(m / 1000).toFixed(1)}B` : `$${Math.round(m)}M`;
+  if (usd === null || usd === undefined || isNaN(usd)) return '--'
+  const m = usd / 1_000_000
+  return m >= 1000 ? `$${(m / 1000).toFixed(1)}B` : `$${Math.round(m)}M`
 }
 
 function buildParams(f: FilterState): Record<string, string> {
-  const params: Record<string, string> = {};
-  if (f.dealType) params.deal_type = f.dealType;
-  if (f.sector) params.sector = f.sector;
-  if (f.geo) params.geo = f.geo;
-  if (f.amountMin) params.amount_min = f.amountMin;
-  if (f.dateFrom) params.date_from = f.dateFrom.toISOString().slice(0, 10);
-  if (f.dateTo) params.date_to = f.dateTo.toISOString().slice(0, 10);
-  return params;
+  const params: Record<string, string> = {}
+  if (f.dealType) params.deal_type = f.dealType
+  if (f.sector) params.sector = f.sector
+  if (f.geo) params.geo = f.geo
+  if (f.amountMin) params.amount_min = f.amountMin
+  if (f.dateFrom) params.date_from = f.dateFrom.toISOString().slice(0, 10)
+  if (f.dateTo) params.date_to = f.dateTo.toISOString().slice(0, 10)
+  return params
 }
 
 function getTodayDeals(deals: DealResponse[]): DealResponse[] {
-  const today = new Date().toISOString().slice(0, 10);
-  return deals.filter((d) => d.announced_date?.slice(0, 10) === today);
+  const today = new Date().toISOString().slice(0, 10)
+  return deals.filter((d) => d.announced_date?.slice(0, 10) === today)
+}
+
+function exportCSV(deals: DealResponse[]) {
+  const headers = ['Company', 'Round', 'Amount USD', 'Sector', 'Geo', 'Lead Investor', 'Date']
+  const rows = deals.map((d) => [
+    d.company_name ?? '',
+    d.round_label ?? d.deal_type ?? '',
+    d.amount_usd ?? '',
+    (d.sector || []).join('; '),
+    d.geo ?? '',
+    d.lead_investor ?? '',
+    d.announced_date ?? '',
+  ])
+  const csv = [headers, ...rows].map((r) => r.map(String).map((v) => `"${v.replace(/"/g, '""')}"`).join(',')).join('\n')
+  const blob = new Blob([csv], { type: 'text/csv' })
+  const url = URL.createObjectURL(blob)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `deal-radar-export-${new Date().toISOString().slice(0, 10)}.csv`
+  a.click()
+  URL.revokeObjectURL(url)
 }
 
 // ---- Component ----
 
 export default function DealFeed() {
-  const navigate = useNavigate();
+  const navigate = useNavigate()
 
-  const [filters, setFilters] = useState<FilterState>(defaultFilters);
-  const [deals, setDeals] = useState<DealResponse[]>([]);
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(false);
-  const [loading, setLoading] = useState(true);
-  const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [kpis, setKpis] = useState<KPIResponse | null>(null);
-  const [sectors, setSectors] = useState<string[]>([]);
-  const [search, setSearch] = useState("");
-  const [lastSync, setLastSync] = useState<string | null>(null);
-  const [briefing, setBriefing] = useState<BriefingResponse | null>(null);
+  const [filters, setFilters] = useState<FilterState>(defaultFilters)
+  const [deals, setDeals] = useState<DealResponse[]>([])
+  const [page, setPage] = useState(1)
+  const [hasMore, setHasMore] = useState(false)
+  const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [sectors, setSectors] = useState<string[]>([])
+  const [search, setSearch] = useState('')
+  const [lastSync, setLastSync] = useState<string | null>(null)
+  const [briefing, setBriefing] = useState<BriefingResponse | null>(null)
 
   const fetchDeals = useCallback(async (f: FilterState) => {
-    setLoading(true);
-    setError(null);
-    setPage(1);
+    setLoading(true)
+    setError(null)
+    setPage(1)
     try {
-      const params = { ...buildParams(f), page: "1", limit: "25" };
-      const res = await axios.get("/api/deals", { params });
-      setDeals(res.data.deals);
-      setHasMore(res.data.page < res.data.pages);
+      const params = { ...buildParams(f), page: '1', limit: '25' }
+      const res = await axios.get('/api/deals', { params })
+      setDeals(res.data.deals)
+      setHasMore(res.data.page < res.data.pages)
     } catch {
-      setError(
-        "Could not load data. Check your connection or try refreshing the page."
-      );
+      setError('Could not load data. Check your connection or try refreshing the page.')
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  }, []);
+  }, [])
 
   const loadMore = async () => {
-    setLoadingMore(true);
+    setLoadingMore(true)
     try {
-      const nextPage = page + 1;
-      const res = await axios.get("/api/deals", {
-        params: { ...buildParams(filters), page: String(nextPage), limit: "25" },
-      });
-      setDeals((prev) => [...prev, ...res.data.deals]);
-      setPage(nextPage);
-      setHasMore(nextPage < res.data.pages);
+      const nextPage = page + 1
+      const res = await axios.get('/api/deals', {
+        params: { ...buildParams(filters), page: String(nextPage), limit: '25' },
+      })
+      setDeals((prev) => [...prev, ...res.data.deals])
+      setPage(nextPage)
+      setHasMore(nextPage < res.data.pages)
     } catch {
       // silently fail on load-more
     } finally {
-      setLoadingMore(false);
+      setLoadingMore(false)
     }
-  };
+  }
 
   useEffect(() => {
     axios
-      .get("/api/kpis")
-      .then((r) => setKpis(r.data))
-      .catch(() => {});
-    axios
-      .get("/api/deals/sectors")
+      .get('/api/deals/sectors')
       .then((r) => setSectors(r.data.sectors ?? []))
-      .catch(() => {});
-    fetch("/api/admin/runs?limit=1")
+      .catch(() => {})
+    fetch('/api/admin/runs?limit=1')
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (Array.isArray(data) && data.length > 0 && data[0].run_at) {
-          const d = new Date(data[0].run_at);
+          const d = new Date(data[0].run_at)
           setLastSync(
-            d.toLocaleString("en-US", {
-              month: "short",
-              day: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
+            d.toLocaleString('en-US', {
+              month: 'short',
+              day: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
               hour12: false,
             })
-          );
+          )
         }
       })
-      .catch(() => {});
+      .catch(() => {})
     axios
-      .get("/api/briefing/latest")
+      .get('/api/briefing/latest')
       .then((r) => setBriefing(r.data))
-      .catch(() => {});
-    fetchDeals(defaultFilters);
-  }, [fetchDeals]);
+      .catch(() => {})
+    fetchDeals(defaultFilters)
+  }, [fetchDeals])
 
   // Client-side search filter
   const visibleDeals = deals.filter(
@@ -176,94 +169,99 @@ export default function DealFeed() {
       !search ||
       d.company_name?.toLowerCase().includes(search.toLowerCase()) ||
       d.lead_investor?.toLowerCase().includes(search.toLowerCase())
-  );
+  )
 
-  const todayDeals = getTodayDeals(deals);
-  const todayCapital = todayDeals.reduce(
-    (sum, d) => sum + (d.amount_usd ?? 0),
-    0
-  );
+  const todayDeals = getTodayDeals(deals)
+  const todayCapital = todayDeals.reduce((sum, d) => sum + (d.amount_usd ?? 0), 0)
 
-  // KPI card values with NaN guards
-  const totalCapitalThisWeek = kpis?.capital_this_week_usd ?? 0;
-  const capitalDisplay =
-    !kpis || deals.length === 0 ? "--" : formatCapital(totalCapitalThisWeek);
+  // KPI values computed from all loaded deals (not just filtered)
+  const weekAgo = new Date()
+  weekAgo.setDate(weekAgo.getDate() - 7)
+  const weekDeals = deals.filter((d) => {
+    if (!d.announced_date) return false
+    const dt = new Date(d.announced_date)
+    return dt >= weekAgo
+  })
+  const weekCapital = weekDeals.reduce((s, d) => s + (d.amount_usd ?? 0), 0)
+
+  const sectorCounts: Record<string, number> = {}
+  for (const d of deals) {
+    for (const s of d.sector || []) {
+      sectorCounts[s] = (sectorCounts[s] ?? 0) + 1
+    }
+  }
+  const topSector = Object.entries(sectorCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
 
   return (
     <div>
       {/* Ticker / status bar */}
-      <div className="bg-[#0f1629] border-b border-[#1e2d4a] px-6 py-1.5 flex items-center gap-6 text-xs font-mono text-slate-400">
+      <div className="bg-zinc-900 border-b border-zinc-800 px-6 py-1.5 flex items-center gap-6 text-xs font-mono text-zinc-400">
         <span>
-          DEALS TODAY:{" "}
-          <span className="text-white">{todayDeals.length}</span>
+          DEALS TODAY: <span className="text-zinc-100">{loading ? '...' : todayDeals.length}</span>
         </span>
         <span>
-          CAPITAL TODAY:{" "}
-          <span className="text-green-400">
-            {todayCapital > 0 ? formatCapital(todayCapital) : "--"}
+          CAPITAL TODAY:{' '}
+          <span className="text-emerald-400">
+            {loading ? '...' : todayCapital > 0 ? formatCapital(todayCapital) : '--'}
           </span>
         </span>
         {lastSync && (
           <span>
-            LAST UPDATED: <span className="text-white">{lastSync}</span>
+            LAST UPDATED: <span className="text-zinc-100">{lastSync}</span>
           </span>
         )}
       </div>
 
-      <div className="px-6 py-4">
-        {/* Page title */}
-        <div className="mb-4">
-          <p className="text-xs uppercase tracking-widest text-slate-500">
-            Overview
-          </p>
-          <h1 className="text-lg font-semibold text-slate-200">Deal Feed</h1>
+      {/* Page header */}
+      <div className="px-6 pt-6 pb-4 flex items-center justify-between">
+        <div>
+          <h1 className="text-lg font-semibold text-zinc-50">Deal Feed</h1>
+          {!loading && (
+            <p className="text-xs text-zinc-500 mt-0.5">
+              {deals.length} deals loaded
+            </p>
+          )}
         </div>
+        <button
+          onClick={() => exportCSV(visibleDeals)}
+          className="text-xs px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-zinc-50 border border-zinc-700 rounded-md transition-colors font-mono"
+        >
+          Export CSV
+        </button>
+      </div>
 
-        {/* Weekly briefing banner — only shown when AI summary is available */}
-        {briefing?.ai_summary && (
-          <div className="bg-[#0f1629] border border-blue-500/30 rounded px-4 py-3 mb-4 text-sm">
-            <span className="text-xs uppercase tracking-widest text-blue-400 font-mono mr-2">
-              WEEKLY BRIEFING
-            </span>
-            <span className="text-slate-300">{briefing.ai_summary}</span>
-            <span className="text-xs text-slate-500 ml-2 font-mono">
-              {briefing.deal_count} deals · {formatCapital(briefing.total_capital_usd)}
-            </span>
-          </div>
-        )}
-
-        {/* KPI row */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
-          <div className="bg-[#0f1629] border border-[#1e2d4a] rounded px-4 py-3">
-            <p className="text-xs uppercase tracking-widest text-slate-500">
-              Deals This Week
-            </p>
-            <p className="font-mono text-xl font-bold text-white mt-1">
-              {kpis?.deals_this_week ?? "--"}
-            </p>
-          </div>
-          <div className="bg-[#0f1629] border border-[#1e2d4a] rounded px-4 py-3">
-            <p className="text-xs uppercase tracking-widest text-slate-500">
-              Capital Raised
-            </p>
-            <p className="font-mono text-xl font-bold text-white mt-1">
-              {capitalDisplay}
-            </p>
-          </div>
-          <div className="bg-[#0f1629] border border-[#1e2d4a] rounded px-4 py-3">
-            <p className="text-xs uppercase tracking-widest text-slate-500">
-              Top Sector
-            </p>
-            <p className="font-mono text-xl font-bold text-white mt-1">
-              {kpis?.top_sector_this_week ?? "--"}
-            </p>
-          </div>
+      {/* Weekly briefing banner */}
+      {briefing?.ai_summary && (
+        <div className="mx-6 mb-4 bg-zinc-900 border border-blue-500/30 rounded-lg px-4 py-3 text-sm">
+          <span className="text-xs uppercase tracking-widest text-blue-400 font-mono mr-2">
+            WEEKLY BRIEFING
+          </span>
+          <span className="text-zinc-300">{briefing.ai_summary}</span>
+          <span className="text-xs text-zinc-500 ml-2 font-mono">
+            {briefing.deal_count} deals · {formatCapital(briefing.total_capital_usd)}
+          </span>
         </div>
+      )}
 
+      {/* KPI cards */}
+      <div className="grid grid-cols-3 gap-4 px-6 pb-4">
+        {[
+          { label: 'Deals This Week', value: loading ? '...' : weekDeals.length.toString() },
+          { label: 'Capital Raised', value: loading ? '...' : formatCapital(weekCapital) },
+          { label: 'Top Sector', value: loading ? '...' : topSector ?? '—' },
+        ].map((kpi) => (
+          <div key={kpi.label} className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3">
+            <div className="text-xs uppercase tracking-wider text-zinc-500 mb-1">{kpi.label}</div>
+            <div className="font-mono text-xl font-semibold text-zinc-50">{kpi.value}</div>
+          </div>
+        ))}
+      </div>
+
+      <div className="px-6 pb-6">
         {/* Search */}
         <input
           placeholder="Search companies, investors..."
-          className="w-full bg-[#0f1629] border border-[#1e2d4a] rounded px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500 mb-2"
+          className="w-full bg-zinc-800 border border-zinc-700 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-blue-500 rounded-lg px-4 py-2 text-sm mb-2"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
@@ -273,8 +271,8 @@ export default function DealFeed() {
           filters={filters}
           sectors={sectors}
           onFilterChange={(f) => {
-            setFilters(f);
-            fetchDeals(f);
+            setFilters(f)
+            fetchDeals(f)
           }}
         />
 
@@ -286,86 +284,100 @@ export default function DealFeed() {
             <ErrorBanner message={error} />
           ) : visibleDeals.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-base font-semibold text-slate-300">
-                No deals found
-              </p>
-              <p className="text-sm text-slate-500 mt-2">
-                Try adjusting your filters, or check back after the next
-                ingestion at 7am UTC.
+              <p className="text-base font-semibold text-zinc-300">No deals found</p>
+              <p className="text-sm text-zinc-500 mt-2">
+                Try adjusting your filters, or check back after the next ingestion at 7am UTC.
               </p>
             </div>
           ) : (
             <>
-              <table className="w-full text-sm border-collapse">
-                <thead>
-                  <tr>
-                    {[
-                      "Date",
-                      "Company",
-                      "Round",
-                      "Amount",
-                      "Sector",
-                      "Geo",
-                      "Investors",
-                    ].map((h) => (
-                      <th
-                        key={h}
-                        className="text-left text-xs uppercase tracking-widest text-slate-500 pb-2 border-b border-[#1e2d4a] font-normal px-2"
-                      >
-                        {h}
+              <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-zinc-800">
+                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium w-[200px]">
+                        Company
                       </th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {visibleDeals.map((deal) => {
-                    const amt = formatAmount(deal.amount_usd);
-                    return (
+                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
+                        Round
+                      </th>
+                      <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
+                        Amount
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
+                        Sector
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
+                        Geo
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
+                        Investors
+                      </th>
+                      <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
+                        Date
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {visibleDeals.map((deal) => (
                       <tr
                         key={deal.id}
-                        className="border-b border-[#1e2d4a]/50 hover:bg-[#0f1629] cursor-pointer transition-colors"
                         onClick={() =>
-                          deal.company_id &&
-                          navigate(`/company/${deal.company_id}`)
+                          deal.company_id && navigate(`/company/${deal.company_id}`)
                         }
+                        className="border-b border-zinc-800/50 hover:bg-zinc-800/30 cursor-pointer transition-colors group"
                       >
-                        <td className="py-2 px-2 font-mono text-slate-400 text-xs whitespace-nowrap">
-                          {formatDate(deal.announced_date)}
+                        {/* Company */}
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-3">
+                            <CompanyAvatar name={deal.company_name ?? '?'} size={28} />
+                            <span className="text-sm font-medium text-zinc-100 group-hover:text-white truncate max-w-[130px]">
+                              {deal.company_name ?? '—'}
+                            </span>
+                          </div>
                         </td>
-                        <td className="py-2 px-2 font-semibold text-white">
-                          {deal.company_name ?? "—"}
+                        {/* Round */}
+                        <td className="px-4 py-3">
+                          <span className="text-xs px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono uppercase tracking-wide border border-zinc-700">
+                            {deal.round_label || deal.deal_type?.toUpperCase() || '—'}
+                          </span>
                         </td>
-                        <td className="py-2 px-2">
-                          <DealTypeBadge
-                            dealType={deal.deal_type}
-                            label={deal.round_label ?? undefined}
-                          />
-                        </td>
-                        <td className="py-2 px-2">
-                          {amt.muted ? (
-                            <span className="text-slate-500 italic text-xs">
-                              {amt.text}
+                        {/* Amount */}
+                        <td className="px-4 py-3 text-right">
+                          {deal.amount_usd ? (
+                            <span className="font-mono text-sm tabular-nums text-emerald-400">
+                              {formatAmount(deal.amount_usd)}
                             </span>
                           ) : (
-                            <span className="font-mono text-green-400 font-semibold">
-                              {amt.text}
-                            </span>
+                            <span className="text-zinc-600 text-xs font-mono">—</span>
                           )}
                         </td>
-                        <td className="py-2 px-2 text-slate-400 text-xs">
-                          {deal.sector.join(", ") || "—"}
+                        {/* Sector */}
+                        <td className="px-4 py-3 text-xs text-zinc-400">
+                          {(deal.sector || []).join(', ') || '—'}
                         </td>
-                        <td className="py-2 px-2 text-slate-400 text-xs uppercase">
-                          {deal.geo ?? "—"}
+                        {/* Geo */}
+                        <td className="px-4 py-3 text-xs text-zinc-400 uppercase">
+                          {deal.geo ?? '—'}
                         </td>
-                        <td className="py-2 px-2 text-slate-400 text-xs">
-                          {formatInvestors(deal.all_investors)}
+                        {/* Investors */}
+                        <td className="px-4 py-3 text-xs text-zinc-400 truncate max-w-[160px]">
+                          {deal.lead_investor ?? '—'}
+                        </td>
+                        {/* Date */}
+                        <td className="px-4 py-3 text-right font-mono text-xs text-zinc-500">
+                          {deal.announced_date
+                            ? new Date(deal.announced_date).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                              })
+                            : '—'}
                         </td>
                       </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
 
               {/* Load more */}
               {hasMore && (
@@ -375,7 +387,7 @@ export default function DealFeed() {
                     disabled={loadingMore}
                     className="text-xs text-blue-400 hover:text-blue-300 underline disabled:opacity-50 font-mono"
                   >
-                    {loadingMore ? "Loading..." : "Load more deals"}
+                    {loadingMore ? 'Loading...' : 'Load more deals'}
                   </button>
                 </div>
               )}
@@ -384,5 +396,5 @@ export default function DealFeed() {
         </div>
       </div>
     </div>
-  );
+  )
 }

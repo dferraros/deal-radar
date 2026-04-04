@@ -1,29 +1,29 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { LineChart, BarChart } from '@tremor/react';
-import LoadingSpinner from '../components/LoadingSpinner';
-import ErrorBanner from '../components/ErrorBanner';
+import { useState, useEffect } from 'react'
+import axios from 'axios'
+import { LineChart, BarChart } from '@tremor/react'
+import LoadingSpinner from '../components/LoadingSpinner'
+import ErrorBanner from '../components/ErrorBanner'
 
 // --- Interfaces ---
 
 interface WeekPoint {
-  week_start: string;
-  deal_type: string;
-  deal_count: number;
-  total_capital_usd: number;
+  week_start: string
+  deal_type: string
+  deal_count: number
+  total_capital_usd: number
 }
 
 interface SectorBar {
-  sector: string;
-  deal_count: number;
-  total_capital_usd: number;
+  sector: string
+  deal_count: number
+  total_capital_usd: number
 }
 
 interface TrendsResponse {
-  weeks: number;
-  date_from: string;
-  weekly_by_type: WeekPoint[];
-  top_sectors: SectorBar[];
+  weeks: number
+  date_from: string
+  weekly_by_type: WeekPoint[]
+  top_sectors: SectorBar[]
 }
 
 // --- Helpers ---
@@ -33,50 +33,50 @@ const DEAL_TYPE_LABELS: Record<string, string> = {
   ma: 'M&A',
   crypto: 'Crypto',
   ipo: 'IPO',
-};
+}
 
 function formatWeekLabel(isoDate: string): string {
-  const d = new Date(isoDate + 'T00:00:00');
-  const month = d.toLocaleDateString('en-US', { month: 'short' });
-  const weekNum = Math.ceil(d.getDate() / 7);
-  return `${month} W${weekNum}`;
+  const d = new Date(isoDate + 'T00:00:00')
+  const month = d.toLocaleDateString('en-US', { month: 'short' })
+  const weekNum = Math.ceil(d.getDate() / 7)
+  return `${month} W${weekNum}`
 }
 
 function buildLineData(points: WeekPoint[]): Record<string, string | number>[] {
-  const byWeek = new Map<string, Record<string, number>>();
+  const byWeek = new Map<string, Record<string, number>>()
   for (const p of points) {
-    if (!byWeek.has(p.week_start)) byWeek.set(p.week_start, {});
-    const entry = byWeek.get(p.week_start)!;
-    const label = DEAL_TYPE_LABELS[p.deal_type] ?? p.deal_type.toUpperCase();
-    entry[label] = (entry[label] ?? 0) + p.total_capital_usd;
+    if (!byWeek.has(p.week_start)) byWeek.set(p.week_start, {})
+    const entry = byWeek.get(p.week_start)!
+    const label = DEAL_TYPE_LABELS[p.deal_type] ?? p.deal_type.toUpperCase()
+    entry[label] = (entry[label] ?? 0) + p.total_capital_usd
   }
   return Array.from(byWeek.entries())
     .sort(([a], [b]) => a.localeCompare(b))
     .map(([weekStart, values]) => ({
       week: formatWeekLabel(weekStart),
       ...values,
-    }));
+    }))
 }
 
 function buildBarData(sectors: SectorBar[]): { sector: string; Deals: number }[] {
-  return sectors.map((s) => ({ sector: s.sector, Deals: s.deal_count }));
+  return sectors.map((s) => ({ sector: s.sector, Deals: s.deal_count }))
 }
 
 function fmtCapital(v: number): string {
-  const m = v / 1_000_000;
-  return m >= 1000 ? `$${(m / 1000).toFixed(1)}B` : `$${m.toFixed(1)}M`;
+  const m = v / 1_000_000
+  return m >= 1000 ? `$${(m / 1000).toFixed(1)}B` : `$${m.toFixed(1)}M`
 }
 
 function totalCapital(points: WeekPoint[]): number {
-  return points.reduce((sum, p) => sum + p.total_capital_usd, 0);
+  return points.reduce((sum, p) => sum + p.total_capital_usd, 0)
 }
 
 // --- Component ---
 
 export default function Trends() {
-  const [data, setData] = useState<TrendsResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [data, setData] = useState<TrendsResponse | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     axios
@@ -85,54 +85,42 @@ export default function Trends() {
       .catch(() =>
         setError('Could not load data. Check your connection or try refreshing the page.')
       )
-      .finally(() => setLoading(false));
-  }, []);
+      .finally(() => setLoading(false))
+  }, [])
 
-  const lineData = data ? buildLineData(data.weekly_by_type) : [];
-  const barData = data ? buildBarData(data.top_sectors) : [];
-  const grandTotal = data ? totalCapital(data.weekly_by_type) : 0;
+  const lineData = data ? buildLineData(data.weekly_by_type) : []
+  const barData = data ? buildBarData(data.top_sectors) : []
+  const grandTotal = data ? totalCapital(data.weekly_by_type) : 0
 
   return (
-    <div className="px-6 py-4">
-      {/* Page title */}
+    <div className="px-6 pt-6 pb-6">
+      {/* Page header */}
       <div className="mb-4">
-        <p className="text-xs uppercase tracking-widest text-slate-500">Analytics</p>
-        <h1 className="text-lg font-semibold text-slate-200">Trends</h1>
+        <h1 className="text-lg font-semibold text-zinc-50">Trends</h1>
+        {data && grandTotal > 0 && (
+          <p className="text-xs text-zinc-500 mt-0.5 font-mono">
+            {fmtCapital(grandTotal)} tracked over {data.weeks} weeks
+          </p>
+        )}
       </div>
-
-      {/* Total capital stat */}
-      {data && grandTotal > 0 && (
-        <div className="mb-4 flex items-center gap-2">
-          <span className="text-xs uppercase tracking-widest text-slate-500">
-            Total Capital Tracked:
-          </span>
-          <span className="font-mono text-sm font-semibold text-white">
-            {fmtCapital(grandTotal)}
-          </span>
-          <span className="text-xs text-slate-500">
-            over {data.weeks} weeks
-          </span>
-        </div>
-      )}
 
       {loading && <LoadingSpinner />}
       {!loading && error && <ErrorBanner message={error} />}
 
       {!loading && !error && (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-
           {/* Left: LineChart — Capital by deal type per week */}
-          <div className="bg-[#0f1629] border border-[#1e2d4a] rounded-lg p-4">
-            <p className="text-xs uppercase tracking-widest text-slate-500 mb-1">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5">
+            <p className="text-xs uppercase tracking-wider text-zinc-500 mb-1">
               Capital by Deal Type
             </p>
-            <h2 className="text-sm font-semibold text-white mb-0.5">
+            <h2 className="text-sm font-semibold text-zinc-100 mb-0.5">
               Weekly Capital Raised
             </h2>
-            <p className="text-xs text-slate-500 mb-2">USD · click legend to filter</p>
+            <p className="text-xs text-zinc-500 mb-2">USD · click legend to filter</p>
             {lineData.length === 0 ? (
-              <div className="h-72 flex items-center justify-center">
-                <p className="text-sm text-slate-400">No trend data available yet.</p>
+              <div className="h-64 flex items-center justify-center">
+                <p className="text-sm text-zinc-400">No trend data available yet.</p>
               </div>
             ) : (
               <LineChart
@@ -142,24 +130,24 @@ export default function Trends() {
                 colors={['blue', 'violet', 'amber', 'emerald']}
                 valueFormatter={fmtCapital}
                 yAxisWidth={64}
-                className="h-72 mt-4"
+                className="h-64 mt-4"
                 showLegend={true}
               />
             )}
           </div>
 
           {/* Right: BarChart — Top sectors by deal count */}
-          <div className="bg-[#0f1629] border border-[#1e2d4a] rounded-lg p-4">
-            <p className="text-xs uppercase tracking-widest text-slate-500 mb-1">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5">
+            <p className="text-xs uppercase tracking-wider text-zinc-500 mb-1">
               Sector Distribution
             </p>
-            <h2 className="text-sm font-semibold text-white mb-0.5">
+            <h2 className="text-sm font-semibold text-zinc-100 mb-0.5">
               Top Sectors by Deal Count
             </h2>
-            <p className="text-xs text-slate-500 mb-2">This month</p>
+            <p className="text-xs text-zinc-500 mb-2">This month</p>
             {barData.length === 0 ? (
-              <div className="h-72 flex items-center justify-center">
-                <p className="text-sm text-slate-400">No sector data available yet.</p>
+              <div className="h-64 flex items-center justify-center">
+                <p className="text-sm text-zinc-400">No sector data available yet.</p>
               </div>
             ) : (
               <BarChart
@@ -169,13 +157,12 @@ export default function Trends() {
                 colors={['blue']}
                 valueFormatter={(v: number) => `${v}`}
                 yAxisWidth={48}
-                className="h-72 mt-4"
+                className="h-64 mt-4"
               />
             )}
           </div>
-
         </div>
       )}
     </div>
-  );
+  )
 }
