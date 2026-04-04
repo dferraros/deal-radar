@@ -13,7 +13,7 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 - Phase 2 (Ingestion Pipeline): COMPLETE (5/5 plans done, last commit ee68219)
 - Phase 3 (API Layer): COMPLETE (all routers built: deals, companies, heatmap, trends, kpi, watchlist, ingest)
 - Phase 4 (Dashboard Frontend): COMPLETE — all 4 plans done (04-01..04-04, commits 2d9f252 → 75626fb)
-- Phase 5 (Polish & Deploy): Pending
+- Phase 5 (Polish & Deploy): IN PROGRESS — 05-01 COMPLETE (commits 22f56f9 + 9495cc2)
 
 ## Decisions Made
 
@@ -108,6 +108,15 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 - frontend/src/views/CompanyProfile.tsx — full company profile: header card (badges, geo, website, description show-more), WatchlistToggle, deal history list, known investors, 404 state
 - frontend/src/views/Watchlist.tsx — watchlist table: 9 columns (Date/Company/Round/Amount/Sector/Geo/Investors/Notes/Remove), client-side FilterBar, inline remove confirm, empty state
 
+## What Was Built in Phase 5 Plan 01
+
+- backend/ingestion/pipeline.py: Step 7 fixed — per-source rows use deals_added=0; new "pipeline" summary row carries real count
+- backend/routers/admin.py: GET /api/admin/runs — newest 50 IngestionRun rows, newest first
+- backend/main.py: admin router registered at /api prefix
+- frontend/src/views/Admin.tsx: ingestion run history table (StatusBadge, expandable errors, run_at formatting)
+- frontend/src/components/Navbar.tsx: Admin link after divider, font-bold throughout (no font-medium)
+- frontend/src/App.tsx: /admin route added
+
 ## Next Action
 
-Phase 4 COMPLETE (all 4 plans done). Execute Phase 5 (Polish & Deploy).
+Phase 5 Plan 01 COMPLETE. Continue Phase 5 remaining plans.
