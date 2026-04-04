@@ -16,31 +16,57 @@ RSS_FEEDS = [
     "https://techcrunch.com/category/venture/feed/",
     "https://feeds.feedburner.com/venturebeat/SZYF",
     "https://news.crunchbase.com/feed/",
-    "https://www.businesswire.com/rss/home/?rss=G22",      # BusinessWire VC press releases
-    "https://www.prnewswire.com/rss/news-releases-list.rss",  # PR Newswire
+    "https://www.businesswire.com/rss/home/?rss=G22",
+    "https://www.prnewswire.com/rss/news-releases-list.rss",
+    "https://feeds.feedburner.com/axios/technology",         # Axios Tech
+    "https://www.geekwire.com/feed/",                        # GeekWire startup deals
+    "https://www.forbes.com/innovation/feed/",               # Forbes Tech / Innovation
 
-    # Crypto / Web3
+    # Finance / M&A / IPO
+    "https://feeds.reuters.com/reuters/businessNews",        # Reuters Business
+    "https://feeds.reuters.com/reuters/technologyNews",      # Reuters Technology
+    "https://www.wsj.com/xml/rss/3_7085.xml",               # WSJ Markets
+    "https://feeds.ft.com/rss/companies-financials",        # Financial Times M&A
+    "https://www.finextra.com/rss/headlines.aspx",
+    "https://www.fintechfutures.com/feed/",
+
+    # Crypto / Web3 (trimmed — keep top 3)
     "https://www.coindesk.com/arc/outboundfeeds/rss/",
     "https://www.theblock.co/rss.xml",
-    "https://decrypt.co/feed",
-    "https://thedefiant.io/feed",
     "https://cointelegraph.com/rss",
-    "https://blockworks.co/feed",
 
-    # Europe / Spain
+    # Europe
     "https://sifted.eu/feed",
     "https://www.eu-startups.com/feed/",
+    "https://www.businessinsider.com/sai/feed",              # BI Tech
+    "https://www.maddyness.com/feed/",                       # France startup deals
+    "https://www.wired.co.uk/feed/rss",                      # Wired UK
+
+    # Spain
     "https://cincodias.elpais.com/seccion/rss/tecnologia/",
     "https://www.expansion.com/rss/mercados/fondos-de-inversion.xml",
 
     # LatAm
     "https://contxto.com/en/feed/",
     "https://startupeable.com/feed/",
-    "https://www.latamlist.com/feed/",
 
-    # Fintech specific
-    "https://www.fintechfutures.com/feed/",
-    "https://www.finextra.com/rss/headlines.aspx",
+    # Asia
+    "https://technode.com/feed/",                            # China tech/VC
+    "https://kr-asia.com/feed",                              # Southeast Asia
+    "https://e27.co/feed/",                                  # Singapore/SEA
+    "https://www.techinasia.com/feed",                       # Pan-Asia VC
+
+    # India
+    "https://yourstory.com/feed",                            # India startups
+    "https://entrackr.com/feed/",                            # India funding news
+
+    # Africa
+    "https://techpoint.africa/feed/",                        # Africa tech
+    "https://disrupt-africa.com/feed/",                      # Africa funding
+
+    # MENA
+    "https://wamda.com/feed",                                # MENA startups
+    "https://magnitt.com/feed",                              # MENA/Africa deals
 ]
 
 # Keywords that indicate a deal announcement
