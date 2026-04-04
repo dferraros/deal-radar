@@ -5,13 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-04-04)
 
 **Core value:** Surface every relevant deal from the last 24 hours -- normalized, deduplicated, and queryable in one dashboard.
-**Current focus:** Phase 2 -- Ingestion Pipeline
+**Current focus:** Phase 4 -- Dashboard Frontend
 
 ## Current Position
 
 - Phase 1 (Foundation): COMPLETE (3/3 plans done, commits 248e92f + 9f53212 + bd98b9e)
 - Phase 2 (Ingestion Pipeline): COMPLETE (5/5 plans done, last commit ee68219)
-- Phases 3-5: Pending
+- Phase 3 (API Layer): COMPLETE (all routers built: deals, companies, heatmap, trends, kpi, watchlist, ingest)
+- Phase 4 (Dashboard Frontend): IN PROGRESS — 04-01 DONE (commits 2d9f252, fc1f768, 368bb33); 04-02 DONE (commit c6e160a); 04-03 and 04-04 pending
+- Phase 5 (Polish & Deploy): Pending
 
 ## Decisions Made
 
@@ -63,6 +65,32 @@ See: .planning/PROJECT.md (updated 2026-04-04)
 - Lazy imports in scheduler job to avoid circular imports
 - FastAPI lifespan replaces deprecated on_event handlers
 
+## Phase 4 Plans (ready to execute)
+
+| Plan | Description | Wave |
+|------|-------------|------|
+| 04-01 | Deal Feed: KPI row + FilterBar + Tremor Table + load-more | 1 (parallel with 04-02) |
+| 04-02 | Sector Heatmap: custom CSS grid + color scale + period toggle | 1 (parallel with 04-01) |
+| 04-03 | Company Profile + Watchlist: deal history + optimistic toggle + inline notes | 2 (after Wave 1) |
+| 04-04 | Trend Charts: Tremor LineChart (4 series) + BarChart | 2 (after Wave 1) |
+
+## Phase 4 Progress
+
+| Plan | Status | Key commits |
+|------|--------|-------------|
+| 04-01 | DONE | 2d9f252 + fc1f768 + 368bb33 |
+| 04-02 | DONE | c6e160a |
+| 04-03 | PENDING | — |
+| 04-04 | PENDING | — |
+
+## What Was Built in Phase 4 Plan 01
+
+- frontend/src/components/LoadingSpinner.tsx — centered amber spinner
+- frontend/src/components/ErrorBanner.tsx — full-width red error bar
+- frontend/src/components/DealTypeBadge.tsx — Tremor Badge with vc/ma/crypto/ipo color map
+- frontend/src/components/FilterBar.tsx — reusable filter row (type, sector, geo, amount, date); exports FilterState + defaultFilters
+- frontend/src/views/DealFeed.tsx — full Deal Feed: KPI row + FilterBar + Table + all 4 states + load-more
+
 ## Next Action
 
-Start Phase 3 -- API + Dashboard (deals query endpoints + React data tables)
+Execute Phase 4 Wave 2 — run 04-03 (Company Profile + Watchlist) + 04-04 (Trend Charts) in parallel
