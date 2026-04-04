@@ -8,7 +8,7 @@
 
 | # | Phase | Goal | Requirements | Status |
 |---|-------|------|--------------|--------|
-| 1 | Foundation | Working skeleton deployed on Railway | DEPLOY-01, DEPLOY-02 | pending |
+| 1 | Foundation | Working skeleton deployed on Railway | DEPLOY-01, DEPLOY-02 | done |
 | 2 | Ingestion Pipeline | Daily deal ingestion from all sources | INGEST-01 to INGEST-07 | pending |
 | 3 | API Layer | All FastAPI endpoints serving deal data | MANUAL-01, MANUAL-02 | pending |
 | 4 | Dashboard Frontend | Full React UI with all 5 views | FEED-01 to FEED-03, HEAT-01, HEAT-02, COMP-01 to COMP-03, TREND-01, TREND-02, WATCH-01, WATCH-02 | pending |
@@ -21,9 +21,9 @@
 **Goal:** FastAPI + React scaffold running on Railway with PostgreSQL connected.
 
 **Plans:**
-- Plan 01-01: Create FastAPI skeleton (main.py, database.py, models.py, schemas.py) with /api/health endpoint
-- Plan 01-02: Create React + Vite scaffold with Tremor + Tailwind, wired to FastAPI static serving
-- Plan 01-03: Alembic migrations for all DB tables, Railway Procfile + env var config
+- Plan 01-01: Create FastAPI skeleton (main.py, database.py, models.py, schemas.py) with /api/health endpoint -- DONE (248e92f)
+- Plan 01-02: Create React + Vite scaffold with Tremor + Tailwind, wired to FastAPI static serving -- DONE (9f53212)
+- Plan 01-03: Alembic migrations for all DB tables, Railway Procfile + env var config -- DONE (bd98b9e)
 
 **Success criteria:**
 1. GET /api/health returns 200 on Railway URL
