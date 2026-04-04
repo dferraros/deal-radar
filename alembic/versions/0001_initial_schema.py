@@ -32,7 +32,7 @@ def upgrade() -> None:
         sa.Column("founded_year", sa.Integer(), nullable=True),
         sa.Column(
             "created_at",
-            postgresql.TIMESTAMPTZ(),
+            sa.DateTime(timezone=True),
             nullable=True,
             server_default=sa.text("now()"),
         ),
@@ -62,7 +62,7 @@ def upgrade() -> None:
         sa.Column("ai_summary", sa.Text(), nullable=True),
         sa.Column(
             "created_at",
-            postgresql.TIMESTAMPTZ(),
+            sa.DateTime(timezone=True),
             nullable=True,
             server_default=sa.text("now()"),
         ),
@@ -89,7 +89,7 @@ def upgrade() -> None:
         ),
         sa.Column(
             "added_at",
-            postgresql.TIMESTAMPTZ(),
+            sa.DateTime(timezone=True),
             nullable=True,
             server_default=sa.text("now()"),
         ),
@@ -106,7 +106,7 @@ def upgrade() -> None:
         sa.Column("deals_added", sa.Integer(), nullable=True),
         sa.Column(
             "run_at",
-            postgresql.TIMESTAMPTZ(),
+            sa.DateTime(timezone=True),
             nullable=True,
             server_default=sa.text("now()"),
         ),

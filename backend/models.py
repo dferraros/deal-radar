@@ -11,7 +11,10 @@ from sqlalchemy import (
     Text,
     ARRAY,
 )
-from sqlalchemy.dialects.postgresql import UUID, TIMESTAMPTZ
+from sqlalchemy import DateTime
+from sqlalchemy.dialects.postgresql import UUID
+
+TIMESTAMPTZ = DateTime(timezone=True)
 from sqlalchemy.orm import relationship
 
 from backend.database import Base
