@@ -73,11 +73,41 @@ def _extract_company_name(title: Optional[str]) -> str:
 
 def _build_queries(target_date: date) -> list[str]:
     month_year = target_date.strftime("%B %Y")
+    year = target_date.strftime("%Y")
     return [
-        f"startup funding round announced {month_year} venture capital million",
-        f"crypto web3 funding raise {month_year} million token",
-        f"acquisition merger deal closed {month_year} fintech",
-        f"LatAm Spain Europe startup funding {month_year}",
+        # Core deal discovery
+        f"startup funding round raised {month_year} venture capital Series",
+        f"startup raised million funding {month_year} seed round",
+        f"venture capital investment deal announced {month_year}",
+
+        # Crypto / Web3
+        f"crypto web3 DeFi funding raise {month_year} million",
+        f"blockchain protocol token raise {month_year}",
+        f"Layer2 DeFi protocol funding {month_year}",
+
+        # M&A / Acquisitions
+        f"acquisition merger deal closed {month_year} fintech tech",
+        f"acquired startup acquisition {month_year} million billion",
+
+        # Geography — LatAm
+        f"Latin America LatAm startup funding {month_year} million",
+        f"Brazil Mexico Colombia fintech startup raise {month_year}",
+        f"Argentina Chile Peru startup investment {month_year}",
+
+        # Geography — Spain / Europe
+        f"Spain startup funding round {month_year} million euros",
+        f"Europe fintech startup raise {month_year} million Series",
+
+        # Sector — Fintech / Embedded Finance
+        f"fintech neobank embedded finance funding {month_year}",
+        f"payments lending insurtech raise {month_year} million",
+
+        # Sector — Healthtech / SaaS
+        f"healthtech medtech digital health funding {month_year} million Series",
+        f"SaaS enterprise software funding round {month_year}",
+
+        # IPO
+        f"IPO initial public offering {year} tech startup",
     ]
 
 
@@ -116,8 +146,8 @@ class TavilyFetcher(BaseFetcher):
                     lambda: client.search(
                         query=query,
                         search_depth="advanced",
-                        max_results=10,
-                        include_raw_content=False,
+                        max_results=15,
+                        include_raw_content=True,   # get full article text
                     ),
                 )
                 results = response.get("results", [])
@@ -130,7 +160,10 @@ class TavilyFetcher(BaseFetcher):
                     if not url:
                         continue
 
-                    combined = f"{title or ''} {content}"
+                    raw_content = result.get("raw_content") or ""
+                    # Use raw_content if substantial, else fall back to snippet
+                    full_text = raw_content if len(raw_content) > len(content) else content
+                    combined = f"{title or ''}\n\n{full_text}"
                     amount_raw = _extract_amount_raw(combined)
                     company_name = _extract_company_name(title)
 
@@ -141,7 +174,7 @@ class TavilyFetcher(BaseFetcher):
                             amount_raw=amount_raw,
                             date_raw=target_date.isoformat(),
                             url=url,
-                            raw_text=content,
+                            raw_text=full_text,
                             title=title,
                         )
                     )

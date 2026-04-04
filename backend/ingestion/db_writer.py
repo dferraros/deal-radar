@@ -4,7 +4,7 @@ DB Writer — Plan 02-05
 Persists ExtractedDeal records to PostgreSQL, creating Company records as needed.
 
 write_deals():
-  - Skips deals with confidence < 0.3 (likely extraction failures)
+  - Skips deals with confidence < 0.2 (likely extraction failures)
   - Creates Company records on first encounter (case-insensitive name match)
   - Skips Deal records that already exist (same company_id + announced_date + amount_usd)
   - Commits after each successful deal write (safer for partial failures)
@@ -25,7 +25,7 @@ from backend.models import Company, Deal
 logger = logging.getLogger(__name__)
 
 # Minimum confidence threshold for writing to DB
-_MIN_CONFIDENCE = 0.3
+_MIN_CONFIDENCE = 0.2
 
 
 async def write_deals(

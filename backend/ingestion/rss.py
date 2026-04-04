@@ -12,12 +12,35 @@ logger = logging.getLogger(__name__)
 
 # RSS feeds covering deal announcements across crypto, fintech, LatAm, and Europe
 RSS_FEEDS = [
+    # US Tech / VC
     "https://techcrunch.com/category/venture/feed/",
-    "https://www.coindesk.com/arc/outboundfeeds/rss/",
-    "https://sifted.eu/feed",
-    "https://contxto.com/en/feed/",
-    "https://www.theblock.co/rss.xml",
+    "https://feeds.feedburner.com/venturebeat/SZYF",
     "https://news.crunchbase.com/feed/",
+    "https://www.businesswire.com/rss/home/?rss=G22",      # BusinessWire VC press releases
+    "https://www.prnewswire.com/rss/news-releases-list.rss",  # PR Newswire
+
+    # Crypto / Web3
+    "https://www.coindesk.com/arc/outboundfeeds/rss/",
+    "https://www.theblock.co/rss.xml",
+    "https://decrypt.co/feed",
+    "https://thedefiant.io/feed",
+    "https://cointelegraph.com/rss",
+    "https://blockworks.co/feed",
+
+    # Europe / Spain
+    "https://sifted.eu/feed",
+    "https://www.eu-startups.com/feed/",
+    "https://cincodias.elpais.com/seccion/rss/tecnologia/",
+    "https://www.expansion.com/rss/mercados/fondos-de-inversion.xml",
+
+    # LatAm
+    "https://contxto.com/en/feed/",
+    "https://startupeable.com/feed/",
+    "https://www.latamlist.com/feed/",
+
+    # Fintech specific
+    "https://www.fintechfutures.com/feed/",
+    "https://www.finextra.com/rss/headlines.aspx",
 ]
 
 # Keywords that indicate a deal announcement
@@ -42,7 +65,7 @@ DEAL_KEYWORDS = {
 }
 
 # Maximum age of an entry relative to target_date (days)
-MAX_AGE_DAYS = 3
+MAX_AGE_DAYS = 7
 
 
 def _entry_date(entry: feedparser.util.FeedParserDict) -> Optional[date]:
