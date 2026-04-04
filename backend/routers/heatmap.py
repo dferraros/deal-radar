@@ -32,8 +32,13 @@ async def get_heatmap(
     date_to = date.today()
     date_from = date_to - timedelta(days=_PERIOD_DAYS[period])
 
+    deal_type_filter = "AND d.deal_type = :deal_type" if deal_type else ""
+    params: dict = {"date_from": date_from, "date_to": date_to}
+    if deal_type:
+        params["deal_type"] = deal_type
+
     sql = text(
-        """
+        f"""
         SELECT
             unnest(c.sector)                    AS sector_value,
             c.geo,
@@ -43,21 +48,14 @@ async def get_heatmap(
         JOIN companies c ON d.company_id = c.id
         WHERE d.announced_date >= :date_from
           AND d.announced_date <= :date_to
-          AND (:deal_type::TEXT IS NULL OR d.deal_type = :deal_type::TEXT)
+          {deal_type_filter}
           AND d.amount_usd IS NOT NULL
         GROUP BY sector_value, c.geo
         ORDER BY total_capital_usd DESC
         """
     )
 
-    result = await session.execute(
-        sql,
-        {
-            "date_from": date_from,
-            "date_to": date_to,
-            "deal_type": deal_type,
-        },
-    )
+    result = await session.execute(sql, params)
     rows = result.fetchall()
 
     cells: list[HeatmapCellV2] = []
