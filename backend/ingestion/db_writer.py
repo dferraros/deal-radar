@@ -183,13 +183,30 @@ async def _find_existing_deal(
     extracted: ExtractedDeal,
 ) -> Deal | None:
     """
-    Check if a Deal already exists with the same company_id, announced_date,
-    and amount_usd (all three must match exactly).
+    Check if a Deal already exists with the same company_id + announced_date.
+    Amount match uses 15% tolerance to catch the same deal reported with slight
+    variations across sources (e.g. $10M vs $10.5M). NULL amounts match only NULL.
     """
+    from sqlalchemy import and_, or_
+
+    if extracted.amount_usd is None:
+        amount_filter = Deal.amount_usd.is_(None)
+    else:
+        tolerance = int(extracted.amount_usd * 0.15)
+        amount_filter = or_(
+            Deal.amount_usd.is_(None),
+            Deal.amount_usd.between(
+                extracted.amount_usd - tolerance,
+                extracted.amount_usd + tolerance,
+            ),
+        )
+
     stmt = select(Deal).where(
-        Deal.company_id == company_id,
-        Deal.announced_date == extracted.announced_date,
-        Deal.amount_usd == extracted.amount_usd,
+        and_(
+            Deal.company_id == company_id,
+            Deal.announced_date == extracted.announced_date,
+            amount_filter,
+        )
     )
     result = await db_session.execute(stmt)
     return result.scalars().first()

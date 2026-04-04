@@ -139,49 +139,60 @@ class TavilyFetcher(BaseFetcher):
         queries = _build_queries(target_date)
 
         async def _search_one(query: str) -> list[RawDeal]:
-            try:
-                loop = asyncio.get_event_loop()
-                response = await loop.run_in_executor(
-                    None,
-                    lambda: client.search(
-                        query=query,
-                        search_depth="advanced",
-                        max_results=15,
-                        include_raw_content=True,   # get full article text
-                    ),
-                )
-                results = response.get("results", [])
-                deals: list[RawDeal] = []
-                for result in results:
-                    title: Optional[str] = result.get("title")
-                    content: str = result.get("content", "")
-                    url: str = result.get("url", "")
-
-                    if not url:
-                        continue
-
-                    raw_content = result.get("raw_content") or ""
-                    # Use raw_content if substantial, else fall back to snippet
-                    full_text = raw_content if len(raw_content) > len(content) else content
-                    combined = f"{title or ''}\n\n{full_text}"
-                    amount_raw = _extract_amount_raw(combined)
-                    company_name = _extract_company_name(title)
-
-                    deals.append(
-                        RawDeal(
-                            source="tavily",
-                            company_name=company_name,
-                            amount_raw=amount_raw,
-                            date_raw=target_date.isoformat(),
-                            url=url,
-                            raw_text=full_text,
-                            title=title,
-                        )
+            loop = asyncio.get_event_loop()
+            for attempt in range(3):
+                try:
+                    response = await loop.run_in_executor(
+                        None,
+                        lambda: client.search(
+                            query=query,
+                            search_depth="advanced",
+                            max_results=15,
+                            include_raw_content=True,
+                        ),
                     )
-                return deals
-            except Exception as exc:
-                logger.error("Tavily search failed for query %r: %s", query, exc)
-                return []
+                    results = response.get("results", [])
+                    deals: list[RawDeal] = []
+                    for result in results:
+                        title: Optional[str] = result.get("title")
+                        content: str = result.get("content", "")
+                        url: str = result.get("url", "")
+
+                        if not url:
+                            continue
+
+                        raw_content = result.get("raw_content") or ""
+                        full_text = raw_content if len(raw_content) > len(content) else content
+                        combined = f"{title or ''}\n\n{full_text}"
+                        amount_raw = _extract_amount_raw(combined)
+                        company_name = _extract_company_name(title)
+
+                        deals.append(
+                            RawDeal(
+                                source="tavily",
+                                company_name=company_name,
+                                amount_raw=amount_raw,
+                                date_raw=target_date.isoformat(),
+                                url=url,
+                                raw_text=full_text,
+                                title=title,
+                            )
+                        )
+                    return deals
+                except Exception as exc:
+                    err_str = str(exc).lower()
+                    if "429" in err_str or "rate limit" in err_str or "too many" in err_str:
+                        wait = 2 ** attempt  # 1s, 2s, 4s
+                        logger.warning(
+                            "Tavily rate limit on query %r (attempt %d/3) — retrying in %ds",
+                            query, attempt + 1, wait,
+                        )
+                        await asyncio.sleep(wait)
+                    else:
+                        logger.error("Tavily search failed for query %r: %s", query, exc)
+                        return []
+            logger.error("Tavily query %r failed after 3 retries (rate limit)", query)
+            return []
 
         # Run all 4 queries concurrently
         results_per_query = await asyncio.gather(*[_search_one(q) for q in queries])

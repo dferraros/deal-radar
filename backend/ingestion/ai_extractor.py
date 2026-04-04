@@ -103,9 +103,11 @@ class ExtractedDeal(BaseModel):
 # ---------------------------------------------------------------------------
 
 _SYSTEM_PROMPT = (
-    "You are a financial deals analyst. "
+    "You are a financial deals analyst specializing in investment data extraction. "
     "Extract structured deal information from the provided text. "
-    "Return only valid JSON — no markdown, no explanation, just the JSON object."
+    "Return only valid JSON — no markdown, no explanation, just the JSON object. "
+    "company_name is REQUIRED and must never be null or empty. "
+    "If you cannot identify a clear deal in the text, set confidence below 0.3."
 )
 
 _USER_TEMPLATE = """\
@@ -119,22 +121,32 @@ Source: {source}
 Date hint: {date_raw}
 Amount hint: {amount_raw}
 
-Return a single JSON object with these fields:
-- company_name (string)
-- company_description (string, 1 sentence, or null)
-- company_website (string URL or null)
+Return a single JSON object with these exact fields:
+
+REQUIRED:
+- company_name (string — MUST be the company that raised/was acquired, never null)
+
+OPTIONAL (use null if not found):
+- company_description (string, 1 sentence max)
+- company_website (string URL)
 - deal_type (one of: vc / ma / crypto / ipo / unknown)
-- amount_usd (integer USD, or null if undisclosed)
-- currency (string or null)
-- round_label (string like "Series A", "Seed", "Acquisition", or null)
-- announced_date (YYYY-MM-DD or null)
-- sector (array of strings from: crypto / fintech / saas / healthtech / edtech / proptech / other)
-- geo (one of: latam / spain / europe / us / asia / global, or null)
-- lead_investor (string or null)
-- all_investors (array of strings, empty if none)
-- tech_stack (array of strings: technologies, frameworks, languages, or platforms used by the company, e.g. ["Python", "AWS", "React"] or ["Solidity", "EVM"] or ["Rust", "Kubernetes"]. Empty array if unknown)
-- ai_summary (string, 2-3 sentences)
-- confidence (float 0.0-1.0, your extraction confidence)\
+- amount_usd (integer in USD — convert currencies; null if undisclosed)
+- currency (original currency string, e.g. "EUR", "USD")
+- round_label (e.g. "Seed", "Series A", "Series B", "Acquisition", "Token Sale")
+- announced_date (YYYY-MM-DD)
+- sector (array from: crypto / fintech / saas / healthtech / edtech / proptech / other)
+- geo (one of: latam / spain / europe / us / asia / africa / mena / global)
+- lead_investor (string)
+- all_investors (array of strings)
+- tech_stack (array: technologies/frameworks/platforms used, e.g. ["Solidity","EVM"] or ["Python","AWS"])
+- ai_summary (2-3 sentences describing the deal)
+
+REQUIRED:
+- confidence (float 0.0-1.0):
+    0.8-1.0 = company name certain + amount/date both present and clear
+    0.5-0.7 = company name certain but amount or date missing/unclear
+    0.3-0.5 = partial extraction, some key fields ambiguous
+    0.0-0.3 = not a real deal announcement, or company name unclear\
 """
 
 

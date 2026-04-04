@@ -103,6 +103,7 @@ async def run_ingestion(
     logger.info("Starting ingestion pipeline for %s", target_date)
 
     # --- Step 1: Run discovery fetchers concurrently ---
+    # FirecrawlFetcher is enricher-only (Step 3); not a discovery source.
     rss_fetcher = RSSFetcher()
     tavily_fetcher = TavilyFetcher()
     firecrawl_fetcher = FirecrawlFetcher()
@@ -110,8 +111,6 @@ async def run_ingestion(
     fetch_tasks = [
         _run_fetcher_safe(rss_fetcher, target_date),
         _run_fetcher_safe(tavily_fetcher, target_date),
-        # FirecrawlFetcher.fetch() always returns [] — it's an enricher only
-        _run_fetcher_safe(firecrawl_fetcher, target_date),
     ]
 
     fetch_results = await asyncio.gather(*fetch_tasks)

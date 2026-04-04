@@ -114,9 +114,10 @@ def _is_within_window(entry_date: Optional[date], target_date: date) -> bool:
 
 
 def _has_deal_keyword(text: str) -> bool:
-    """Return True if any deal keyword appears in the lowercased text."""
+    """Return True if any deal keyword appears as a whole word in the lowercased text."""
+    import re
     lowered = text.lower()
-    return any(kw in lowered for kw in DEAL_KEYWORDS)
+    return any(re.search(r'\b' + re.escape(kw) + r'\b', lowered) for kw in DEAL_KEYWORDS)
 
 
 def _parse_feed(feed_url: str) -> feedparser.util.FeedParserDict:
