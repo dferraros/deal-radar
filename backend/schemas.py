@@ -218,3 +218,26 @@ class BriefingResponse(BaseModel):
     top_sector: Optional[str] = None
     ai_summary: Optional[str] = None
     generated_at: Optional[datetime] = None
+
+
+# ---------------------------------------------------------------------------
+# Investor Network endpoint schemas
+# ---------------------------------------------------------------------------
+
+class InvestorNetworkNode(BaseModel):
+    id: str
+    deal_count: int
+    total_capital_usd: int
+
+
+class InvestorNetworkEdge(BaseModel):
+    source: str
+    target: str
+    weight: int
+
+
+class InvestorNetworkResponse(BaseModel):
+    nodes: list[InvestorNetworkNode]
+    edges: list[InvestorNetworkEdge]
+    date_from: date
+    date_to: date

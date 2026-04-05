@@ -5,6 +5,7 @@ import {
   Grid3X3,
   TrendingUp,
   Users,
+  Network,
   Star,
   Bell,
   Settings,
@@ -17,6 +18,7 @@ const navItems = [
   { to: '/heatmap', label: 'Heatmap', icon: Grid3X3 },
   { to: '/trends', label: 'Trends', icon: TrendingUp },
   { to: '/investors', label: 'Investors', icon: Users },
+  { to: '/network', label: 'Network', icon: Network },
   { to: '/alerts', label: 'Alerts', icon: Bell },
   { to: '/watchlist', label: 'Watchlist', icon: Star },
 ]
