@@ -80,4 +80,6 @@ async def test_crawl_includes_extra_start_urls():
     assert "https://example.com" in urls
     assert "https://example.com/security" in urls
     assert "https://example.com/trust" in urls
+    assert "https://example.com/trust-center" in urls
     assert "https://status.example.com" in urls
+    assert "https://example.com/.well-known/security.txt" in urls

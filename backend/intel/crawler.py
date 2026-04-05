@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 _SOURCE_TYPE_PATTERNS = {
     "github": ["github.com"],
     "trust_center": ["/security", "/trust", "/trust-center"],
-    "status_page": ["status."],
+    "status_page": ["://status."],
     "docs": ["/docs", "/documentation", "/api-reference", "/developers", "/technology"],
     "blog": ["/blog", "/news", "/insights", "/articles", "/press"],
     "careers": ["/careers", "/jobs", "/hiring", "/join-us", "/team"],
@@ -95,13 +95,13 @@ class ApifyCrawler:
 
         # Derive high-signal additional start URLs from the base domain
         parsed = urlparse(website)
-        domain = parsed.netloc  # e.g. "mistral.ai"
-        base = f"{parsed.scheme}://{domain}"
+        base = f"{parsed.scheme}://{parsed.netloc}"
+        hostname = parsed.hostname  # host only, no port, always lowercase
         extra_urls = [
             f"{base}/security",
             f"{base}/trust",
             f"{base}/trust-center",
-            f"https://status.{domain}",
+            f"https://status.{hostname}",
             f"{base}/.well-known/security.txt",
         ]
         start_urls = [website] + extra_urls
