@@ -110,3 +110,147 @@ class AlertRule(Base):
     last_triggered_at = Column(DateTime(timezone=True), nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     is_active = Column(Boolean, default=True)
+
+
+# ─────────────────────────────────────────────
+# Tech Bet Intelligence Engine models
+# ─────────────────────────────────────────────
+
+class IntelQueue(Base):
+    __tablename__ = "intel_queue"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id"), nullable=True)
+    company_name = Column(Text, nullable=False)
+    website = Column(Text, nullable=False)
+    status = Column(Text, default="queued")  # queued|crawling|extracting|normalizing|done|failed
+    queued_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+    started_at = Column(TIMESTAMPTZ, nullable=True)
+    completed_at = Column(TIMESTAMPTZ, nullable=True)
+    error_log = Column(Text, nullable=True)
+
+    sources = relationship("IntelSource", back_populates="queue_entry", cascade="all, delete-orphan")
+    profile = relationship("IntelCompanyProfile", back_populates="queue_entry", uselist=False, cascade="all, delete-orphan")
+    observations = relationship("IntelObservation", back_populates="queue_entry", cascade="all, delete-orphan")
+
+
+class IntelSource(Base):
+    __tablename__ = "intel_sources"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    queue_id = Column(UUID(as_uuid=True), ForeignKey("intel_queue.id"), nullable=False)
+    url = Column(Text, nullable=False)
+    source_type = Column(Text)  # homepage|product|docs|blog|careers|github|other
+    raw_text = Column(Text)
+    clean_text = Column(Text)
+    content_hash = Column(Text)
+    fetched_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+    http_status = Column(Integer, nullable=True)
+
+    queue_entry = relationship("IntelQueue", back_populates="sources")
+    chunks = relationship("IntelSourceChunk", back_populates="source", cascade="all, delete-orphan")
+
+
+class IntelSourceChunk(Base):
+    __tablename__ = "intel_source_chunks"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_id = Column(UUID(as_uuid=True), ForeignKey("intel_sources.id"), nullable=False)
+    chunk_index = Column(Integer, nullable=False)
+    clean_text = Column(Text, nullable=False)
+    token_count = Column(Integer, default=0)
+
+    source = relationship("IntelSource", back_populates="chunks")
+
+
+class IntelCompanyProfile(Base):
+    __tablename__ = "intel_company_profiles"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    queue_id = Column(UUID(as_uuid=True), ForeignKey("intel_queue.id"), nullable=False, unique=True)
+    summary = Column(Text)
+    target_user = Column(ARRAY(Text), default=list)
+    workflow = Column(ARRAY(Text), default=list)
+    inputs = Column(ARRAY(Text), default=list)
+    outputs = Column(ARRAY(Text), default=list)
+    claimed_differentiators = Column(ARRAY(Text), default=list)
+    jtbd = Column(Text)
+    profile_confidence = Column(Text)  # stored as string float e.g. "0.85"
+    generated_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+    model_version = Column(Text)
+
+    queue_entry = relationship("IntelQueue", back_populates="profile")
+
+
+class IntelOntologyNode(Base):
+    __tablename__ = "intel_ontology_nodes"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    canonical_name = Column(Text, unique=True, nullable=False)
+    node_type = Column(Text)  # domain|system_class|primitive
+    parent_id = Column(UUID(as_uuid=True), ForeignKey("intel_ontology_nodes.id"), nullable=True)
+    description = Column(Text)
+    status = Column(Text, default="active")  # active|pending_review
+    created_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+
+    aliases = relationship("IntelOntologyAlias", back_populates="node", cascade="all, delete-orphan")
+    observations = relationship("IntelObservation", back_populates="node")
+    scores = relationship("IntelTechnologyScore", back_populates="node", cascade="all, delete-orphan")
+
+
+class IntelOntologyAlias(Base):
+    __tablename__ = "intel_ontology_aliases"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    node_id = Column(UUID(as_uuid=True), ForeignKey("intel_ontology_nodes.id"), nullable=False)
+    alias = Column(Text, nullable=False)
+    alias_type = Column(Text, default="extracted")  # extracted|manual
+
+    node = relationship("IntelOntologyNode", back_populates="aliases")
+
+
+class IntelObservation(Base):
+    __tablename__ = "intel_observations"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    queue_id = Column(UUID(as_uuid=True), ForeignKey("intel_queue.id"), nullable=False)
+    node_id = Column(UUID(as_uuid=True), ForeignKey("intel_ontology_nodes.id"), nullable=False)
+    layer = Column(Text)  # model|application_logic|infra|interface|hardware
+    confidence = Column(Text)  # stored as string float e.g. "0.78"
+    is_explicit = Column(Boolean, default=False)
+    inference_method = Column(Text)
+    generated_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+    model_version = Column(Text)
+
+    queue_entry = relationship("IntelQueue", back_populates="observations")
+    node = relationship("IntelOntologyNode", back_populates="observations")
+    evidence = relationship("IntelObservationEvidence", back_populates="observation", cascade="all, delete-orphan")
+
+
+class IntelObservationEvidence(Base):
+    __tablename__ = "intel_observation_evidence"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    observation_id = Column(UUID(as_uuid=True), ForeignKey("intel_observations.id"), nullable=False)
+    source_id = Column(UUID(as_uuid=True), ForeignKey("intel_sources.id"), nullable=True)
+    evidence_text = Column(Text, nullable=False)
+    evidence_reason = Column(Text)
+    evidence_type = Column(Text)  # product_page|docs|careers|blog|github
+
+    observation = relationship("IntelObservation", back_populates="evidence")
+
+
+class IntelTechnologyScore(Base):
+    __tablename__ = "intel_technology_scores"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    node_id = Column(UUID(as_uuid=True), ForeignKey("intel_ontology_nodes.id"), nullable=False)
+    period_start = Column(Date, nullable=False)
+    period_end = Column(Date, nullable=False)
+    company_count = Column(Integer, default=0)
+    capital_weighted_score = Column(Text, default="0.0")  # string float
+    growth_rate = Column(Text, default="0.0")
+    novelty_score = Column(Text, default="0.0")
+    co_occurrence_density = Column(Text, default="0.0")
+
+    node = relationship("IntelOntologyNode", back_populates="scores")
