@@ -92,20 +92,26 @@ export default function Trends() {
   const [error, setError] = useState<string | null>(null)
   const [briefingSummary, setBriefingSummary] = useState<string | null>(null)
 
-  useEffect(() => {
-    axios
-      .get('/api/trends')
-      .then((r) => setData(r.data))
-      .catch(() =>
-        setError('Could not load data. Check your connection or try refreshing the page.')
-      )
-      .finally(() => setLoading(false))
-  }, [])
+  const [period] = useState('monthly')
 
   useEffect(() => {
-    axios.get('/api/briefing/latest').then((r) => {
-      setBriefingSummary(r.data?.ai_summary ?? null)
-    }).catch(() => {})
+    const controller = new AbortController()
+    setLoading(true)
+    setError(null)
+    axios
+      .get('/api/trends', { params: { period }, signal: controller.signal })
+      .then((r) => setData(r.data))
+      .catch((err) => { if (!axios.isCancel(err)) setError('Could not load trend data.') })
+      .finally(() => setLoading(false))
+    return () => controller.abort()
+  }, [period])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    axios.get('/api/briefing/latest', { signal: controller.signal })
+      .then((r) => setBriefingSummary(r.data?.ai_summary ?? null))
+      .catch(() => {})
+    return () => controller.abort()
   }, [])
 
   const lineData = data ? buildLineData(data.weekly_by_type) : []

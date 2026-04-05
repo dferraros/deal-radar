@@ -5,16 +5,10 @@ import { Network } from 'lucide-react'
 import LoadingSpinner from '../components/LoadingSpinner'
 import ErrorBanner from '../components/ErrorBanner'
 
-interface Node {
+interface Node extends d3.SimulationNodeDatum {
   id: string
   deal_count: number
   total_capital_usd: number
-  x?: number
-  y?: number
-  vx?: number
-  vy?: number
-  fx?: number | null
-  fy?: number | null
 }
 
 interface Edge {
@@ -59,11 +53,10 @@ export default function InvestorNetwork() {
 
     const g = svg.append('g')
 
-    svg.call(
-      d3.zoom<SVGSVGElement, unknown>().on('zoom', (event) => {
-        g.attr('transform', event.transform)
-      })
-    )
+    const zoom = d3.zoom<SVGSVGElement, unknown>().on('zoom', (event) => {
+      g.attr('transform', event.transform)
+    })
+    svg.call(zoom)
 
     const maxDeals = d3.max(data.nodes, (n) => n.deal_count) || 1
     const r = d3.scaleSqrt().domain([1, maxDeals]).range([5, 20])
@@ -83,11 +76,11 @@ export default function InvestorNetwork() {
     }
 
     const simulation = d3
-      .forceSimulation(data.nodes as d3.SimulationNodeDatum[])
-      .force('link', d3.forceLink(data.edges).id((d: any) => d.id).distance(80))
+      .forceSimulation(data.nodes)
+      .force('link', d3.forceLink<Node, Edge>(data.edges).id((d) => d.id).distance(80))
       .force('charge', d3.forceManyBody().strength(-120))
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collision', d3.forceCollide().radius((d: any) => r(d.deal_count) + 4))
+      .force('collision', d3.forceCollide<Node>().radius((d) => r(d.deal_count) + 4))
 
     const link = g
       .append('g')
@@ -173,7 +166,10 @@ export default function InvestorNetwork() {
       label.attr('x', (d: any) => d.x).attr('y', (d: any) => d.y)
     })
 
-    return () => { simulation.stop() }
+    return () => {
+      simulation.stop()
+      svg.on('.zoom', null)
+    }
   }, [data])
 
   return (

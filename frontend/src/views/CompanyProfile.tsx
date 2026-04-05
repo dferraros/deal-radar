@@ -14,6 +14,7 @@ interface DealResponse {
   source_name: string | null
   ai_summary: string | null
   all_investors: string[]
+  lead_investor?: string | null
 }
 
 interface CompanyResponse {
@@ -26,6 +27,7 @@ interface CompanyResponse {
   website: string | null
   in_watchlist: boolean
   deals: DealResponse[]
+  founded_year?: number | null
 }
 
 // --- Helpers ---
@@ -127,6 +129,9 @@ export default function CompanyProfile() {
                         {GEO_FLAGS[company.geo] ?? ''} {company.geo}
                       </span>
                     )}
+                    {company.founded_year && (
+                      <span className="text-xs text-zinc-500 font-mono">Est. {company.founded_year}</span>
+                    )}
                     {company.website && (
                       <a
                         href={company.website}
@@ -224,12 +229,13 @@ export default function CompanyProfile() {
                             {deal.all_investors.length > 0 && (
                               <div className="flex gap-1.5 flex-wrap mt-1.5">
                                 {deal.all_investors.slice(0, 5).map((inv) => (
-                                  <span
+                                  <button
                                     key={inv}
-                                    className="text-[10px] px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-400 font-mono"
+                                    onClick={() => navigate(`/leaderboard?investor=${encodeURIComponent(inv)}`)}
+                                    className="text-xs px-2 py-0.5 rounded bg-zinc-800 text-zinc-400 hover:bg-amber-500/20 hover:text-amber-400 border border-zinc-700 hover:border-amber-500/30 transition-colors cursor-pointer"
                                   >
                                     {inv}
-                                  </span>
+                                  </button>
                                 ))}
                                 {deal.all_investors.length > 5 && (
                                   <span className="text-[10px] text-zinc-600">
@@ -241,6 +247,11 @@ export default function CompanyProfile() {
                             {deal.ai_summary && (
                               <p className="text-xs text-zinc-500 mt-1.5 line-clamp-2">{deal.ai_summary}</p>
                             )}
+                            {deal.lead_investor && (
+                              <div className="text-xs text-zinc-500 mt-0.5">
+                                Lead: <span className="text-zinc-400">{deal.lead_investor}</span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )
@@ -251,21 +262,27 @@ export default function CompanyProfile() {
           </div>
 
           {/* Known Investors */}
-          {company.deals.flatMap((d) => d.all_investors).filter(Boolean).length > 0 && (
-            <div className="mt-8">
-              <h2 className="text-xl font-bold text-zinc-100 mb-4">Known Investors</h2>
-              <div className="flex flex-wrap gap-2">
-                {[...new Set(company.deals.flatMap((d) => d.all_investors))].map((inv) => (
-                  <span
-                    key={inv}
-                    className="text-xs px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-zinc-400 font-mono"
-                  >
-                    {inv}
-                  </span>
-                ))}
+          {(() => {
+            const allInvestors = [...new Set(
+              company.deals.flatMap((d) => d.all_investors ?? []).filter(Boolean)
+            )] as string[]
+            return allInvestors.length > 0 ? (
+              <div className="mt-8">
+                <h2 className="text-xl font-bold text-zinc-100 mb-4">Known Investors</h2>
+                <div className="flex flex-wrap gap-2">
+                  {allInvestors.map((inv) => (
+                    <button
+                      key={inv}
+                      onClick={() => navigate(`/leaderboard?investor=${encodeURIComponent(inv)}`)}
+                      className="text-xs px-2 py-0.5 rounded bg-zinc-800 text-zinc-400 hover:bg-amber-500/20 hover:text-amber-400 border border-zinc-700 hover:border-amber-500/30 transition-colors cursor-pointer"
+                    >
+                      {inv}
+                    </button>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            ) : null
+          })()}
         </>
       )}
     </div>

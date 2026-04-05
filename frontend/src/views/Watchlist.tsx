@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import FilterBar, { defaultFilters, FilterState } from '../components/FilterBar'
@@ -79,28 +79,27 @@ export default function Watchlist() {
 
   const watchlistSectors = [...new Set(watchlist.flatMap((w) => w.company_sector))]
 
-  const filteredDeals: FlatDeal[] = watchlist.flatMap((item) =>
-    item.recent_deals
-      .filter((d) => {
-        if (filters.dealType && d.deal_type !== filters.dealType) return false
-        if (filters.sector && !d.sector.includes(filters.sector)) return false
-        if (filters.geo && d.geo !== filters.geo) return false
-        if (
-          filters.amountMin &&
-          d.amount_usd !== null &&
-          d.amount_usd < Number(filters.amountMin) * 1_000_000
-        )
-          return false
-        return true
-      })
-      .map((d) => ({
-        ...d,
-        _watchlistItemId: item.id,
-        _companyName: item.company_name,
-        _companyId: item.company_id,
-        _notes: item.notes,
-      }))
-  )
+  const filteredDeals: FlatDeal[] = useMemo(() =>
+    watchlist.flatMap((item) =>
+      item.recent_deals
+        .filter((d) => {
+          if (filters.dealType && d.deal_type !== filters.dealType) return false
+          if (filters.sector && !d.sector.includes(filters.sector)) return false
+          if (filters.geo && d.geo !== filters.geo) return false
+          if (filters.amountMin) {
+            if (d.amount_usd === null || d.amount_usd < Number(filters.amountMin) * 1_000_000) return false
+          }
+          return true
+        })
+        .map((d) => ({
+          ...d,
+          _watchlistItemId: item.id,
+          _companyName: item.company_name,
+          _companyId: item.company_id,
+          _notes: item.notes,
+        }))
+    )
+  , [watchlist, filters])
 
   const handleRemoveConfirmed = async (watchlistItemId: string, companyName: string) => {
     try {

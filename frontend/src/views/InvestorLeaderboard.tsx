@@ -25,7 +25,7 @@ function formatCapital(usd: number): string {
 function getRankColor(index: number): string {
   if (index === 0) return 'text-amber-400 font-bold'
   if (index <= 2) return 'text-zinc-300 font-semibold'
-  return 'text-zinc-600'
+  return 'text-zinc-500'
 }
 
 export default function InvestorLeaderboard() {
@@ -54,7 +54,7 @@ export default function InvestorLeaderboard() {
     { key: 'quarterly', label: 'Quarterly' },
   ]
 
-  const maxCapital = Math.max(...(data?.investors ?? []).map((i) => i.total_capital_usd), 1)
+  const maxCapital = data?.investors.reduce((m, i) => Math.max(m, i.total_capital_usd), 1) ?? 1
 
   return (
     <div className="px-6 pt-6 pb-6">
@@ -126,15 +126,13 @@ export default function InvestorLeaderboard() {
                   <td className="px-4 py-2.5 font-mono text-zinc-300 text-sm tabular">
                     {entry.deal_count}
                   </td>
-                  <td className="px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 bg-zinc-800 rounded-full h-1.5 max-w-[120px]">
-                        <div
-                          className="h-1.5 rounded-full bg-emerald-500/70"
-                          style={{ width: `${Math.round((entry.total_capital_usd / maxCapital) * 100)}%` }}
-                        />
-                      </div>
-                      <span className="font-mono text-sm tabular text-emerald-400 w-16 text-right">
+                  <td className="px-4 py-3 text-right">
+                    <div className="relative inline-flex items-center justify-end w-full">
+                      <div
+                        className="absolute left-0 top-0 bottom-0 bg-emerald-500/20 rounded"
+                        style={{ width: `${Math.round((entry.total_capital_usd / maxCapital) * 100)}%` }}
+                      />
+                      <span className="relative text-emerald-400 tabular text-sm font-mono">
                         {formatCapital(entry.total_capital_usd)}
                       </span>
                     </div>
