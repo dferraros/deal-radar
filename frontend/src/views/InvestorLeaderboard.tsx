@@ -117,7 +117,7 @@ export default function InvestorLeaderboard() {
                   key={entry.investor_name}
                   className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
                 >
-                  <td className={`px-4 py-3 font-mono text-sm tabular ${getRankColor(idx)}`}>
+                  <td className={`px-4 py-3 font-mono text-sm tabular-nums${getRankColor(idx)}`}>
                     #{idx + 1}
                   </td>
                   <td className="px-4 py-2.5 font-medium text-slate-800">
@@ -132,7 +132,7 @@ export default function InvestorLeaderboard() {
                         className="absolute left-0 top-0 bottom-0 bg-emerald-500/20 rounded"
                         style={{ width: `${Math.round((entry.total_capital_usd / maxCapital) * 100)}%` }}
                       />
-                      <span className="relative text-emerald-400 tabular text-sm font-mono">
+                      <span className="relative text-emerald-400 tabular-numstext-sm font-mono">
                         {formatCapital(entry.total_capital_usd)}
                       </span>
                     </div>

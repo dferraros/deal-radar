@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { Fragment, useEffect, useState } from 'react'
 
 interface IngestionRun {
   id: string
@@ -114,9 +114,8 @@ export default function Admin() {
             </thead>
             <tbody>
               {runs.map((run) => (
-                <>
+                <Fragment key={run.id}>
                   <tr
-                    key={run.id}
                     className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
                   >
                     <td className="py-2.5 px-4 font-mono text-xs text-slate-500 whitespace-nowrap">
@@ -162,7 +161,7 @@ export default function Admin() {
                       </td>
                     </tr>
                   )}
-                </>
+                </Fragment>
               ))}
             </tbody>
           </table>
