@@ -17,38 +17,23 @@ branch_labels = None
 depends_on = None
 
 
-_SAFE_CAST = "CASE WHEN {col} ~ E'^[+-]?[0-9]+(\\\\.[0-9]+)?$' THEN {col}::double precision ELSE NULL END"
-
-
-def _safe(col: str) -> str:
-    return _SAFE_CAST.format(col=col)
-
-
 def upgrade() -> None:
     op.execute("SET lock_timeout = '5s'")
 
-    op.execute(f"""
-        ALTER TABLE intel_observations
-            ALTER COLUMN confidence TYPE double precision
-            USING {_safe('confidence')}
-    """)
+    # Null out any non-numeric strings before casting — safer than USING CASE
+    op.execute("UPDATE intel_observations SET confidence = NULL WHERE confidence !~ '^[0-9]+(\\.[0-9]+)?$'")
+    op.execute("UPDATE intel_company_profiles SET profile_confidence = NULL WHERE profile_confidence !~ '^[0-9]+(\\.[0-9]+)?$'")
+    for col in ("capital_weighted_score", "growth_rate", "novelty_score", "co_occurrence_density"):
+        op.execute(f"UPDATE intel_technology_scores SET {col} = NULL WHERE {col} !~ '^[0-9]+(\\.[0-9]+)?$'")
 
-    op.execute(f"""
-        ALTER TABLE intel_company_profiles
-            ALTER COLUMN profile_confidence TYPE double precision
-            USING {_safe('profile_confidence')}
-    """)
-
-    op.execute(f"""
+    op.execute("ALTER TABLE intel_observations ALTER COLUMN confidence TYPE double precision USING confidence::double precision")
+    op.execute("ALTER TABLE intel_company_profiles ALTER COLUMN profile_confidence TYPE double precision USING profile_confidence::double precision")
+    op.execute("""
         ALTER TABLE intel_technology_scores
-            ALTER COLUMN capital_weighted_score TYPE double precision
-            USING {_safe('capital_weighted_score')},
-            ALTER COLUMN growth_rate TYPE double precision
-            USING {_safe('growth_rate')},
-            ALTER COLUMN novelty_score TYPE double precision
-            USING {_safe('novelty_score')},
-            ALTER COLUMN co_occurrence_density TYPE double precision
-            USING {_safe('co_occurrence_density')}
+            ALTER COLUMN capital_weighted_score TYPE double precision USING capital_weighted_score::double precision,
+            ALTER COLUMN growth_rate TYPE double precision USING growth_rate::double precision,
+            ALTER COLUMN novelty_score TYPE double precision USING novelty_score::double precision,
+            ALTER COLUMN co_occurrence_density TYPE double precision USING co_occurrence_density::double precision
     """)
 
 
