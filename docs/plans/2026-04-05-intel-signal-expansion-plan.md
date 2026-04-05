@@ -1011,3 +1011,143 @@ git push origin master
 **New env var required:** `GITHUB_TOKEN` (free personal access token from github.com/settings/tokens)
 
 **New dependencies:** `httpx` (already in requirements.txt via existing ingestion pipeline)
+
+
+---
+
+## Task 6: Define Target Output — "Technical Bets" Analysis Layer
+
+> This task defines WHAT the Intel engine should produce, not just what data it collects.
+> The Scale AI analysis below is the canonical example of the target output quality.
+
+### The Problem With Current Output
+
+Right now the Intel engine produces:
+- A list of primitives (e.g. "Python", "AWS", "Transformer")
+- A confidence score per primitive
+- A layer assignment (model / infra / interface / etc.)
+
+That is **inputs to analysis**, not analysis itself.
+
+### What We Actually Want
+
+Given any company, the Intel engine should produce a **Technical Bets Dossier**:
+
+```
+Company: [Name]
+Engineering Frame: [1-sentence description of what problem they're actually solving]
+
+Technical Bets (ranked by confidence):
+  Bet A: [Name] — [What the bet is] — [Why it's a bet, not obvious]
+  Bet B: ...
+
+Stack Clusters:
+  Cluster A — [Layer Name]
+    Core components: [list]
+    Engineering implication: [why this cluster exists]
+  ...
+
+What They Are NOT Betting On: [important negatives]
+
+Engineer's Summary: [3-level nested view — surface / real / deepest product]
+```
+
+### Scale AI as the Canonical Example
+
+The following is the reference output for what a high-quality Technical Bets analysis looks like. The Intel engine's Claude extraction prompt should be calibrated to produce this quality of output.
+
+---
+
+**Company:** Scale AI (early-stage, 2016–2019)
+
+**Engineering Frame:**
+They were building a machine for converting raw, ambiguous sensor data into reliable supervised learning signal at industrial throughput. Not "AI data labeling" — a distributed systems + human computation + data-model interface problem.
+
+---
+
+**The 7 Core Technical Bets:**
+
+**Bet 1 — Labeling is a formal task graph, not ad hoc labor**
+Labeling should be represented as a precise computational object (task, project, schema, output spec) so it becomes programmable: automatable routing, validation, prelabels, multi-stage review, export consistency, agreement measurement.
+
+**Bet 2 — The scarce resource is controllable human judgment, not raw labor**
+If bottleneck = "get more people" → build a marketplace. If bottleneck = "reliable judgment under tight spec" → build tooling, instruction systems, QA layers, disagreement resolution, latency control, workforce segmentation. The second is far more defensible.
+
+**Bet 3 — Data quality is fundamentally an ontology problem before it is a labor problem**
+A bad ontology causes inconsistent labels, low inter-annotator agreement, bad training targets, spurious model error, non-comparable datasets. The platform is partly an ontology compiler for ML supervision.
+
+**Bet 4 — Win the hardest data modality first, not the easiest**
+AV wedge: extremely painful bottleneck, high WTP, complex geometry (3D cuboids, LiDAR, sensor fusion), multimodal stacks, expensive failure. This is a high-complexity annotation infrastructure wedge, not a generic outsourcing wedge.
+
+**Bet 5 — "Ground truth" is manufactured, not observed**
+There is no perfect truth in the data. There is only: noisy observation + task instructions + partial human judgment + agreement rules + validation loops. The real product is confidence-calibrated supervision.
+
+**Bet 6 — The annotation system should learn from its own output (closed-loop data engine)**
+raw data → human labels → model prelabels → human corrections → better prelabels → more throughput → lower marginal cost. This is the deepest bet: concentration of human effort on edge cases, model handles the bulk.
+
+**Bet 7 — Annotation is part of the training pipeline, not a separate business process**
+Scale sits between raw data storage and model training. Structured outputs plug directly into customer ML pipelines. That is the seed of infrastructure control.
+
+---
+
+**Stack Clusters:**
+
+| Cluster | What it is | Engineering implication |
+|---|---|---|
+| A — Task abstraction | Task object, project, schema, input modalities, output spec | Makes labeling programmable |
+| B — Human computation orchestration | Queues, assignment, review, escalation, throughput control | Controllable judgment at scale |
+| C — Ontology / label semantics | Classes, attributes, geometry, annotation semantics, frame consistency | Quality is an ontology problem first |
+| D — CV labeling infrastructure | 2D boxes, video tracking, cuboids, LiDAR, point cloud, sensor fusion | Hard modality wedge |
+| E — QA and consensus | Consensus, audits, validation, disagreement handling, instruction refinement | Ground truth is manufactured |
+| F — Model-assisted prelabeling | First-pass model + human correction closed loop | Self-improving throughput |
+| G — Delivery layer | Export formats, stable IDs, schema consistency, integration APIs | Annotation = part of training pipeline |
+
+---
+
+**What They Were NOT Betting On (early):**
+- Frontier foundation model research
+- Proprietary base-model breakthroughs
+- Generic BPO economics
+- Pure crowd marketplace scale
+- One-off consulting data projects
+
+---
+
+**Engineer's 3-Level Summary:**
+
+- **Level 1 (surface):** "Get labels for my ML data."
+- **Level 2 (real product):** "Convert raw multimodal sensor data into reliable supervised training signal."
+- **Level 3 (deepest product):** "Build a software-controlled feedback loop where human judgment creates training data that gradually automates more of the same pipeline." — *Supervision itself can be industrialized, formalized, and partially automated like any other production system.*
+
+---
+
+### Implementation Plan for Task 6
+
+**What needs to be built:**
+
+The current `IntelExtractor.extract_profile()` produces: summary, target_user, workflow, inputs, outputs, claimed_differentiators, jtbd, confidence.
+
+A new method `extract_technical_bets()` should produce the structured analysis above.
+
+**Files to create/modify:**
+- `backend/intel/extractors.py` — add `extract_technical_bets()` method
+- `backend/models.py` — add `IntelTechnicalBets` model (or store as JSONB on existing profile)
+- `backend/routers/intel.py` — expose bets in dossier endpoint
+- `frontend/src/views/IntelDossier.tsx` — display bets section
+
+**The prompt engineering:**
+
+The extraction prompt should instruct Claude to:
+1. First identify the engineering frame ("what problem are they actually solving at the infrastructure level")
+2. Then identify 3–7 specific technical bets with: name, what it is, why it's a bet (not obvious/certain)
+3. Cluster the stack into logical groups with an engineering implication per cluster
+4. State explicitly what the company is NOT betting on
+5. Produce a 3-level nested summary: surface product / real product / deepest product
+
+**Key calibration:** The prompt should explicitly say "you are a senior engineer analyzing this company, not an investor or VC. Focus on technical architecture choices, what problems they're actually solving at the systems level, and what assumptions their stack commits them to."
+
+**Confidence signal:** A good technical bets analysis requires enough signal. The engine should only attempt this if:
+- At least 5 primitives extracted with confidence >= 0.6
+- At least one of: GitHub SBOM data, job postings, docs/product pages
+
+**Storage:** Store as JSONB in a new `intel_technical_bets` table or as a TEXT field on `intel_company_profiles`. JSONB preferred for structured access.
