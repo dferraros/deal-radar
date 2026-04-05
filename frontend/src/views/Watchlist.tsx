@@ -43,6 +43,17 @@ interface FlatDeal extends DealResponse {
   _notes: string | null
 }
 
+function daysSince(dateStr: string | null | undefined): string {
+  if (!dateStr) return '—'
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const days = Math.floor(diff / 86_400_000)
+  if (days === 0) return 'Today'
+  if (days === 1) return '1d ago'
+  if (days < 30) return `${days}d ago`
+  if (days < 365) return `${Math.floor(days / 30)}mo ago`
+  return `${Math.floor(days / 365)}y ago`
+}
+
 export default function Watchlist() {
   const navigate = useNavigate()
   const [watchlist, setWatchlist] = useState<WatchlistItem[]>([])
@@ -135,11 +146,11 @@ export default function Watchlist() {
           <table className="w-full text-sm border-collapse">
             <thead>
               <tr className="border-b border-zinc-800">
-                {['Date', 'Company', 'Round', 'Amount', 'Sector', 'Geo', 'Investors', 'Notes', ''].map(
+                {['Date', 'Company', 'Round', 'Amount', 'Sector', 'Geo', 'Investors', 'Notes', 'Last Activity', ''].map(
                   (h, i) => (
                     <th
                       key={i}
-                      className="text-left text-xs uppercase tracking-wider text-zinc-500 py-3 px-4 font-medium"
+                      className={`text-xs uppercase tracking-wider text-zinc-500 py-3 px-4 font-medium ${h === 'Last Activity' ? 'text-right' : 'text-left'}`}
                     >
                       {h}
                     </th>
@@ -153,7 +164,7 @@ export default function Watchlist() {
                 if (confirmRemove === item._watchlistItemId) {
                   return (
                     <tr key={`${item.id}-confirm`}>
-                      <td colSpan={9} className="py-2 px-4">
+                      <td colSpan={10} className="py-2 px-4">
                         <div className="flex items-center gap-3 text-xs">
                           <span className="text-zinc-300">
                             Remove {item._companyName}? This will delete your notes for this
@@ -202,7 +213,7 @@ export default function Watchlist() {
                 return (
                   <tr
                     key={item.id}
-                    className="border-b border-zinc-800/50 hover:bg-zinc-800/30 cursor-pointer transition-colors group"
+                    className="border-b border-zinc-800/50 border-l-4 border-l-amber-400/40 hover:bg-zinc-800/30 cursor-pointer transition-colors group"
                     onClick={() => navigate(`/company/${item._companyId}`)}
                   >
                     <td className="py-3 px-4 font-mono text-zinc-500 text-xs whitespace-nowrap">
@@ -243,6 +254,9 @@ export default function Watchlist() {
                         watchlistItemId={item._watchlistItemId}
                         initialNote={item._notes}
                       />
+                    </td>
+                    <td className="px-4 py-3 text-right font-mono text-xs text-zinc-500">
+                      {daysSince(item.announced_date)}
                     </td>
                     <td className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
                       <button
