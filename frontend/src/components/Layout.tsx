@@ -1,5 +1,6 @@
 import { Outlet } from 'react-router-dom'
 import Sidebar from './Sidebar'
+import CommandPalette from './CommandPalette'
 
 export default function Layout() {
   return (
@@ -8,6 +9,7 @@ export default function Layout() {
       <main className="ml-[220px] flex-1 min-h-screen overflow-auto">
         <Outlet />
       </main>
+      <CommandPalette />
     </div>
   )
 }
