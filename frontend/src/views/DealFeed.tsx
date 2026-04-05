@@ -637,18 +637,18 @@ export default function DealFeed() {
                 <table className="w-full">
                   <thead className="sticky top-0 z-10">
                     <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="text-left px-4 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium w-[200px]">Company</th>
-                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium w-[100px]">Type</th>
-                      <th onClick={() => toggleSort('amount_usd')} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && toggleSort('amount_usd')} className="text-right px-4 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium cursor-pointer hover:text-amber-600 select-none w-[200px] focus:outline-none focus:bg-amber-50">
+                      <th className="text-left px-4 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-semibold w-[200px]">Company</th>
+                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-semibold w-[100px]">Type</th>
+                      <th onClick={() => toggleSort('amount_usd')} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && toggleSort('amount_usd')} className="text-right px-4 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-semibold cursor-pointer hover:text-amber-600 select-none w-[200px] focus:outline-none focus:bg-amber-50">
                         Amount · USD {sortKey === 'amount_usd'
                           ? <span className="text-amber-600 ml-0.5">{sortDir === 'desc' ? '▼' : '▲'}</span>
                           : <span className="text-slate-300 ml-0.5 text-[8px]">⊞</span>}
                       </th>
-                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium">Sector</th>
-                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium">Tech</th>
-                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium">Geo</th>
-                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium">Lead Inv.</th>
-                      <th onClick={() => toggleSort('announced_date')} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && toggleSort('announced_date')} className="text-right px-4 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium cursor-pointer hover:text-amber-600 select-none focus:outline-none focus:bg-amber-50">
+                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Sector</th>
+                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Tech</th>
+                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Geo</th>
+                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-semibold">Lead Inv.</th>
+                      <th onClick={() => toggleSort('announced_date')} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && toggleSort('announced_date')} className="text-right px-4 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-semibold cursor-pointer hover:text-amber-600 select-none focus:outline-none focus:bg-amber-50">
                         Date {sortKey === 'announced_date'
                           ? <span className="text-amber-600 ml-0.5">{sortDir === 'desc' ? '▼' : '▲'}</span>
                           : <span className="text-slate-300 ml-0.5 text-[8px]">⊞</span>}
@@ -669,7 +669,7 @@ export default function DealFeed() {
                           onClick={() => deal.company_id && navigate(`/company/${deal.company_id}`)}
                           className={`
                             deal-row cursor-pointer group
-                            ${idx % 2 === 1 ? 'bg-slate-50/60' : 'bg-white'}
+                            bg-white
                             ${tier === 'mega' ? 'mega-deal-row border-l-2 border-l-amber-400' : `border-l-2 ${DEAL_TYPE_LEFT_BORDER[typeKey]}`}
                             ${isNew ? 'border-r-2 border-r-blue-400' : ''}
                           `}
@@ -683,7 +683,7 @@ export default function DealFeed() {
                               ) : (
                                 <CompanyAvatar name={deal.company_name ?? '?'} size={14} />
                               )}
-                              <span className="text-[13px] font-medium text-slate-800 group-hover:text-slate-900 truncate max-w-[140px]">
+                              <span className="text-[13px] font-semibold text-slate-900 group-hover:text-slate-700 truncate max-w-[140px]">
                                 {deal.company_name ?? '—'}
                               </span>
                               {deal.source_name && (

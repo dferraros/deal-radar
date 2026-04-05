@@ -18,7 +18,7 @@
 body {
   background-color: #f8fafc;
   color: #0f172a;
-  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+  font-family: 'IBM Plex Sans', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   font-feature-settings: "kern" 1, "liga" 1;
 }
