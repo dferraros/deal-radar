@@ -4,7 +4,7 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import BackgroundTasks, FastAPI, Depends, Request
-from fastapi.middleware.base import BaseHTTPMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.routing import APIRouter
@@ -22,6 +22,7 @@ from backend.routers import admin as admin_router
 from backend.routers import investors_leaderboard as investors_leaderboard_router
 from backend.routers import briefing as briefing_router
 from backend.routers import alerts as alerts_router
+from backend.routers.intel import router as intel_router
 from backend.scheduler import scheduler, start_scheduler, daily_ingestion_job
 
 logger = logging.getLogger(__name__)
@@ -103,6 +104,7 @@ app.include_router(admin_router.router, prefix="/api")
 app.include_router(investors_leaderboard_router.router, prefix="/api")
 app.include_router(briefing_router.router, prefix="/api")
 app.include_router(alerts_router.router, prefix="/api")
+app.include_router(intel_router, prefix="/api")
 
 # Serve React build as static files — must come AFTER API routes
 FRONTEND_DIST = Path(__file__).parent.parent / "frontend" / "dist"
