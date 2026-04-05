@@ -365,8 +365,7 @@ export default function DealFeed() {
   }, [deals])
 
   const maxAmount = useMemo(() => {
-    const amounts = deals.filter(d => (d.amount_usd ?? 0) > 0).map(d => d.amount_usd!)
-    return amounts.length > 0 ? Math.max(...amounts) : 1
+    return deals.reduce((max, d) => ((d.amount_usd ?? 0) > max ? d.amount_usd! : max), 1)
   }, [deals])
 
   // Task 4: Sorted deals
