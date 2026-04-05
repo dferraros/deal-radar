@@ -35,7 +35,7 @@ from backend.database import get_session
 from backend.models import (
     IntelQueue, IntelCompanyProfile, IntelObservation,
     IntelObservationEvidence, IntelOntologyNode, IntelOntologyAlias,
-    IntelTechnologyScore, Company, Deal,
+    IntelTechnologyScore, Company, Deal, IntelTechnicalBet,
 )
 from backend.intel.pipeline import run_intel_pipeline
 from backend.intel.seed import seed_ontology
@@ -79,6 +79,14 @@ class PrimitiveItem(BaseModel):
     evidence: list[EvidenceItem]
 
 
+class TechnicalBetItem(BaseModel):
+    bet_index: int
+    thesis: str
+    implication: Optional[str]
+    signals: list[str]
+    confidence: float
+
+
 class DossierResponse(BaseModel):
     queue_id: uuid.UUID
     company_name: str
@@ -89,6 +97,7 @@ class DossierResponse(BaseModel):
     profile_confidence: float
     primitives: list[PrimitiveItem]
     total_funding_usd: Optional[int]
+    technical_bets: list[TechnicalBetItem] = []
 
 
 class GraphNode(BaseModel):
@@ -263,6 +272,14 @@ async def get_dossier(queue_id: uuid.UUID, db: AsyncSession = Depends(get_sessio
     )
     observations = obs_result.scalars().all()
 
+    # Load technical bets
+    bets_result = await db.execute(
+        select(IntelTechnicalBet)
+        .where(IntelTechnicalBet.queue_id == queue_id)
+        .order_by(IntelTechnicalBet.bet_index)
+    )
+    bets_rows = bets_result.scalars().all()
+
     # Compute total funding via company_id if available
     total_funding = None
     if queue.company_id:
@@ -300,6 +317,16 @@ async def get_dossier(queue_id: uuid.UUID, db: AsyncSession = Depends(get_sessio
         profile_confidence=(profile.profile_confidence or 0.0) if profile else 0.0,
         primitives=primitives,
         total_funding_usd=total_funding,
+        technical_bets=[
+            TechnicalBetItem(
+                bet_index=b.bet_index,
+                thesis=b.thesis,
+                implication=b.implication,
+                signals=b.signals or [],
+                confidence=b.confidence or 0.0,
+            )
+            for b in bets_rows
+        ],
     )
 
 
