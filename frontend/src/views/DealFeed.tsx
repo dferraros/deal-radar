@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import FilterBar, { defaultFilters } from '../components/FilterBar'
@@ -115,17 +115,27 @@ export default function DealFeed() {
   const [error, setError] = useState<string | null>(null)
   const [sectors, setSectors] = useState<string[]>([])
   const [search, setSearch] = useState('')
+  const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [lastSync, setLastSync] = useState<string | null>(null)
   const [briefing, setBriefing] = useState<BriefingResponse | null>(null)
   const [lastVisit, setLastVisit] = useState<Date | null>(null)
   const [newCount, setNewCount] = useState(0)
 
-  const fetchDeals = useCallback(async (f: FilterState) => {
+  const handleSearchChange = (val: string) => {
+    setSearch(val)
+    if (searchTimerRef.current) clearTimeout(searchTimerRef.current)
+    searchTimerRef.current = setTimeout(() => {
+      fetchDeals(filters, val)
+      setPage(1)
+    }, 300)
+  }
+
+  const fetchDeals = useCallback(async (f: FilterState, searchQuery = '') => {
     setLoading(true)
     setError(null)
     setPage(1)
     try {
-      const params = { ...buildParams(f), page: '1', limit: '50' }
+      const params = { ...buildParams(f), page: '1', limit: '50', ...(searchQuery ? { q: searchQuery } : {}) }
       const res = await axios.get('/api/deals', { params })
       setDeals(res.data.deals)
       setHasMore(res.data.page < res.data.pages)
@@ -196,16 +206,11 @@ export default function DealFeed() {
       .get('/api/briefing/latest')
       .then((r) => setBriefing(r.data))
       .catch(() => {})
-    fetchDeals(filters)
+    fetchDeals(filters, search)
   }, [fetchDeals]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Client-side search filter
-  const visibleDeals = deals.filter(
-    (d) =>
-      !search ||
-      d.company_name?.toLowerCase().includes(search.toLowerCase()) ||
-      d.lead_investor?.toLowerCase().includes(search.toLowerCase())
-  )
+  // Search is handled server-side via the q param
+  const visibleDeals = deals
 
   const todayDeals = getTodayDeals(deals)
   const todayCapital = todayDeals.reduce((sum, d) => sum + (d.amount_usd ?? 0), 0)
@@ -300,12 +305,15 @@ export default function DealFeed() {
 
       <div className="px-6 pb-6">
         {/* Search */}
-        <input
-          placeholder="Search companies, investors..."
-          className="w-full bg-zinc-800 border border-zinc-700 text-zinc-200 placeholder-zinc-500 focus:outline-none focus:border-blue-500 rounded-lg px-4 py-2 text-sm mb-2"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+        <div className="px-0 pt-0 pb-2">
+          <input
+            type="text"
+            placeholder="Search company name..."
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            className="w-full max-w-sm bg-zinc-900 border border-zinc-700 text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-amber-500 rounded-md px-3 py-1.5 text-sm"
+          />
+        </div>
 
         {/* Filter bar */}
         <FilterBar
@@ -313,7 +321,7 @@ export default function DealFeed() {
           sectors={sectors}
           onFilterChange={(f) => {
             setFilters(f)
-            fetchDeals(f)
+            fetchDeals(f, search)
           }}
         />
 

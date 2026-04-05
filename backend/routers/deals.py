@@ -50,6 +50,7 @@ async def list_deals(
     sector: Optional[str] = Query(None, description="Filter by sector tag"),
     geo: Optional[str] = Query(None, description="Exact match on company geo"),
     amount_min: Optional[int] = Query(None, description="Minimum amount_usd"),
+    q: Optional[str] = Query(None, description="Search by company name"),
     page: int = Query(1, ge=1),
     limit: int = Query(50, ge=1, le=200),
     db: AsyncSession = Depends(get_session),
@@ -77,6 +78,10 @@ async def list_deals(
         base_stmt = base_stmt.where(Company.geo == geo)
     if amount_min is not None:
         base_stmt = base_stmt.where(Deal.amount_usd >= amount_min)
+    if q is not None and q.strip():
+        base_stmt = base_stmt.where(
+            Company.name.ilike(f"%{q.strip()}%")
+        )
 
     # --- Count total (before pagination) ---
     count_stmt = select(func.count()).select_from(base_stmt.subquery())
@@ -112,6 +117,7 @@ async def export_deals_csv(
     sector: Optional[str] = Query(None, description="Filter by sector tag"),
     geo: Optional[str] = Query(None, description="Exact match on company geo"),
     amount_min: Optional[int] = Query(None, description="Minimum amount_usd"),
+    q: Optional[str] = Query(None, description="Search by company name"),
     db: AsyncSession = Depends(get_session),
 ) -> StreamingResponse:
     """Export filtered deals as a CSV file download."""
@@ -134,6 +140,10 @@ async def export_deals_csv(
         stmt = stmt.where(Company.geo == geo)
     if amount_min is not None:
         stmt = stmt.where(Deal.amount_usd >= amount_min)
+    if q is not None and q.strip():
+        stmt = stmt.where(
+            Company.name.ilike(f"%{q.strip()}%")
+        )
 
     stmt = stmt.order_by(Deal.announced_date.desc().nullslast(), Deal.created_at.desc())
     result = await db.execute(stmt)
