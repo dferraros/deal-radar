@@ -69,11 +69,11 @@ const DEAL_TYPE_LEFT_BORDER: Record<string, string> = {
 }
 
 const DEAL_TYPE_BG: Record<string, string> = {
-  vc:      'bg-emerald-500/5',
-  crypto:  'bg-violet-500/5',
-  ma:      'bg-sky-500/5',
-  ipo:     'bg-rose-500/5',
-  unknown: 'bg-zinc-900',
+  vc:      'bg-emerald-50',
+  crypto:  'bg-violet-50',
+  ma:      'bg-sky-50',
+  ipo:     'bg-rose-50',
+  unknown: 'bg-slate-50',
 }
 
 const DEAL_TYPE_DOT: Record<string, string> = {
@@ -99,13 +99,13 @@ const AMOUNT_BAR_COLOR: Record<string, string> = {
 }
 
 const SECTOR_PILL_COLORS: Record<string, string> = {
-  crypto:    'bg-violet-500/15 text-violet-300 border-violet-500/30',
-  fintech:   'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-  saas:      'bg-sky-500/15 text-sky-300 border-sky-500/30',
-  healthtech:'bg-rose-500/15 text-rose-300 border-rose-500/30',
-  edtech:    'bg-amber-500/15 text-amber-300 border-amber-500/30',
-  proptech:  'bg-orange-500/15 text-orange-300 border-orange-500/30',
-  other:     'bg-zinc-500/15 text-zinc-400 border-zinc-600/30',
+  crypto:    'bg-violet-100 text-violet-700 border-violet-200',
+  fintech:   'bg-emerald-100 text-emerald-700 border-emerald-200',
+  saas:      'bg-sky-100 text-sky-700 border-sky-200',
+  healthtech:'bg-rose-100 text-rose-700 border-rose-200',
+  edtech:    'bg-amber-100 text-amber-700 border-amber-200',
+  proptech:  'bg-orange-100 text-orange-700 border-orange-200',
+  other:     'bg-slate-100 text-slate-500 border-slate-200',
 }
 
 function SectorPill({ sector }: { sector: string }) {
@@ -142,11 +142,11 @@ function getFaviconUrl(website: string | null | undefined, sourceUrl: string | n
 // ---- Task 6: Source badge pills ----
 
 const SOURCE_COLORS: Record<string, string> = {
-  crunchbase: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
-  tavily:     'bg-violet-500/15 text-violet-400 border-violet-500/30',
-  rss:        'bg-zinc-700/50 text-zinc-400 border-zinc-600',
-  firecrawl:  'bg-orange-500/15 text-orange-400 border-orange-500/30',
-  manual:     'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+  crunchbase: 'bg-blue-100 text-blue-600 border-blue-200',
+  tavily:     'bg-violet-100 text-violet-600 border-violet-200',
+  rss:        'bg-slate-100 text-slate-500 border-slate-200',
+  firecrawl:  'bg-orange-100 text-orange-600 border-orange-200',
+  manual:     'bg-emerald-100 text-emerald-600 border-emerald-200',
 }
 
 function SourceBadge({ source }: { source: string | null | undefined }) {
@@ -391,81 +391,81 @@ export default function DealFeed() {
   return (
     <div>
       {/* ── Status bar ──────────────────────────────────────────── */}
-      <div className="bg-black border-b border-zinc-800/80 px-6 py-1.5 flex items-center gap-5 text-xs font-mono text-zinc-500">
+      <div className="bg-white border-b border-slate-200 px-6 py-1.5 flex items-center gap-5 text-xs font-mono text-slate-400">
         {/* Product label */}
-        <span className="font-mono text-[10px] font-bold tracking-[0.15em] text-amber-500/70">DEAL·RADAR</span>
-        <span className="w-px h-3 bg-zinc-800" />
+        <span className="font-mono text-[10px] font-bold tracking-[0.15em] text-amber-600">DEAL·RADAR</span>
+        <span className="w-px h-3 bg-slate-200" />
         {/* LIVE badge */}
-        <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+        <span className="flex items-center gap-1.5 text-emerald-500 font-semibold">
           <span className="relative flex h-1.5 w-1.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
-            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-60"></span>
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
           </span>
           LIVE
         </span>
-        <span className="w-px h-3 bg-zinc-800" />
+        <span className="w-px h-3 bg-slate-200" />
         <span>
-          TODAY: <span className="text-zinc-300">{loading ? '…' : todayDeals.length} deals</span>
+          TODAY: <span className="text-slate-700">{loading ? '…' : todayDeals.length} deals</span>
         </span>
         <span>
-          <span className="text-emerald-400">
+          <span className="text-emerald-600 font-semibold">
             {loading ? '…' : fmtAmount(todayCapital)}
           </span>
         </span>
         {lastSync && (
           <>
-            <span className="w-px h-3 bg-zinc-800" />
+            <span className="w-px h-3 bg-slate-200" />
             <span>
-              SYNCED: <span className="text-zinc-400">{lastSync}</span>
+              SYNCED: <span className="text-slate-500">{lastSync}</span>
             </span>
           </>
         )}
         <div className="flex-1" />
         <button
           onClick={() => exportCSV(visibleDeals)}
-          className="text-[10px] px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-800 rounded transition-colors"
+          className="text-[10px] px-2.5 py-1 bg-slate-50 hover:bg-slate-100 text-slate-500 hover:text-slate-700 border border-slate-200 rounded transition-colors"
         >
           Export CSV
         </button>
       </div>
 
       {/* ── Hero stats band ──────────────────────────────────────── */}
-      <div className="terminal-bg border-b border-zinc-800/60 px-6 py-5">
+      <div className="terminal-bg border-b border-slate-200 px-6 py-5">
         <div className="flex items-center gap-8 flex-wrap">
           {/* Primary: 7D Capital */}
           <div>
-            <div className="text-[9px] uppercase tracking-[0.25em] text-zinc-600 font-mono mb-1">Capital · 7D</div>
+            <div className="text-[9px] uppercase tracking-[0.25em] text-slate-500 font-mono mb-1">Capital · 7D</div>
             <div className="flex items-baseline gap-1.5">
-              <span className="stat-number text-[2.6rem] font-black text-emerald-400 amount-glow leading-none">
+              <span className="stat-number text-[2.6rem] font-black text-emerald-500 leading-none">
                 {loading ? '—' : (weekCapital > 0 ? fmtAmount(weekCapital) : '$0')}
               </span>
-              <span className="text-zinc-700 font-mono text-xs">USD</span>
+              <span className="text-slate-400 font-mono text-xs">USD</span>
             </div>
-            <div className="text-[10px] text-zinc-600 font-mono mt-1 flex items-center gap-2">
+            <div className="text-[10px] text-slate-500 font-mono mt-1 flex items-center gap-2">
               <span>{loading ? '…' : `${weekDeals.length} deals`}</span>
               {kpis?.topSector && kpis.topSector !== '—' && (
-                <span className="text-zinc-700">· <span className="text-zinc-500 capitalize">{kpis.topSector}</span></span>
+                <span className="text-slate-400">· <span className="text-slate-500 capitalize">{kpis.topSector}</span></span>
               )}
               {newCount > 0 && (
-                <span className="text-blue-500/80">· {newCount} new</span>
+                <span className="text-blue-500">· {newCount} new</span>
               )}
             </div>
           </div>
 
           {/* Divider */}
-          <div className="h-10 w-px bg-zinc-800 self-center" />
+          <div className="h-10 w-px bg-slate-200 self-center" />
 
           {/* Secondary stats — compact horizontal strip */}
           <div className="flex items-center gap-6">
             {[
-              { label: 'Deals', value: loading ? '—' : String(kpis?.count ?? 0), color: 'text-zinc-200' },
-              { label: 'All-Time', value: loading ? '—' : fmtAmount(kpis?.totalCapital), color: 'text-zinc-200' },
-              { label: 'Biggest', value: loading ? '—' : (kpis?.biggest ? fmtAmount(kpis.biggest.amount_usd) : '—'), color: 'text-amber-400', sub: kpis?.biggest?.company_name },
+              { label: 'Deals', value: loading ? '—' : String(kpis?.count ?? 0), color: 'text-slate-800' },
+              { label: 'All-Time', value: loading ? '—' : fmtAmount(kpis?.totalCapital), color: 'text-slate-800' },
+              { label: 'Biggest', value: loading ? '—' : (kpis?.biggest ? fmtAmount(kpis.biggest.amount_usd) : '—'), color: 'text-amber-600', sub: kpis?.biggest?.company_name },
             ].map(({ label, value, color, sub }) => (
               <div key={label}>
-                <div className="text-[9px] uppercase tracking-widest text-zinc-700 font-mono mb-0.5">{label}</div>
+                <div className="text-[9px] uppercase tracking-widest text-slate-400 font-mono mb-0.5">{label}</div>
                 <div className={`stat-number text-lg font-bold ${color} tabular-nums leading-tight`}>{value}</div>
-                {sub && <div className="text-[9px] text-zinc-600 font-mono truncate max-w-[90px]">{sub}</div>}
+                {sub && <div className="text-[9px] text-slate-400 font-mono truncate max-w-[90px]">{sub}</div>}
               </div>
             ))}
           </div>
@@ -473,9 +473,9 @@ export default function DealFeed() {
 
         {/* AI Briefing strip */}
         {briefing?.ai_summary && (
-          <div className="mt-4 flex items-start gap-2.5 border border-amber-500/15 bg-amber-500/[0.04] rounded-lg px-4 py-2.5">
-            <span className="text-[9px] uppercase tracking-widest text-amber-500/80 font-mono mt-0.5 shrink-0">AI</span>
-            <p className="text-[11px] text-zinc-500 leading-relaxed">{briefing.ai_summary}</p>
+          <div className="mt-4 flex items-start gap-2.5 border border-amber-200 bg-amber-50 rounded-lg px-4 py-2.5">
+            <span className="text-[9px] uppercase tracking-widest text-amber-600 font-mono mt-0.5 shrink-0">AI</span>
+            <p className="text-[11px] text-slate-600 leading-relaxed">{briefing.ai_summary}</p>
           </div>
         )}
       </div>
@@ -514,9 +514,9 @@ export default function DealFeed() {
               onClick={() => deal.company_id && navigate(`/company/${deal.company_id}`)}
               className={`
                 relative overflow-hidden border-l-[3px] ${leftBorder} ${bgCls}
-                border border-zinc-800 rounded-xl cursor-pointer
-                hover:border-zinc-700 transition-all duration-150
-                ${isTop ? 'position-card-top ring-1 ring-amber-500/15 p-5' : 'p-4'}
+                border border-slate-200 rounded-xl cursor-pointer
+                hover:border-slate-300 hover:shadow-sm transition-all duration-150
+                ${isTop ? 'position-card-top ring-1 ring-amber-400/20 p-5' : 'p-4'}
               `}
             >
               {/* Top accent line for secondary cards */}
@@ -525,34 +525,34 @@ export default function DealFeed() {
               )}
 
               {/* Watermark rank number */}
-              <div className={`absolute bottom-1 right-3 font-black select-none pointer-events-none tabular-nums leading-none text-zinc-100 opacity-[0.03] ${isTop ? 'text-[96px]' : 'text-[72px]'}`}>
+              <div className={`absolute bottom-1 right-3 font-black select-none pointer-events-none tabular-nums leading-none text-slate-900 opacity-[0.05] ${isTop ? 'text-[96px]' : 'text-[72px]'}`}>
                 {RANK_LABELS[i]}
               </div>
 
               {/* Header row */}
               <div className="flex items-center justify-between mb-2.5">
-                <span className="text-[9px] font-mono uppercase tracking-[0.3em] text-zinc-600">
+                <span className="text-[9px] font-mono uppercase tracking-[0.3em] text-slate-400">
                   Deal · #{RANK_LABELS[i]}
                 </span>
-                <span className="text-[9px] font-mono text-zinc-600">
+                <span className="text-[9px] font-mono text-slate-400">
                   {roundDisplay !== '—' ? roundDisplay : (deal.deal_type?.toUpperCase() || 'DEAL')}
                   {deal.geo && <span className="ml-1">{GEO_FLAGS[deal.geo] ?? ''}</span>}
                 </span>
               </div>
 
               {/* Company name */}
-              <div className={`font-semibold truncate mb-1 ${isTop ? 'text-xl text-zinc-50' : 'text-base text-zinc-100'}`}>
+              <div className={`font-semibold truncate mb-1 ${isTop ? 'text-xl text-slate-900' : 'text-base text-slate-800'}`}>
                 {deal.company_name ?? '—'}
               </div>
 
               {/* Amount */}
-              <div className={`font-mono font-black tabular stat-number ${isTop ? 'text-[2rem] text-amber-400 mega-glow mb-1' : 'text-2xl text-emerald-400 amount-glow mb-1'}`}>
+              <div className={`font-mono font-black tabular stat-number ${isTop ? 'text-[2rem] text-amber-600 mb-1' : 'text-2xl text-emerald-600 mb-1'}`}>
                 {fmtAmount(deal.amount_usd)}
               </div>
 
               {/* % of total */}
               {pct && (
-                <div className="text-[9px] font-mono text-zinc-700 mb-2.5">
+                <div className="text-[9px] font-mono text-slate-400 mb-2.5">
                   {pct}% of period capital
                 </div>
               )}
@@ -566,7 +566,7 @@ export default function DealFeed() {
 
               {/* Lead investor */}
               {deal.lead_investor && (
-                <div className="text-[10px] text-zinc-600 mt-2 truncate font-mono">
+                <div className="text-[10px] text-slate-500 mt-2 truncate font-mono">
                   {deal.lead_investor}
                 </div>
               )}
@@ -592,7 +592,7 @@ export default function DealFeed() {
         {/* Search + controls row */}
         <div className="pt-4 pb-2 flex items-center gap-3">
           <div className="relative">
-            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600 w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
@@ -600,7 +600,7 @@ export default function DealFeed() {
               placeholder="Search company…"
               value={search}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-56 bg-zinc-900 border border-zinc-800 text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-amber-500/60 rounded-lg pl-8 pr-3 py-1.5 text-sm transition-colors"
+              className="w-56 bg-white border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-400 rounded-lg pl-8 pr-3 py-1.5 text-sm transition-colors shadow-sm"
             />
           </div>
         </div>
@@ -623,39 +623,39 @@ export default function DealFeed() {
             <ErrorBanner message={error} />
           ) : visibleDeals.length === 0 ? (
             <div className="text-center py-16">
-              <p className="text-base font-semibold text-zinc-300">No deals found</p>
-              <p className="text-sm text-zinc-500 mt-2">
+              <p className="text-base font-semibold text-slate-700">No deals found</p>
+              <p className="text-sm text-slate-400 mt-2">
                 Try adjusting your filters, or check back after the next ingestion at 7am UTC.
               </p>
             </div>
           ) : (
             <>
-              <div className="border border-zinc-800 rounded-lg overflow-hidden">
+              <div className="border border-slate-200 rounded-lg overflow-hidden shadow-sm">
                 {/* Amber gradient accent line above header */}
                 <div className="table-header-accent h-px w-full" />
                 <table className="w-full">
                   <thead className="sticky top-0 z-10">
-                    <tr className="bg-zinc-950 backdrop-blur border-b-2 border-zinc-900">
-                      <th className="text-left px-4 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium w-[200px]">Company</th>
-                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium w-[100px]">Type</th>
-                      <th onClick={() => toggleSort('amount_usd')} className="text-right px-4 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium cursor-pointer hover:text-amber-500/70 select-none w-[200px]">
+                    <tr className="bg-slate-50 border-b border-slate-200">
+                      <th className="text-left px-4 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium w-[200px]">Company</th>
+                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium w-[100px]">Type</th>
+                      <th onClick={() => toggleSort('amount_usd')} className="text-right px-4 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium cursor-pointer hover:text-amber-600 select-none w-[200px]">
                         Amount · USD {sortKey === 'amount_usd'
-                          ? <span className="text-amber-400 ml-0.5">{sortDir === 'desc' ? '▼' : '▲'}</span>
-                          : <span className="text-zinc-800 ml-0.5 text-[8px]">⊞</span>}
+                          ? <span className="text-amber-600 ml-0.5">{sortDir === 'desc' ? '▼' : '▲'}</span>
+                          : <span className="text-slate-300 ml-0.5 text-[8px]">⊞</span>}
                       </th>
-                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium">Sector</th>
-                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium">Tech</th>
-                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium">Geo</th>
-                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium">Lead Inv.</th>
-                      <th onClick={() => toggleSort('announced_date')} className="text-right px-4 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium cursor-pointer hover:text-amber-500/70 select-none">
+                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium">Sector</th>
+                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium">Tech</th>
+                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium">Geo</th>
+                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium">Lead Inv.</th>
+                      <th onClick={() => toggleSort('announced_date')} className="text-right px-4 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium cursor-pointer hover:text-amber-600 select-none">
                         Date {sortKey === 'announced_date'
-                          ? <span className="text-amber-400 ml-0.5">{sortDir === 'desc' ? '▼' : '▲'}</span>
-                          : <span className="text-zinc-800 ml-0.5 text-[8px]">⊞</span>}
+                          ? <span className="text-amber-600 ml-0.5">{sortDir === 'desc' ? '▼' : '▲'}</span>
+                          : <span className="text-slate-300 ml-0.5 text-[8px]">⊞</span>}
                       </th>
                       <th className="px-2 py-2 w-[60px]" />
                     </tr>
                   </thead>
-                  <tbody className="bg-zinc-950">
+                  <tbody className="bg-white divide-y divide-slate-100">
                     {sortedDeals.map((deal, idx) => {
                       const tier = dealTier(deal.amount_usd)
                       const favicon = getFaviconUrl(deal.company_website, deal.source_url)
@@ -667,10 +667,10 @@ export default function DealFeed() {
                           key={deal.id}
                           onClick={() => deal.company_id && navigate(`/company/${deal.company_id}`)}
                           className={`
-                            deal-row border-b border-zinc-800/30 cursor-pointer group
-                            ${idx % 2 === 1 ? 'bg-zinc-900/20' : ''}
-                            ${tier === 'mega' ? 'mega-deal-row border-l-2 border-l-amber-400/70' : `border-l-2 ${DEAL_TYPE_LEFT_BORDER[typeKey]}`}
-                            ${isNew ? 'border-r-2 border-r-blue-500/50' : ''}
+                            deal-row cursor-pointer group
+                            ${idx % 2 === 1 ? 'bg-slate-50/60' : 'bg-white'}
+                            ${tier === 'mega' ? 'mega-deal-row border-l-2 border-l-amber-400' : `border-l-2 ${DEAL_TYPE_LEFT_BORDER[typeKey]}`}
+                            ${isNew ? 'border-r-2 border-r-blue-400' : ''}
                           `}
                         >
                           {/* Company */}
@@ -682,7 +682,7 @@ export default function DealFeed() {
                               ) : (
                                 <CompanyAvatar name={deal.company_name ?? '?'} size={14} />
                               )}
-                              <span className="text-[13px] font-medium text-zinc-100 group-hover:text-white truncate max-w-[140px]">
+                              <span className="text-[13px] font-medium text-slate-800 group-hover:text-slate-900 truncate max-w-[140px]">
                                 {deal.company_name ?? '—'}
                               </span>
                               {deal.source_name && (
@@ -709,7 +709,7 @@ export default function DealFeed() {
                           <td className="px-4 py-2 w-[200px]">
                             <div className="flex items-center gap-2">
                               {/* heat bar track */}
-                              <div className="flex-1 h-[3px] bg-zinc-800 rounded-full overflow-hidden">
+                              <div className="flex-1 h-[3px] bg-slate-200 rounded-full overflow-hidden">
                                 {barPct > 0 && (
                                   <div
                                     className={`h-full rounded-full ${AMOUNT_BAR_COLOR[tier]}`}
@@ -718,10 +718,10 @@ export default function DealFeed() {
                                 )}
                               </div>
                               <span className={`font-mono text-xs tabular-nums font-semibold w-[56px] text-right ${
-                                tier === 'mega' ? 'text-amber-400' :
-                                tier === 'large' ? 'text-emerald-400' : 'text-zinc-300'
+                                tier === 'mega' ? 'text-amber-600' :
+                                tier === 'large' ? 'text-emerald-600' : 'text-slate-600'
                               }`}>
-                                {deal.amount_usd ? fmtAmount(deal.amount_usd) : <span className="text-zinc-700">—</span>}
+                                {deal.amount_usd ? fmtAmount(deal.amount_usd) : <span className="text-slate-300">—</span>}
                               </span>
                             </div>
                           </td>
@@ -732,7 +732,7 @@ export default function DealFeed() {
                               {(deal.sector || []).slice(0, 2).map((s) => (
                                 <SectorPill key={s} sector={s} />
                               ))}
-                              {(deal.sector || []).length === 0 && <span className="text-zinc-700 text-xs">—</span>}
+                              {(deal.sector || []).length === 0 && <span className="text-slate-300 text-xs">—</span>}
                             </div>
                           </td>
 
@@ -740,12 +740,12 @@ export default function DealFeed() {
                           <td className="px-3 py-2">
                             <div className="flex flex-wrap gap-1">
                               {(deal.tech_stack || []).slice(0, 2).map(tech => (
-                                <span key={tech} className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800/80 text-zinc-500 border border-zinc-700/60 font-mono">
+                                <span key={tech} className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 border border-slate-200 font-mono">
                                   {tech}
                                 </span>
                               ))}
                               {(deal.tech_stack || []).length > 2 && (
-                                <span className="text-[10px] text-zinc-700 font-mono">+{deal.tech_stack!.length - 2}</span>
+                                <span className="text-[10px] text-slate-400 font-mono">+{deal.tech_stack!.length - 2}</span>
                               )}
                             </div>
                           </td>
@@ -753,17 +753,17 @@ export default function DealFeed() {
                           {/* Geo */}
                           <td className="px-3 py-2">
                             {deal.geo
-                              ? <span className="text-[11px] text-zinc-400 uppercase font-mono">{GEO_FLAGS[deal.geo] ?? ''} {deal.geo}</span>
-                              : <span className="text-zinc-700 text-xs">—</span>}
+                              ? <span className="text-[11px] text-slate-600 uppercase font-mono">{GEO_FLAGS[deal.geo] ?? ''} {deal.geo}</span>
+                              : <span className="text-slate-300 text-xs">—</span>}
                           </td>
 
                           {/* Lead Investor */}
-                          <td className="px-3 py-2 text-[11px] text-zinc-500 font-mono truncate max-w-[150px]">
-                            {deal.lead_investor ?? <span className="text-zinc-700">—</span>}
+                          <td className="px-3 py-2 text-[11px] text-slate-500 font-mono truncate max-w-[150px]">
+                            {deal.lead_investor ?? <span className="text-slate-300">—</span>}
                           </td>
 
                           {/* Date */}
-                          <td className="px-4 py-2 text-right font-mono text-[11px] text-zinc-600 tabular-nums">
+                          <td className="px-4 py-2 text-right font-mono text-[11px] text-slate-500 tabular-nums">
                             {deal.announced_date
                               ? new Date(deal.announced_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
                               : '—'}
@@ -775,7 +775,7 @@ export default function DealFeed() {
                               <button
                                 onClick={(e) => { e.stopPropagation(); addToIntel(deal.company_name ?? '', deal.company_website!) }}
                                 title="Analyze with Tech Intel"
-                                className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-mono px-2 py-0.5 rounded border border-zinc-700 text-zinc-600 hover:text-amber-400 hover:border-amber-500/50"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-mono px-2 py-0.5 rounded border border-slate-200 text-slate-500 hover:text-amber-600 hover:border-amber-400 bg-white"
                               >
                                 + Intel
                               </button>
@@ -794,7 +794,7 @@ export default function DealFeed() {
                   <button
                     onClick={loadMore}
                     disabled={loadingMore}
-                    className="text-xs font-mono px-4 py-1.5 rounded border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 disabled:opacity-40 transition-colors"
+                    className="text-xs font-mono px-4 py-1.5 rounded border border-slate-200 text-slate-500 hover:text-slate-700 hover:border-slate-300 bg-white disabled:opacity-40 transition-colors shadow-sm"
                   >
                     {loadingMore ? 'Loading…' : `Load more deals ↓`}
                   </button>

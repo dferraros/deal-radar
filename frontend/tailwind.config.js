@@ -8,6 +8,10 @@ export default {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['Plus Jakarta Sans', 'system-ui', '-apple-system', 'sans-serif'],
+        mono: ['IBM Plex Mono', 'Fira Code', 'Courier New', 'monospace'],
+      },
       colors: {
         // Semantic deal-type signals
         'signal-vc':     '#34d399', // emerald-400

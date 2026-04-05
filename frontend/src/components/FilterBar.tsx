@@ -52,10 +52,10 @@ function hasActiveFilters(filters: FilterState): boolean {
 }
 
 const DEAL_TYPE_ACTIVE: Record<string, string> = {
-  vc:     'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-  ma:     'bg-sky-500/20 text-sky-300 border-sky-500/40',
-  crypto: 'bg-violet-500/20 text-violet-300 border-violet-500/40',
-  ipo:    'bg-rose-500/20 text-rose-300 border-rose-500/40',
+  vc:     'bg-emerald-50 text-emerald-700 border-emerald-300',
+  ma:     'bg-sky-50 text-sky-700 border-sky-300',
+  crypto: 'bg-violet-50 text-violet-700 border-violet-300',
+  ipo:    'bg-rose-50 text-rose-700 border-rose-300',
 }
 
 const GEO_OPTIONS = [
@@ -77,18 +77,18 @@ const AMOUNT_OPTIONS = [
 ]
 
 const pillBase = 'text-[10px] px-2.5 py-1 rounded-full border font-mono transition-colors cursor-pointer'
-const pillInactive = 'text-zinc-600 border-zinc-800 hover:text-zinc-400 hover:border-zinc-700'
-const pillActive = 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+const pillInactive = 'text-slate-500 border-slate-200 hover:text-slate-700 hover:border-slate-300 bg-white'
+const pillActive = 'bg-amber-50 text-amber-700 border-amber-300'
 
 const dateInputClass =
-  'bg-zinc-900/80 border border-zinc-800 text-zinc-400 text-[10px] font-mono px-2 py-1 rounded focus:outline-none focus:border-amber-500/50 transition-colors'
+  'bg-white border border-slate-200 text-slate-600 text-[10px] font-mono px-2 py-1 rounded focus:outline-none focus:border-amber-400 transition-colors'
 
 const SectionLabel = ({ label }: { label: string }) => (
-  <span className="text-[9px] tracking-[0.35em] text-zinc-700 font-mono uppercase">{label}</span>
+  <span className="text-[9px] tracking-[0.35em] text-slate-400 font-mono uppercase">{label}</span>
 )
 
 const Pipe = () => (
-  <span className="w-px h-4 bg-zinc-800/80 self-center" />
+  <span className="w-px h-4 bg-slate-200 self-center" />
 )
 
 export default function FilterBar({
@@ -212,14 +212,14 @@ export default function FilterBar({
       {/* Active count + reset */}
       <div className="flex items-center gap-2 ml-auto">
         {activeCount > 0 && (
-          <span className="text-[9px] font-mono text-amber-400/80 tracking-wider">
+          <span className="text-[9px] font-mono text-amber-600 tracking-wider">
             [{activeCount} active]
           </span>
         )}
         {hasActiveFilters(filters) && (
           <button
             onClick={() => onFilterChange(defaultFilters)}
-            className="text-[9px] font-mono tracking-[0.2em] uppercase text-zinc-600 hover:text-zinc-300 border border-zinc-800 hover:border-zinc-600 px-2 py-0.5 rounded transition-colors"
+            className="text-[9px] font-mono tracking-[0.2em] uppercase text-slate-500 hover:text-slate-700 border border-slate-200 hover:border-slate-300 px-2 py-0.5 rounded transition-colors bg-white"
           >
             Reset
           </button>

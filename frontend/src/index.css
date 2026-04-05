@@ -4,14 +4,15 @@
 
 /* ─── Typography ──────────────────────────────────────────────── */
 body {
-  background-color: #09090b;
-  color: #fafafa;
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  background-color: #f8fafc;
+  color: #0f172a;
+  font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
+  font-feature-settings: "kern" 1, "liga" 1;
 }
 
 .mono {
-  font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+  font-family: 'IBM Plex Mono', 'Fira Code', 'Courier New', monospace;
 }
 
 /* Tabular numbers — all numeric columns align perfectly */
@@ -19,6 +20,12 @@ body {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum";
 }
+
+/* IBM Plex Sans weight helpers */
+.weight-300 { font-weight: 300; }
+.weight-500 { font-weight: 500; }
+.weight-600 { font-weight: 600; }
+.weight-700 { font-weight: 700; }
 
 /* ─── Premium scrollbar ───────────────────────────────────────── */
 ::-webkit-scrollbar {
@@ -71,12 +78,11 @@ body {
   100% { transform: translateX(-100%); }
 }
 
-/* ─── Terminal grid background ────────────────────────────────── */
+/* ─── Hero band subtle dot grid ──────────────────────────────── */
 .terminal-bg {
-  background-image:
-    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
-  background-size: 40px 40px;
+  background-color: #ffffff;
+  background-image: radial-gradient(circle, #e2e8f0 1px, transparent 1px);
+  background-size: 24px 24px;
 }
 
 /* ─── Stat number (Bloomberg-style big numbers) ───────────────── */
@@ -90,6 +96,7 @@ body {
 /* ─── Deal row hover ──────────────────────────────────────────── */
 tr.deal-row {
   transition: background 0.1s ease;
+  border-bottom: 1px solid #f1f5f9;
 }
 
 /* ─── Amber gradient top accent ───────────────────────────────── */
@@ -122,16 +129,16 @@ tr.deal-row {
 
 /* ─── Mega deal row highlight ─────────────────────────────────── */
 .mega-deal-row {
-  background: linear-gradient(90deg, rgba(251,191,36,0.04) 0%, transparent 40%);
+  background: linear-gradient(90deg, rgba(251,191,36,0.06) 0%, transparent 40%);
 }
 
 .mega-deal-row:hover {
-  background: linear-gradient(90deg, rgba(251,191,36,0.08) 0%, rgba(39,39,42,0.3) 40%) !important;
+  background: linear-gradient(90deg, rgba(251,191,36,0.12) 0%, rgba(241,245,249,0.8) 40%) !important;
 }
 
 /* ─── Deal row hover (non-mega) ──────────────────────────────── */
 tr.deal-row:not(.mega-deal-row):hover {
-  background-color: rgba(39,39,42,0.4) !important;
+  background-color: rgba(241,245,249,0.9) !important;
 }
 
 /* ─── Table sticky header shadow ─────────────────────────────── */
@@ -154,9 +161,9 @@ thead.sticky tr {
 
 /* ─── Filter terminal strip ───────────────────────────────────── */
 .filter-strip {
-  background: rgba(24, 24, 27, 0.6);
-  border-top: 1px solid rgba(63, 63, 70, 0.5);
-  border-bottom: 1px solid rgba(63, 63, 70, 0.5);
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 /* ─── Table amber header accent ──────────────────────────────── */
