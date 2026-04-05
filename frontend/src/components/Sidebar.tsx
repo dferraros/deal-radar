@@ -10,6 +10,7 @@ import {
   Bell,
   Settings,
   Radio,
+  Brain,
 } from 'lucide-react'
 import axios from 'axios'
 import { OPEN_COMMAND_PALETTE_EVENT } from '../lib/events'
@@ -20,6 +21,7 @@ const navItems = [
   { to: '/trends', label: 'Trends', icon: TrendingUp },
   { to: '/investors', label: 'Investors', icon: Users },
   { to: '/network', label: 'Network', icon: Network },
+  { to: '/intel', label: 'Tech Intel', icon: Brain },
   { to: '/alerts', label: 'Alerts', icon: Bell },
   { to: '/watchlist', label: 'Watchlist', icon: Star },
 ]
