@@ -17,7 +17,7 @@ interface QueueItem {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
-  queued:      { label: 'Queued',      color: 'text-zinc-400 bg-zinc-800',           icon: Clock },
+  queued:      { label: 'Queued',      color: 'text-slate-500 bg-slate-100',         icon: Clock },
   crawling:    { label: 'Crawling',    color: 'text-sky-400 bg-sky-950/50',           icon: Loader2 },
   extracting:  { label: 'Extracting', color: 'text-amber-400 bg-amber-950/50',       icon: Loader2 },
   normalizing: { label: 'Normalizing',color: 'text-violet-400 bg-violet-950/50',     icon: Loader2 },
@@ -100,7 +100,7 @@ export default function IntelQueue() {
     {
       label: 'Queued',
       value: queue.filter((q) => q.status === 'queued').length,
-      color: 'text-zinc-400',
+      color: 'text-slate-500',
     },
     {
       label: 'Failed',
@@ -114,24 +114,24 @@ export default function IntelQueue() {
       {/* Header */}
       <div className="px-6 pt-6 pb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-zinc-50 flex items-center gap-2">
+          <h1 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
             <Brain size={18} className="text-amber-400" strokeWidth={1.5} />
             Tech Intel
           </h1>
-          <p className="text-xs text-zinc-500 mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5">
             Capital-weighted technology bet inference — add companies to analyze
           </p>
         </div>
         <div className="flex gap-2">
           <button
             onClick={() => navigate('/intel/graph')}
-            className="text-xs px-3 py-1.5 rounded border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors font-mono"
+            className="text-xs px-3 py-1.5 rounded border border-slate-200 text-slate-500 hover:text-slate-700 transition-colors font-mono"
           >
             Graph
           </button>
           <button
             onClick={() => navigate('/intel/heatmap')}
-            className="text-xs px-3 py-1.5 rounded border border-zinc-800 text-zinc-400 hover:text-zinc-200 transition-colors font-mono"
+            className="text-xs px-3 py-1.5 rounded border border-slate-200 text-slate-500 hover:text-slate-700 transition-colors font-mono"
           >
             Heatmap
           </button>
@@ -147,24 +147,24 @@ export default function IntelQueue() {
       {/* Add modal */}
       {showAdd && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
-          <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-full max-w-md">
-            <h2 className="text-sm font-semibold text-zinc-100 mb-4">Add Company to Intel Queue</h2>
+          <div className="bg-white border border-slate-200 rounded-xl p-6 w-full max-w-md shadow-sm">
+            <h2 className="text-sm font-semibold text-slate-900 mb-4">Add Company to Intel Queue</h2>
             <div className="space-y-3">
               <input
-                className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500/50"
+                className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-400"
                 placeholder="Company name"
                 value={addForm.company_name}
                 onChange={(e) => setAddForm((f) => ({ ...f, company_name: e.target.value }))}
               />
               <input
-                className="w-full bg-zinc-800 border border-zinc-700 rounded px-3 py-2 text-sm text-zinc-100 placeholder-zinc-500 focus:outline-none focus:border-amber-500/50"
+                className="w-full bg-white border border-slate-200 rounded px-3 py-2 text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-400"
                 placeholder="https://company.com"
                 value={addForm.website}
                 onChange={(e) => setAddForm((f) => ({ ...f, website: e.target.value }))}
               />
             </div>
             <div className="flex gap-2 mt-4 justify-end">
-              <button onClick={() => setShowAdd(false)} className="text-xs px-3 py-1.5 text-zinc-400 hover:text-zinc-200">Cancel</button>
+              <button onClick={() => setShowAdd(false)} className="text-xs px-3 py-1.5 text-slate-500 hover:text-slate-700">Cancel</button>
               <button
                 onClick={handleAdd}
                 disabled={adding}
@@ -186,10 +186,10 @@ export default function IntelQueue() {
                 {statCards.map((card) => (
                   <div
                     key={card.label}
-                    className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3"
+                    className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 shadow-sm"
                   >
                     <div className={`text-xl font-bold ${card.color}`}>{card.value}</div>
-                    <div className="text-xs text-zinc-500 font-mono uppercase tracking-wider mt-0.5">{card.label}</div>
+                    <div className="text-xs text-slate-500 font-mono uppercase tracking-wider mt-0.5">{card.label}</div>
                   </div>
                 ))}
               </div>
@@ -201,14 +201,14 @@ export default function IntelQueue() {
                 <div className="w-12 h-12 rounded-full bg-amber-400/10 flex items-center justify-center mb-4">
                   <Brain size={24} className="text-amber-400" />
                 </div>
-                <h3 className="text-zinc-100 font-semibold mb-2">No companies analyzed yet</h3>
-                <p className="text-zinc-500 text-sm mb-6 leading-relaxed">
+                <h3 className="text-slate-900 font-semibold mb-2">No companies analyzed yet</h3>
+                <p className="text-slate-500 text-sm mb-6 leading-relaxed">
                   Add a funded company to infer which technical primitives they actually build on —
                   from their product pages, docs, blog, and careers listings.
                   Capital-weighted across the portfolio.
                 </p>
-                <div className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-                  <p className="text-xs text-zinc-500 uppercase tracking-wider mb-3 font-mono">Try these examples</p>
+                <div className="w-full bg-slate-50 border border-slate-200 rounded-lg p-4 shadow-sm">
+                  <p className="text-xs text-slate-500 uppercase tracking-wider mb-3 font-mono">Try these examples</p>
                   <div className="grid grid-cols-1 gap-2">
                     {[
                       { name: 'Mistral AI', website: 'https://mistral.ai' },
@@ -221,10 +221,10 @@ export default function IntelQueue() {
                           setAddForm({ company_name: name, website })
                           setShowAdd(true)
                         }}
-                        className="flex items-center justify-between px-3 py-2 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors text-left"
+                        className="flex items-center justify-between px-3 py-2 rounded bg-white hover:bg-slate-50 transition-colors text-left border border-slate-200"
                       >
-                        <span className="text-sm text-zinc-200">{name}</span>
-                        <span className="text-xs text-zinc-500 font-mono">{website}</span>
+                        <span className="text-sm text-slate-800">{name}</span>
+                        <span className="text-xs text-slate-500 font-mono">{website}</span>
                       </button>
                     ))}
                   </div>
@@ -234,7 +234,7 @@ export default function IntelQueue() {
 
             {/* Card list */}
             {queue.length > 0 && (
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+              <div className="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                 {queue.map((item, idx) => {
                   const cfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.queued
                   const Icon = cfg.icon
@@ -245,8 +245,8 @@ export default function IntelQueue() {
                     <div
                       key={item.id}
                       className={[
-                        'flex items-center gap-4 px-4 py-3 transition-colors hover:bg-zinc-800/30',
-                        idx < queue.length - 1 ? 'border-b border-zinc-800/50' : '',
+                        'flex items-center gap-4 px-4 py-3 transition-colors hover:bg-slate-50',
+                        idx < queue.length - 1 ? 'border-b border-slate-200' : '',
                         isActive ? 'ring-1 ring-inset ring-amber-500/20 border-l-2 border-amber-500/60' : '',
                       ].join(' ')}
                     >
@@ -256,12 +256,12 @@ export default function IntelQueue() {
                           onClick={() => isDone && navigate(`/intel/dossier/${item.id}`)}
                           className={[
                             'font-semibold text-sm truncate block',
-                            isDone ? 'text-zinc-100 hover:text-amber-400 cursor-pointer' : 'text-zinc-400 cursor-default',
+                            isDone ? 'text-slate-900 hover:text-amber-400 cursor-pointer' : 'text-slate-400 cursor-default',
                           ].join(' ')}
                         >
                           {item.company_name}
                         </button>
-                        <div className="text-xs text-zinc-500 font-mono truncate mt-0.5">{item.website}</div>
+                        <div className="text-xs text-slate-500 font-mono truncate mt-0.5">{item.website}</div>
                         {isDone && item.tech_preview.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1.5">
                             {item.tech_preview.map((tech) => (
@@ -282,7 +282,7 @@ export default function IntelQueue() {
                           <Icon size={10} className={isActive ? 'animate-spin' : ''} />
                           {cfg.label}
                         </span>
-                        <span className="text-[11px] text-zinc-600 font-mono">
+                        <span className="text-[11px] text-slate-400 font-mono">
                           {relativeTime(item.queued_at)}
                         </span>
                       </div>
@@ -299,7 +299,7 @@ export default function IntelQueue() {
                         )}
                         <button
                           onClick={() => handleDelete(item.id)}
-                          className="text-xs text-zinc-600 hover:text-rose-400 transition-colors"
+                          className="text-xs text-slate-400 hover:text-rose-400 transition-colors"
                         >
                           ✕
                         </button>

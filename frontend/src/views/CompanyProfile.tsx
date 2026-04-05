@@ -44,7 +44,7 @@ const SECTOR_PILL_COLORS: Record<string, string> = {
   healthtech:'bg-rose-500/15 text-rose-300 border-rose-500/30',
   edtech:    'bg-amber-500/15 text-amber-300 border-amber-500/30',
   proptech:  'bg-orange-500/15 text-orange-300 border-orange-500/30',
-  other:     'bg-zinc-500/15 text-zinc-400 border-zinc-600/30',
+  other:     'bg-slate-100 text-slate-500 border-slate-200',
 }
 
 function SectorPill({ sector }: { sector: string }) {
@@ -101,13 +101,13 @@ export default function CompanyProfile() {
       {!loading && error && <ErrorBanner message={error} />}
       {!loading && !error && !company && (
         <div className="text-center py-16">
-          <p className="text-xl font-bold text-zinc-300">Company not found</p>
+          <p className="text-xl font-bold text-slate-600">Company not found</p>
         </div>
       )}
       {!loading && !error && company && (
         <>
           {/* === HEADER BANNER === */}
-          <div className="relative bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden mb-6">
+          <div className="relative bg-slate-50 border border-slate-200 rounded-xl overflow-hidden mb-6 shadow-sm">
             <div className="absolute inset-0 opacity-5"
               style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #f59e0b 0%, transparent 60%)' }}
             />
@@ -119,18 +119,18 @@ export default function CompanyProfile() {
                   </span>
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-zinc-50">{company.name}</h1>
+                  <h1 className="text-2xl font-bold text-slate-900">{company.name}</h1>
                   <div className="flex items-center gap-2 mt-2 flex-wrap">
                     {company.sector.map((s) => (
                       <SectorPill key={s} sector={s} />
                     ))}
                     {company.geo && (
-                      <span className="text-xs font-mono text-zinc-500 uppercase">
+                      <span className="text-xs font-mono text-slate-500 uppercase">
                         {GEO_FLAGS[company.geo] ?? ''} {company.geo}
                       </span>
                     )}
                     {company.founded_year && (
-                      <span className="text-xs text-zinc-500 font-mono">Est. {company.founded_year}</span>
+                      <span className="text-xs text-slate-500 font-mono">Est. {company.founded_year}</span>
                     )}
                     {company.website && (
                       <a
@@ -156,7 +156,7 @@ export default function CompanyProfile() {
               {company.tech_stack.map((tech) => (
                 <span
                   key={tech}
-                  className="text-[11px] px-2 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700 font-mono"
+                  className="text-[11px] px-2 py-0.5 rounded bg-slate-100 text-slate-500 border border-slate-200 font-mono"
                 >
                   {tech}
                 </span>
@@ -168,7 +168,7 @@ export default function CompanyProfile() {
           {company.description && (
             <div className="mb-6">
               <p
-                className={`text-sm text-zinc-300 ${descExpanded ? '' : 'line-clamp-3'}`}
+                className={`text-sm text-slate-600 ${descExpanded ? '' : 'line-clamp-3'}`}
               >
                 {company.description}
               </p>
@@ -184,15 +184,15 @@ export default function CompanyProfile() {
           )}
 
           {/* === FUNDING TIMELINE === */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
-            <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider mb-6">
+          <div className="bg-slate-50 border border-slate-200 rounded-xl p-6 mb-6 shadow-sm">
+            <h2 className="text-sm font-semibold text-slate-600 uppercase tracking-wider mb-6">
               Funding History
             </h2>
             {company.deals.length === 0 ? (
-              <p className="text-sm text-zinc-600">No deals recorded.</p>
+              <p className="text-sm text-slate-400">No deals recorded.</p>
             ) : (
               <div className="relative">
-                <div className="absolute left-4 top-2 bottom-2 w-px bg-zinc-800" />
+                <div className="absolute left-4 top-2 bottom-2 w-px bg-slate-200" />
                 <div className="space-y-6">
                   {[...company.deals]
                     .sort((a, b) =>
@@ -205,12 +205,12 @@ export default function CompanyProfile() {
                       return (
                         <div key={deal.id} className="flex items-start gap-4 relative pl-10">
                           <div
-                            className="absolute left-0 top-1 rounded-full bg-amber-400 border-2 border-zinc-950 flex-shrink-0"
+                            className="absolute left-0 top-1 rounded-full bg-amber-400 border-2 border-white flex-shrink-0"
                             style={{ width: size, height: size, marginLeft: `${4 - size / 2}px` }}
                           />
                           <div className="flex-1 min-w-0">
                             <div className="flex items-baseline gap-3 flex-wrap">
-                              <span className="text-sm font-semibold text-zinc-100">
+                              <span className="text-sm font-semibold text-slate-900">
                                 {deal.round_label || deal.deal_type?.toUpperCase() || 'Round'}
                               </span>
                               {deal.amount_usd && (
@@ -218,7 +218,7 @@ export default function CompanyProfile() {
                                   {formatAmount(deal.amount_usd)}
                                 </span>
                               )}
-                              <span className="text-xs text-zinc-500 font-mono">
+                              <span className="text-xs text-slate-500 font-mono">
                                 {deal.announced_date
                                   ? new Date(deal.announced_date).toLocaleDateString('en-US', {
                                       month: 'short', day: 'numeric', year: 'numeric',
@@ -232,24 +232,24 @@ export default function CompanyProfile() {
                                   <button
                                     key={inv}
                                     onClick={() => navigate(`/leaderboard?investor=${encodeURIComponent(inv)}`)}
-                                    className="text-xs px-2 py-0.5 rounded bg-zinc-800 text-zinc-400 hover:bg-amber-500/20 hover:text-amber-400 border border-zinc-700 hover:border-amber-500/30 transition-colors cursor-pointer"
+                                    className="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-500 hover:bg-amber-500/20 hover:text-amber-400 border border-slate-200 hover:border-amber-500/30 transition-colors cursor-pointer"
                                   >
                                     {inv}
                                   </button>
                                 ))}
                                 {deal.all_investors.length > 5 && (
-                                  <span className="text-[10px] text-zinc-600">
+                                  <span className="text-[10px] text-slate-400">
                                     +{deal.all_investors.length - 5}
                                   </span>
                                 )}
                               </div>
                             )}
                             {deal.ai_summary && (
-                              <p className="text-xs text-zinc-500 mt-1.5 line-clamp-2">{deal.ai_summary}</p>
+                              <p className="text-xs text-slate-500 mt-1.5 line-clamp-2">{deal.ai_summary}</p>
                             )}
                             {deal.lead_investor && (
-                              <div className="text-xs text-zinc-500 mt-0.5">
-                                Lead: <span className="text-zinc-400">{deal.lead_investor}</span>
+                              <div className="text-xs text-slate-500 mt-0.5">
+                                Lead: <span className="text-slate-600">{deal.lead_investor}</span>
                               </div>
                             )}
                           </div>
@@ -268,13 +268,13 @@ export default function CompanyProfile() {
             )] as string[]
             return allInvestors.length > 0 ? (
               <div className="mt-8">
-                <h2 className="text-xl font-bold text-zinc-100 mb-4">Known Investors</h2>
+                <h2 className="text-xl font-bold text-slate-900 mb-4">Known Investors</h2>
                 <div className="flex flex-wrap gap-2">
                   {allInvestors.map((inv) => (
                     <button
                       key={inv}
                       onClick={() => navigate(`/leaderboard?investor=${encodeURIComponent(inv)}`)}
-                      className="text-xs px-2 py-0.5 rounded bg-zinc-800 text-zinc-400 hover:bg-amber-500/20 hover:text-amber-400 border border-zinc-700 hover:border-amber-500/30 transition-colors cursor-pointer"
+                      className="text-xs px-2 py-0.5 rounded bg-slate-100 text-slate-500 hover:bg-amber-500/20 hover:text-amber-400 border border-slate-200 hover:border-amber-500/30 transition-colors cursor-pointer"
                     >
                       {inv}
                     </button>
