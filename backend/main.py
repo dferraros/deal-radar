@@ -3,7 +3,8 @@ import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import BackgroundTasks, FastAPI, Depends
+from fastapi import BackgroundTasks, FastAPI, Depends, Request
+from fastapi.middleware.base import BaseHTTPMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from fastapi.routing import APIRouter
@@ -45,6 +46,18 @@ async def lifespan(app: FastAPI):
 # ---------------------------------------------------------------------------
 
 app = FastAPI(title="Deal Radar API", version="1.0.0", lifespan=lifespan)
+
+
+class NoCacheAPIMiddleware(BaseHTTPMiddleware):
+    """Prevent CDN from caching /api/* responses."""
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        if request.url.path.startswith("/api/"):
+            response.headers["Cache-Control"] = "no-store"
+        return response
+
+
+app.add_middleware(NoCacheAPIMiddleware)
 
 api_router = APIRouter(prefix="/api")
 
