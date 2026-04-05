@@ -70,6 +70,7 @@ export default function CommandPalette() {
       setDeals([])
       return
     }
+    setDeals([])      // ← clear stale results immediately
     setLoading(true)
     const timer = setTimeout(() => {
       axios
@@ -122,7 +123,7 @@ export default function CommandPalette() {
               <div className="px-4 py-1.5 text-[10px] uppercase tracking-widest text-zinc-600 font-mono">
                 Companies
               </div>
-              {deals.map((d) => (
+              {deals.filter((d) => d.company_id).map((d) => (
                 <button
                   key={d.id}
                   onClick={() => d.company_id && go(`/company/${d.company_id}`)}
