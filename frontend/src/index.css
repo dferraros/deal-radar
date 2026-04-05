@@ -20,5 +20,5 @@ body {
 
 /* Emerald glow for large amounts */
 .amount-glow {
-  filter: drop-shadow(0 0 8px rgba(52, 211, 153, 0.45));
+  filter: drop-shadow(0 0 8px rgba(52, 211, 153, 0.4));
 }
