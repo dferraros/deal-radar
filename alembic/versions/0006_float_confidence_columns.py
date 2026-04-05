@@ -17,31 +17,38 @@ branch_labels = None
 depends_on = None
 
 
+_SAFE_CAST = "CASE WHEN {col} ~ E'^[+-]?[0-9]+(\\\\.[0-9]+)?$' THEN {col}::double precision ELSE NULL END"
+
+
+def _safe(col: str) -> str:
+    return _SAFE_CAST.format(col=col)
+
+
 def upgrade() -> None:
     op.execute("SET lock_timeout = '5s'")
 
-    op.execute("""
+    op.execute(f"""
         ALTER TABLE intel_observations
             ALTER COLUMN confidence TYPE double precision
-            USING NULLIF(confidence, '')::double precision
+            USING {_safe('confidence')}
     """)
 
-    op.execute("""
+    op.execute(f"""
         ALTER TABLE intel_company_profiles
             ALTER COLUMN profile_confidence TYPE double precision
-            USING NULLIF(profile_confidence, '')::double precision
+            USING {_safe('profile_confidence')}
     """)
 
-    op.execute("""
+    op.execute(f"""
         ALTER TABLE intel_technology_scores
             ALTER COLUMN capital_weighted_score TYPE double precision
-            USING NULLIF(capital_weighted_score, '')::double precision,
+            USING {_safe('capital_weighted_score')},
             ALTER COLUMN growth_rate TYPE double precision
-            USING NULLIF(growth_rate, '')::double precision,
+            USING {_safe('growth_rate')},
             ALTER COLUMN novelty_score TYPE double precision
-            USING NULLIF(novelty_score, '')::double precision,
+            USING {_safe('novelty_score')},
             ALTER COLUMN co_occurrence_density TYPE double precision
-            USING NULLIF(co_occurrence_density, '')::double precision
+            USING {_safe('co_occurrence_density')}
     """)
 
 
