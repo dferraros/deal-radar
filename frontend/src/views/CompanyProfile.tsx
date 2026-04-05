@@ -1,8 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import axios from 'axios'
-import { Card, Badge, List, ListItem } from '@tremor/react'
-import DealTypeBadge from '../components/DealTypeBadge'
 import WatchlistToggle from '../components/WatchlistToggle'
 import LoadingSpinner from '../components/LoadingSpinner'
 import ErrorBanner from '../components/ErrorBanner'
@@ -28,6 +26,38 @@ interface CompanyResponse {
   website: string | null
   in_watchlist: boolean
   deals: DealResponse[]
+}
+
+// --- Helpers ---
+
+const GEO_FLAGS: Record<string, string> = {
+  latam: '🌎', spain: '🇪🇸', europe: '🇪🇺', us: '🇺🇸',
+  asia: '🌏', africa: '🌍', mena: '🕌', global: '🌐',
+}
+
+const SECTOR_PILL_COLORS: Record<string, string> = {
+  crypto:    'bg-violet-500/15 text-violet-300 border-violet-500/30',
+  fintech:   'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  saas:      'bg-sky-500/15 text-sky-300 border-sky-500/30',
+  healthtech:'bg-rose-500/15 text-rose-300 border-rose-500/30',
+  edtech:    'bg-amber-500/15 text-amber-300 border-amber-500/30',
+  proptech:  'bg-orange-500/15 text-orange-300 border-orange-500/30',
+  other:     'bg-zinc-500/15 text-zinc-400 border-zinc-600/30',
+}
+
+function SectorPill({ sector }: { sector: string }) {
+  const cls = SECTOR_PILL_COLORS[sector.toLowerCase()] ?? SECTOR_PILL_COLORS['other']
+  return (
+    <span className={`text-[10px] px-2 py-0.5 rounded-full border font-mono uppercase tracking-wide ${cls}`}>
+      {sector}
+    </span>
+  )
+}
+
+function formatAmount(usd: number): string {
+  const m = usd / 1_000_000
+  if (m >= 1000) return `$${(m / 1000).toFixed(1)}B`
+  return m >= 100 ? `$${Math.round(m)}M` : `$${m.toFixed(1)}M`
 }
 
 export default function CompanyProfile() {
@@ -74,119 +104,149 @@ export default function CompanyProfile() {
       )}
       {!loading && !error && company && (
         <>
-          {/* Header card */}
-          <Card className="bg-zinc-900 border-zinc-800 relative">
-            {/* Watchlist toggle — top-right absolute */}
-            <div className="absolute top-4 right-4">
+          {/* === HEADER BANNER === */}
+          <div className="relative bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden mb-6">
+            <div className="absolute inset-0 opacity-5"
+              style={{ backgroundImage: 'radial-gradient(circle at 20% 50%, #f59e0b 0%, transparent 60%)' }}
+            />
+            <div className="relative flex items-start justify-between p-6">
+              <div className="flex items-start gap-5">
+                <div className="w-16 h-16 rounded-xl bg-amber-400/10 border border-amber-400/20 flex items-center justify-center flex-shrink-0">
+                  <span className="text-2xl font-bold text-amber-400 font-mono">
+                    {company.name.charAt(0).toUpperCase()}
+                  </span>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold text-zinc-50">{company.name}</h1>
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
+                    {company.sector.map((s) => (
+                      <SectorPill key={s} sector={s} />
+                    ))}
+                    {company.geo && (
+                      <span className="text-xs font-mono text-zinc-500 uppercase">
+                        {GEO_FLAGS[company.geo] ?? ''} {company.geo}
+                      </span>
+                    )}
+                    {company.website && (
+                      <a
+                        href={company.website}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-amber-400/70 hover:text-amber-400 font-mono transition-colors"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        ↗ {company.website.replace(/^https?:\/\//, '').split('/')[0]}
+                      </a>
+                    )}
+                  </div>
+                </div>
+              </div>
               <WatchlistToggle companyId={company.id} initialState={company.in_watchlist} />
             </div>
+          </div>
 
-            {/* Company name */}
-            <h1 className="text-2xl font-bold text-zinc-50 pr-40">{company.name}</h1>
-
-            {/* Sector badges */}
-            <div className="flex flex-wrap gap-2 mt-2">
-              {company.sector.map((s) => (
-                <Badge key={s} color="blue">
-                  {s}
-                </Badge>
+          {/* Tech stack pills */}
+          {(company.tech_stack || []).length > 0 && (
+            <div className="flex flex-wrap gap-1.5 mb-4">
+              {company.tech_stack.map((tech) => (
+                <span
+                  key={tech}
+                  className="text-[11px] px-2 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700 font-mono"
+                >
+                  {tech}
+                </span>
               ))}
             </div>
+          )}
 
-            {/* Tech stack pills */}
-            {(company.tech_stack || []).length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {company.tech_stack.map((tech) => (
-                  <span
-                    key={tech}
-                    className="text-[11px] px-2 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700 font-mono"
-                  >
-                    {tech}
-                  </span>
-                ))}
-              </div>
-            )}
-
-            {/* Geo + Website */}
-            {company.geo && <p className="text-sm text-zinc-400 mt-1">{company.geo}</p>}
-            {company.website && (
-              <a
-                href={company.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-amber-400 underline mt-1 block"
+          {/* Description with show more */}
+          {company.description && (
+            <div className="mb-6">
+              <p
+                className={`text-sm text-zinc-300 ${descExpanded ? '' : 'line-clamp-3'}`}
               >
-                {company.website}
-              </a>
-            )}
-
-            {/* Description with show more */}
-            {company.description && (
-              <div className="mt-4">
-                <p
-                  className={`text-sm text-zinc-300 ${descExpanded ? '' : 'line-clamp-3'}`}
+                {company.description}
+              </p>
+              {company.description.length > 200 && (
+                <button
+                  onClick={() => setDescExpanded(!descExpanded)}
+                  className="text-xs text-amber-400 hover:underline mt-1"
                 >
-                  {company.description}
-                </p>
-                {company.description.length > 200 && (
-                  <button
-                    onClick={() => setDescExpanded(!descExpanded)}
-                    className="text-xs text-amber-400 hover:underline mt-1"
-                  >
-                    {descExpanded ? 'Show less' : 'Show more'}
-                  </button>
-                )}
-              </div>
-            )}
-          </Card>
+                  {descExpanded ? 'Show less' : 'Show more'}
+                </button>
+              )}
+            </div>
+          )}
 
-          {/* Deal History section */}
-          <div className="mt-8">
-            <h2 className="text-xl font-bold text-zinc-100 mb-4">Deal History</h2>
+          {/* === FUNDING TIMELINE === */}
+          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 mb-6">
+            <h2 className="text-sm font-semibold text-zinc-300 uppercase tracking-wider mb-6">
+              Funding History
+            </h2>
             {company.deals.length === 0 ? (
-              <p className="text-sm text-zinc-400">No deals recorded for this company yet.</p>
+              <p className="text-sm text-zinc-600">No deals recorded.</p>
             ) : (
-              <List>
-                {company.deals.map((deal) => {
-                  const amt = deal.amount_usd
-                    ? `$${(deal.amount_usd / 1_000_000).toFixed(1)}M`
-                    : 'Undisclosed'
-                  const dateStr = deal.announced_date
-                    ? new Date(deal.announced_date + 'T00:00:00').toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                      })
-                    : '\u2014'
-                  return (
-                    <ListItem key={deal.id} className="flex-col items-start gap-1 py-3">
-                      <div className="flex items-center gap-3 w-full justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-zinc-400">{dateStr}</span>
-                          <DealTypeBadge
-                            dealType={deal.deal_type}
-                            label={deal.round_label ?? undefined}
+              <div className="relative">
+                <div className="absolute left-4 top-2 bottom-2 w-px bg-zinc-800" />
+                <div className="space-y-6">
+                  {[...company.deals]
+                    .sort((a, b) =>
+                      (b.announced_date ?? '').localeCompare(a.announced_date ?? '')
+                    )
+                    .map((deal) => {
+                      const size = deal.amount_usd
+                        ? Math.min(Math.max(Math.log10(deal.amount_usd / 1_000_000 + 1) * 10, 8), 28)
+                        : 8
+                      return (
+                        <div key={deal.id} className="flex items-start gap-4 relative pl-10">
+                          <div
+                            className="absolute left-0 top-1 rounded-full bg-amber-400 border-2 border-zinc-950 flex-shrink-0"
+                            style={{ width: size, height: size, marginLeft: `${4 - size / 2}px` }}
                           />
-                          <span
-                            className={`text-sm tabular-nums ${
-                              deal.amount_usd ? 'text-zinc-100' : 'text-zinc-400 italic'
-                            }`}
-                          >
-                            {amt}
-                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-baseline gap-3 flex-wrap">
+                              <span className="text-sm font-semibold text-zinc-100">
+                                {deal.round_label || deal.deal_type?.toUpperCase() || 'Round'}
+                              </span>
+                              {deal.amount_usd && (
+                                <span className="font-mono text-emerald-400 font-bold">
+                                  {formatAmount(deal.amount_usd)}
+                                </span>
+                              )}
+                              <span className="text-xs text-zinc-500 font-mono">
+                                {deal.announced_date
+                                  ? new Date(deal.announced_date).toLocaleDateString('en-US', {
+                                      month: 'short', day: 'numeric', year: 'numeric',
+                                    })
+                                  : '—'}
+                              </span>
+                            </div>
+                            {deal.all_investors.length > 0 && (
+                              <div className="flex gap-1.5 flex-wrap mt-1.5">
+                                {deal.all_investors.slice(0, 5).map((inv) => (
+                                  <span
+                                    key={inv}
+                                    className="text-[10px] px-2 py-0.5 rounded bg-zinc-800 border border-zinc-700 text-zinc-400 font-mono"
+                                  >
+                                    {inv}
+                                  </span>
+                                ))}
+                                {deal.all_investors.length > 5 && (
+                                  <span className="text-[10px] text-zinc-600">
+                                    +{deal.all_investors.length - 5}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                            {deal.ai_summary && (
+                              <p className="text-xs text-zinc-500 mt-1.5 line-clamp-2">{deal.ai_summary}</p>
+                            )}
+                          </div>
                         </div>
-                        {deal.source_name && (
-                          <span className="text-xs text-zinc-400">{deal.source_name}</span>
-                        )}
-                      </div>
-                      {deal.ai_summary && (
-                        <p className="text-sm text-zinc-300 italic line-clamp-2 mt-0.5">
-                          {deal.ai_summary}
-                        </p>
-                      )}
-                    </ListItem>
-                  )
-                })}
-              </List>
+                      )
+                    })}
+                </div>
+              </div>
             )}
           </div>
 
@@ -196,9 +256,12 @@ export default function CompanyProfile() {
               <h2 className="text-xl font-bold text-zinc-100 mb-4">Known Investors</h2>
               <div className="flex flex-wrap gap-2">
                 {[...new Set(company.deals.flatMap((d) => d.all_investors))].map((inv) => (
-                  <Badge key={inv} color="gray">
+                  <span
+                    key={inv}
+                    className="text-xs px-2 py-1 rounded bg-zinc-800 border border-zinc-700 text-zinc-400 font-mono"
+                  >
                     {inv}
-                  </Badge>
+                  </span>
                 ))}
               </div>
             </div>
