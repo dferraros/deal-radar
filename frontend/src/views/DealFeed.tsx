@@ -392,6 +392,9 @@ export default function DealFeed() {
     <div>
       {/* ── Status bar ──────────────────────────────────────────── */}
       <div className="bg-black border-b border-zinc-800/80 px-6 py-1.5 flex items-center gap-5 text-xs font-mono text-zinc-500">
+        {/* Product label */}
+        <span className="font-mono text-[10px] font-bold tracking-[0.15em] text-amber-500/70">DEAL·RADAR</span>
+        <span className="w-px h-3 bg-zinc-800" />
         {/* LIVE badge */}
         <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
           <span className="relative flex h-1.5 w-1.5">
@@ -477,57 +480,110 @@ export default function DealFeed() {
         )}
       </div>
 
-      {/* ── Hero deal cards ──────────────────────────────────────── */}
-
-      {/* ── Top deals ───────────────────────────────────────────── */}
+      {/* ── Top deals — asymmetric position cards ───────────────── */}
       {(() => {
         const topDeals = [...deals]
           .filter((d) => d.amount_usd && d.amount_usd > 0)
           .sort((a, b) => (b.amount_usd ?? 0) - (a.amount_usd ?? 0))
           .slice(0, 3)
         if (topDeals.length === 0) return null
-        return (
-          <div className="px-6 pt-4 pb-2 grid grid-cols-3 gap-3">
-            {topDeals.map((deal, i) => {
-              const typeKey = deal.deal_type ?? 'unknown'
-              const leftBorder = DEAL_TYPE_LEFT_BORDER[typeKey] ?? DEAL_TYPE_LEFT_BORDER['unknown']
-              const bgCls = DEAL_TYPE_BG[typeKey] ?? ''
-              const roundDisplay = fmtRound(deal.round_label)
-              const isTop = i === 0
-              return (
-                <div
-                  key={deal.id}
-                  onClick={() => deal.company_id && navigate(`/company/${deal.company_id}`)}
-                  className={`relative border-l-[3px] ${leftBorder} ${bgCls} border border-zinc-800 rounded-xl p-4 cursor-pointer hover:border-zinc-700 transition-all duration-150 ${isTop ? 'ring-1 ring-amber-500/20' : ''}`}
-                >
-                  {isTop && (
-                    <div className="absolute top-2.5 right-2.5 text-[9px] font-mono text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">
-                      #1
-                    </div>
-                  )}
-                  <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-2 flex items-center gap-1.5">
-                    {roundDisplay !== '—' ? roundDisplay : (deal.deal_type || 'Deal')}
-                    {deal.geo && <span>{GEO_FLAGS[deal.geo] ?? ''}</span>}
-                  </div>
-                  <div className={`font-semibold truncate mb-1.5 ${isTop ? 'text-lg text-zinc-50' : 'text-base text-zinc-100'}`}>
-                    {deal.company_name ?? '—'}
-                  </div>
-                  <div className={`font-mono font-black tabular stat-number mb-2.5 ${isTop ? 'text-3xl text-amber-400 mega-glow' : 'text-2xl text-emerald-400 amount-glow'}`}>
-                    {deal.amount_usd ? fmtAmount(deal.amount_usd) : '—'}
-                  </div>
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {(deal.sector || []).slice(0, 2).map((s) => (
-                      <SectorPill key={s} sector={s} />
-                    ))}
-                  </div>
-                  {deal.lead_investor && (
-                    <div className="text-[11px] text-zinc-500 mt-2 truncate font-mono">
-                      {deal.lead_investor}
-                    </div>
-                  )}
+        const totalCapital = deals.reduce((s, d) => s + (d.amount_usd ?? 0), 0)
+
+        const RANK_LABELS = ['01', '02', '03']
+        const TYPE_TOP_ACCENT: Record<string, string> = {
+          vc:      'from-emerald-500/60 to-transparent',
+          crypto:  'from-violet-500/60 to-transparent',
+          ma:      'from-sky-500/60 to-transparent',
+          ipo:     'from-rose-500/60 to-transparent',
+          unknown: 'from-zinc-700/60 to-transparent',
+        }
+
+        const renderCard = (deal: typeof topDeals[0], i: number) => {
+          const typeKey = deal.deal_type ?? 'unknown'
+          const leftBorder = DEAL_TYPE_LEFT_BORDER[typeKey] ?? DEAL_TYPE_LEFT_BORDER['unknown']
+          const bgCls = DEAL_TYPE_BG[typeKey] ?? ''
+          const roundDisplay = fmtRound(deal.round_label)
+          const isTop = i === 0
+          const pct = totalCapital > 0 && deal.amount_usd
+            ? ((deal.amount_usd / totalCapital) * 100).toFixed(1)
+            : null
+
+          return (
+            <div
+              key={deal.id}
+              onClick={() => deal.company_id && navigate(`/company/${deal.company_id}`)}
+              className={`
+                relative overflow-hidden border-l-[3px] ${leftBorder} ${bgCls}
+                border border-zinc-800 rounded-xl cursor-pointer
+                hover:border-zinc-700 transition-all duration-150
+                ${isTop ? 'position-card-top ring-1 ring-amber-500/15 p-5' : 'p-4'}
+              `}
+            >
+              {/* Top accent line for secondary cards */}
+              {!isTop && (
+                <div className={`absolute top-0 left-0 right-0 h-px bg-gradient-to-r ${TYPE_TOP_ACCENT[typeKey] ?? TYPE_TOP_ACCENT['unknown']}`} />
+              )}
+
+              {/* Watermark rank number */}
+              <div className={`absolute bottom-1 right-3 font-black select-none pointer-events-none tabular-nums leading-none text-zinc-100 opacity-[0.03] ${isTop ? 'text-[96px]' : 'text-[72px]'}`}>
+                {RANK_LABELS[i]}
+              </div>
+
+              {/* Header row */}
+              <div className="flex items-center justify-between mb-2.5">
+                <span className="text-[9px] font-mono uppercase tracking-[0.3em] text-zinc-600">
+                  Deal · #{RANK_LABELS[i]}
+                </span>
+                <span className="text-[9px] font-mono text-zinc-600">
+                  {roundDisplay !== '—' ? roundDisplay : (deal.deal_type?.toUpperCase() || 'DEAL')}
+                  {deal.geo && <span className="ml-1">{GEO_FLAGS[deal.geo] ?? ''}</span>}
+                </span>
+              </div>
+
+              {/* Company name */}
+              <div className={`font-semibold truncate mb-1 ${isTop ? 'text-xl text-zinc-50' : 'text-base text-zinc-100'}`}>
+                {deal.company_name ?? '—'}
+              </div>
+
+              {/* Amount */}
+              <div className={`font-mono font-black tabular stat-number ${isTop ? 'text-[2rem] text-amber-400 mega-glow mb-1' : 'text-2xl text-emerald-400 amount-glow mb-1'}`}>
+                {fmtAmount(deal.amount_usd)}
+              </div>
+
+              {/* % of total */}
+              {pct && (
+                <div className="text-[9px] font-mono text-zinc-700 mb-2.5">
+                  {pct}% of period capital
                 </div>
-              )
-            })}
+              )}
+
+              {/* Sector pills */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {(deal.sector || []).slice(0, 2).map((s) => (
+                  <SectorPill key={s} sector={s} />
+                ))}
+              </div>
+
+              {/* Lead investor */}
+              {deal.lead_investor && (
+                <div className="text-[10px] text-zinc-600 mt-2 truncate font-mono">
+                  {deal.lead_investor}
+                </div>
+              )}
+            </div>
+          )
+        }
+
+        return (
+          <div className="px-6 pt-4 pb-2 grid grid-cols-5 gap-3">
+            {/* #1 — dominant card */}
+            <div className="col-span-3">
+              {renderCard(topDeals[0], 0)}
+            </div>
+            {/* #2 + #3 — stacked column */}
+            <div className="col-span-2 grid grid-rows-2 gap-3">
+              {topDeals.slice(1).map((deal, i) => renderCard(deal, i + 1))}
+            </div>
           </div>
         )
       })()}
@@ -575,20 +631,26 @@ export default function DealFeed() {
           ) : (
             <>
               <div className="border border-zinc-800 rounded-lg overflow-hidden">
+                {/* Amber gradient accent line above header */}
+                <div className="table-header-accent h-px w-full" />
                 <table className="w-full">
                   <thead className="sticky top-0 z-10">
-                    <tr className="bg-zinc-900/95 backdrop-blur border-b border-zinc-800">
+                    <tr className="bg-zinc-950 backdrop-blur border-b-2 border-zinc-900">
                       <th className="text-left px-4 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium w-[200px]">Company</th>
                       <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium w-[100px]">Type</th>
-                      <th onClick={() => toggleSort('amount_usd')} className="text-right px-4 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium cursor-pointer hover:text-zinc-400 select-none w-[200px]">
-                        Amount {sortKey === 'amount_usd' ? (sortDir === 'desc' ? '↓' : '↑') : <span className="text-zinc-800">↕</span>}
+                      <th onClick={() => toggleSort('amount_usd')} className="text-right px-4 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium cursor-pointer hover:text-amber-500/70 select-none w-[200px]">
+                        Amount · USD {sortKey === 'amount_usd'
+                          ? <span className="text-amber-400 ml-0.5">{sortDir === 'desc' ? '▼' : '▲'}</span>
+                          : <span className="text-zinc-800 ml-0.5 text-[8px]">⊞</span>}
                       </th>
                       <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium">Sector</th>
                       <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium">Tech</th>
                       <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium">Geo</th>
-                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium">Lead Investor</th>
-                      <th onClick={() => toggleSort('announced_date')} className="text-right px-4 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium cursor-pointer hover:text-zinc-400 select-none">
-                        Date {sortKey === 'announced_date' ? (sortDir === 'desc' ? '↓' : '↑') : <span className="text-zinc-800">↕</span>}
+                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium">Lead Inv.</th>
+                      <th onClick={() => toggleSort('announced_date')} className="text-right px-4 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium cursor-pointer hover:text-amber-500/70 select-none">
+                        Date {sortKey === 'announced_date'
+                          ? <span className="text-amber-400 ml-0.5">{sortDir === 'desc' ? '▼' : '▲'}</span>
+                          : <span className="text-zinc-800 ml-0.5 text-[8px]">⊞</span>}
                       </th>
                       <th className="px-2 py-2 w-[60px]" />
                     </tr>

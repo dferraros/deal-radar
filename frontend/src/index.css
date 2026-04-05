@@ -138,3 +138,28 @@ tr.deal-row:not(.mega-deal-row):hover {
 thead.sticky tr {
   box-shadow: 0 1px 0 rgba(63,63,70,0.8);
 }
+
+/* ─── Position card top accent (amber gradient line) ─────────── */
+.position-card-top {
+  position: relative;
+}
+.position-card-top::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, #f59e0b 0%, #f97316 60%, transparent 100%);
+  border-radius: 0.75rem 0.75rem 0 0;
+}
+
+/* ─── Filter terminal strip ───────────────────────────────────── */
+.filter-strip {
+  background: rgba(24, 24, 27, 0.6);
+  border-top: 1px solid rgba(63, 63, 70, 0.5);
+  border-bottom: 1px solid rgba(63, 63, 70, 0.5);
+}
+
+/* ─── Table amber header accent ──────────────────────────────── */
+.table-header-accent {
+  background: linear-gradient(90deg, rgba(245,158,11,0.5) 0%, rgba(245,158,11,0.2) 30%, transparent 70%);
+}

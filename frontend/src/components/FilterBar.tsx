@@ -30,24 +30,66 @@ function getDefaultFilters(): FilterState {
 
 export const defaultFilters: FilterState = getDefaultFilters();
 
-function hasActiveFilters(filters: FilterState): boolean {
+function countActiveFilters(filters: FilterState): number {
   const defaults = defaultFilters;
-  if (filters.dealType !== "") return true;
-  if (filters.sector !== "") return true;
-  if (filters.geo !== "") return true;
-  if (filters.amountMin !== "") return true;
+  let count = 0;
+  if (filters.dealType !== "") count++;
+  if (filters.sector !== "") count++;
+  if (filters.geo !== "") count++;
+  if (filters.amountMin !== "") count++;
   const fromChanged =
     filters.dateFrom?.toISOString().slice(0, 10) !==
     defaults.dateFrom?.toISOString().slice(0, 10);
   const toChanged =
     filters.dateTo?.toISOString().slice(0, 10) !==
     defaults.dateTo?.toISOString().slice(0, 10);
-  if (fromChanged || toChanged) return true;
-  return false;
+  if (fromChanged || toChanged) count++;
+  return count;
 }
 
-const selectClass =
-  "bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs px-2 py-1.5 rounded focus:outline-none focus:border-blue-500";
+function hasActiveFilters(filters: FilterState): boolean {
+  return countActiveFilters(filters) > 0;
+}
+
+const DEAL_TYPE_ACTIVE: Record<string, string> = {
+  vc:     'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+  ma:     'bg-sky-500/20 text-sky-300 border-sky-500/40',
+  crypto: 'bg-violet-500/20 text-violet-300 border-violet-500/40',
+  ipo:    'bg-rose-500/20 text-rose-300 border-rose-500/40',
+}
+
+const GEO_OPTIONS = [
+  { value: '', label: 'All' },
+  { value: 'latam',  label: '🌎 LatAm' },
+  { value: 'spain',  label: '🇪🇸 Spain' },
+  { value: 'europe', label: '🇪🇺 Europe' },
+  { value: 'us',     label: '🇺🇸 US' },
+  { value: 'asia',   label: '🌏 Asia' },
+  { value: 'global', label: '🌐 Global' },
+]
+
+const AMOUNT_OPTIONS = [
+  { value: '',           label: 'All' },
+  { value: '10000000',   label: '$10M+' },
+  { value: '50000000',   label: '$50M+' },
+  { value: '100000000',  label: '$100M+' },
+  { value: '500000000',  label: '$500M+' },
+]
+
+const pillBase = 'text-[10px] px-2.5 py-1 rounded-full border font-mono transition-colors cursor-pointer'
+const pillInactive = 'text-zinc-600 border-zinc-800 hover:text-zinc-400 hover:border-zinc-700'
+const pillActive = 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+
+const dateInputClass =
+  'bg-zinc-900/80 border border-zinc-800 text-zinc-400 text-[10px] font-mono px-2 py-1 rounded focus:outline-none focus:border-amber-500/50 transition-colors'
+
+const SectionLabel = ({ label }: { label: string }) => (
+  <span className="text-[9px] tracking-[0.35em] text-zinc-700 font-mono uppercase">{label}</span>
+)
+
+const Pipe = () => (
+  <span className="w-px h-4 bg-zinc-800/80 self-center" />
+)
 
 export default function FilterBar({
   filters,
@@ -58,49 +100,63 @@ export default function FilterBar({
   const update = (partial: Partial<FilterState>) =>
     onFilterChange({ ...filters, ...partial });
 
+  const activeCount = countActiveFilters(filters);
+
   return (
-    <div className="flex flex-wrap gap-2 items-center py-3">
+    <div className="filter-strip px-6 py-2.5 flex flex-wrap items-center gap-x-5 gap-y-2">
+      {/* Terminal label */}
+      <SectionLabel label="Screen" />
+      <Pipe />
+
       {/* Deal Type */}
-      <div className="flex items-center gap-1 flex-wrap">
+      <div className="flex items-center gap-1.5">
         {(['', 'vc', 'ma', 'crypto', 'ipo'] as const).map((type) => {
-          const label = type === '' ? 'All' : type.toUpperCase()
           const isActive = filters.dealType === type
-          const activeColors: Record<string, string> = {
-            vc:     'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
-            ma:     'bg-sky-500/20 text-sky-300 border-sky-500/40',
-            crypto: 'bg-violet-500/20 text-violet-300 border-violet-500/40',
-            ipo:    'bg-rose-500/20 text-rose-300 border-rose-500/40',
-          }
           return (
             <button
               key={type}
-              onClick={() => onFilterChange({ ...filters, dealType: type })}
-              className={`text-xs px-3 py-1 rounded-full border font-mono transition-colors ${
+              onClick={() => update({ dealType: type })}
+              className={`${pillBase} ${
                 isActive
-                  ? (activeColors[type] ?? 'bg-amber-500/20 text-amber-300 border-amber-500/40')
-                  : 'text-zinc-500 border-zinc-700 hover:text-zinc-300 hover:border-zinc-600'
+                  ? (type === '' ? pillActive : (DEAL_TYPE_ACTIVE[type] ?? pillActive))
+                  : pillInactive
               }`}
             >
-              {label}
+              {type === '' ? 'All' : type.toUpperCase()}
             </button>
           )
         })}
       </div>
 
+      <Pipe />
+
       {/* Sector */}
-      <div className="flex items-center gap-1 flex-wrap">
+      <div className="flex items-center gap-1.5 flex-wrap">
         {(['', ...sectors] as string[]).map((s) => {
-          const label = s === '' ? 'All sectors' : s
           const isActive = filters.sector === s
           return (
             <button
               key={s}
-              onClick={() => onFilterChange({ ...filters, sector: s })}
-              className={`text-xs px-3 py-1 rounded-full border font-mono transition-colors capitalize ${
-                isActive
-                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                  : 'text-zinc-500 border-zinc-700 hover:text-zinc-300 hover:border-zinc-600'
-              }`}
+              onClick={() => update({ sector: s })}
+              className={`${pillBase} ${isActive ? pillActive : pillInactive} capitalize`}
+            >
+              {s === '' ? 'All sectors' : s}
+            </button>
+          )
+        })}
+      </div>
+
+      <Pipe />
+
+      {/* Geo */}
+      <div className="flex items-center gap-1.5">
+        {GEO_OPTIONS.map(({ value, label }) => {
+          const isActive = filters.geo === value
+          return (
+            <button
+              key={value}
+              onClick={() => update({ geo: value })}
+              className={`${pillBase} ${isActive ? pillActive : pillInactive}`}
             >
               {label}
             </button>
@@ -108,60 +164,67 @@ export default function FilterBar({
         })}
       </div>
 
-      {/* Geo */}
-      <select
-        value={filters.geo}
-        onChange={(e) => update({ geo: e.target.value })}
-        className={selectClass}
-      >
-        <option value="">All Geos</option>
-        <option value="latam">LatAm</option>
-        <option value="spain">Spain</option>
-        <option value="europe">Europe</option>
-        <option value="global">Global</option>
-      </select>
+      <Pipe />
 
-      {/* Min Amount */}
-      <input
-        type="number"
-        placeholder="Min $USD"
-        value={filters.amountMin}
-        onChange={(e) => update({ amountMin: e.target.value })}
-        className={`${selectClass} w-28`}
-      />
+      {/* Size */}
+      <div className="flex items-center gap-1.5">
+        {AMOUNT_OPTIONS.map(({ value, label }) => {
+          const isActive = filters.amountMin === value
+          return (
+            <button
+              key={value}
+              onClick={() => update({ amountMin: value })}
+              className={`${pillBase} ${isActive ? pillActive : pillInactive}`}
+            >
+              {label}
+            </button>
+          )
+        })}
+      </div>
 
-      {/* Date Range */}
-      {showDateRange !== false && (
+      {/* Date Window */}
+      {showDateRange && (
         <>
-          <input
-            type="date"
-            value={filters.dateFrom?.toISOString().slice(0, 10) ?? ""}
-            onChange={(e) =>
-              update({ dateFrom: e.target.value ? new Date(e.target.value) : null })
-            }
-            className={selectClass}
-          />
-          <span className="text-slate-500 text-xs">to</span>
-          <input
-            type="date"
-            value={filters.dateTo?.toISOString().slice(0, 10) ?? ""}
-            onChange={(e) =>
-              update({ dateTo: e.target.value ? new Date(e.target.value) : null })
-            }
-            className={selectClass}
-          />
+          <Pipe />
+          <div className="flex items-center gap-2">
+            <SectionLabel label="Window" />
+            <input
+              type="date"
+              value={filters.dateFrom?.toISOString().slice(0, 10) ?? ""}
+              onChange={(e) =>
+                update({ dateFrom: e.target.value ? new Date(e.target.value) : null })
+              }
+              className={dateInputClass}
+            />
+            <span className="text-zinc-700 text-[9px] font-mono">→</span>
+            <input
+              type="date"
+              value={filters.dateTo?.toISOString().slice(0, 10) ?? ""}
+              onChange={(e) =>
+                update({ dateTo: e.target.value ? new Date(e.target.value) : null })
+              }
+              className={dateInputClass}
+            />
+          </div>
         </>
       )}
 
-      {/* Clear filters */}
-      {hasActiveFilters(filters) && (
-        <button
-          onClick={() => onFilterChange(defaultFilters)}
-          className="text-xs text-blue-400 hover:text-blue-300 hover:underline ml-1"
-        >
-          Clear
-        </button>
-      )}
+      {/* Active count + reset */}
+      <div className="flex items-center gap-2 ml-auto">
+        {activeCount > 0 && (
+          <span className="text-[9px] font-mono text-amber-400/80 tracking-wider">
+            [{activeCount} active]
+          </span>
+        )}
+        {hasActiveFilters(filters) && (
+          <button
+            onClick={() => onFilterChange(defaultFilters)}
+            className="text-[9px] font-mono tracking-[0.2em] uppercase text-zinc-600 hover:text-zinc-300 border border-zinc-800 hover:border-zinc-600 px-2 py-0.5 rounded transition-colors"
+          >
+            Reset
+          </button>
+        )}
+      </div>
     </div>
   );
 }
