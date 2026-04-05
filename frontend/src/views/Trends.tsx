@@ -26,6 +26,19 @@ interface TrendsResponse {
   top_sectors: SectorBar[]
 }
 
+// --- Semantic chart colors ---
+
+const DEAL_TYPE_TREMOR_COLORS: Record<string, string> = {
+  VC:     'emerald',
+  Crypto: 'violet',
+  'M&A':  'sky',
+  IPO:    'rose',
+}
+
+function getChartColors(categories: string[]): string[] {
+  return categories.map((c) => DEAL_TYPE_TREMOR_COLORS[c] ?? 'amber')
+}
+
 // --- Helpers ---
 
 const DEAL_TYPE_LABELS: Record<string, string> = {
@@ -77,6 +90,7 @@ export default function Trends() {
   const [data, setData] = useState<TrendsResponse | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [briefingSummary, setBriefingSummary] = useState<string | null>(null)
 
   useEffect(() => {
     axios
@@ -88,9 +102,17 @@ export default function Trends() {
       .finally(() => setLoading(false))
   }, [])
 
+  useEffect(() => {
+    axios.get('/api/briefing/latest').then((r) => {
+      setBriefingSummary(r.data?.ai_summary ?? null)
+    }).catch(() => {})
+  }, [])
+
   const lineData = data ? buildLineData(data.weekly_by_type) : []
   const barData = data ? buildBarData(data.top_sectors) : []
   const grandTotal = data ? totalCapital(data.weekly_by_type) : 0
+
+  const lineCategories = ['VC', 'M&A', 'Crypto', 'IPO']
 
   return (
     <div className="px-6 pt-6 pb-6">
@@ -108,60 +130,71 @@ export default function Trends() {
       {!loading && error && <ErrorBanner message={error} />}
 
       {!loading && !error && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          {/* Left: LineChart — Capital by deal type per week */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5">
-            <p className="text-xs uppercase tracking-wider text-zinc-500 mb-1">
-              Capital by Deal Type
-            </p>
-            <h2 className="text-sm font-semibold text-zinc-100 mb-0.5">
-              Weekly Capital Raised
-            </h2>
-            <p className="text-xs text-zinc-500 mb-2">USD · click legend to filter</p>
-            {lineData.length === 0 ? (
-              <div className="h-64 flex items-center justify-center">
-                <p className="text-sm text-zinc-400">No trend data available yet.</p>
+        <>
+          {briefingSummary && (
+            <div className="mb-6 border-l-4 border-amber-400 bg-amber-400/5 rounded-r-lg px-4 py-3">
+              <div className="text-[10px] uppercase tracking-wider text-amber-500 font-mono mb-1">
+                AI Insight
               </div>
-            ) : (
-              <LineChart
-                data={lineData}
-                index="week"
-                categories={['VC', 'M&A', 'Crypto', 'IPO']}
-                colors={['blue', 'violet', 'amber', 'emerald']}
-                valueFormatter={fmtCapital}
-                yAxisWidth={64}
-                className="h-64 mt-4"
-                showLegend={true}
-              />
-            )}
-          </div>
+              <p className="text-sm text-zinc-300">{briefingSummary}</p>
+            </div>
+          )}
 
-          {/* Right: BarChart — Top sectors by deal count */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5">
-            <p className="text-xs uppercase tracking-wider text-zinc-500 mb-1">
-              Sector Distribution
-            </p>
-            <h2 className="text-sm font-semibold text-zinc-100 mb-0.5">
-              Top Sectors by Deal Count
-            </h2>
-            <p className="text-xs text-zinc-500 mb-2">This month</p>
-            {barData.length === 0 ? (
-              <div className="h-64 flex items-center justify-center">
-                <p className="text-sm text-zinc-400">No sector data available yet.</p>
-              </div>
-            ) : (
-              <BarChart
-                data={barData}
-                index="sector"
-                categories={['Deals']}
-                colors={['blue']}
-                valueFormatter={(v: number) => `${v}`}
-                yAxisWidth={48}
-                className="h-64 mt-4"
-              />
-            )}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Left: LineChart — Capital by deal type per week */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5">
+              <p className="text-xs uppercase tracking-wider text-zinc-500 mb-1">
+                Capital by Deal Type
+              </p>
+              <h2 className="text-sm font-semibold text-zinc-100 mb-0.5">
+                Weekly Capital Raised
+              </h2>
+              <p className="text-xs text-zinc-500 mb-2">USD · click legend to filter</p>
+              {lineData.length === 0 ? (
+                <div className="h-64 flex items-center justify-center">
+                  <p className="text-sm text-zinc-400">No trend data available yet.</p>
+                </div>
+              ) : (
+                <LineChart
+                  data={lineData}
+                  index="week"
+                  categories={lineCategories}
+                  colors={getChartColors(lineCategories)}
+                  valueFormatter={fmtCapital}
+                  yAxisWidth={64}
+                  className="h-64 mt-4"
+                  showLegend={true}
+                />
+              )}
+            </div>
+
+            {/* Right: BarChart — Top sectors by deal count */}
+            <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-5">
+              <p className="text-xs uppercase tracking-wider text-zinc-500 mb-1">
+                Sector Distribution
+              </p>
+              <h2 className="text-sm font-semibold text-zinc-100 mb-0.5">
+                Top Sectors by Deal Count
+              </h2>
+              <p className="text-xs text-zinc-500 mb-2">This month</p>
+              {barData.length === 0 ? (
+                <div className="h-64 flex items-center justify-center">
+                  <p className="text-sm text-zinc-400">No sector data available yet.</p>
+                </div>
+              ) : (
+                <BarChart
+                  data={barData}
+                  index="sector"
+                  categories={['Deals']}
+                  colors={['amber']}
+                  valueFormatter={(v: number) => `${v}`}
+                  yAxisWidth={48}
+                  className="h-64 mt-4"
+                />
+              )}
+            </div>
           </div>
-        </div>
+        </>
       )}
     </div>
   )
