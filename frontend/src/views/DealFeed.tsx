@@ -373,95 +373,110 @@ export default function DealFeed() {
 
   return (
     <div>
-      {/* Ticker / status bar */}
-      <div className="bg-zinc-900 border-b border-zinc-800 px-6 py-1.5 flex items-center gap-6 text-xs font-mono text-zinc-400">
+      {/* ── Status bar ──────────────────────────────────────────── */}
+      <div className="bg-black border-b border-zinc-800/80 px-6 py-1.5 flex items-center gap-5 text-xs font-mono text-zinc-500">
+        {/* LIVE badge */}
+        <span className="flex items-center gap-1.5 text-emerald-400 font-semibold">
+          <span className="relative flex h-1.5 w-1.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60"></span>
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-400"></span>
+          </span>
+          LIVE
+        </span>
+        <span className="w-px h-3 bg-zinc-800" />
         <span>
-          DEALS TODAY: <span className="text-zinc-100">{loading ? '...' : todayDeals.length}</span>
+          TODAY: <span className="text-zinc-300">{loading ? '…' : todayDeals.length} deals</span>
         </span>
         <span>
-          CAPITAL TODAY:{' '}
           <span className="text-emerald-400">
-            {loading ? '...' : todayCapital > 0 ? formatCapital(todayCapital) : '--'}
+            {loading ? '…' : todayCapital > 0 ? formatCapital(todayCapital) : '--'}
           </span>
         </span>
         {lastSync && (
-          <span>
-            LAST UPDATED: <span className="text-zinc-100">{lastSync}</span>
-          </span>
+          <>
+            <span className="w-px h-3 bg-zinc-800" />
+            <span>
+              SYNCED: <span className="text-zinc-400">{lastSync}</span>
+            </span>
+          </>
         )}
-      </div>
-
-      {/* Page header */}
-      <div className="px-6 pt-6 pb-4 flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-semibold text-zinc-50">Deal Feed</h1>
-          {!loading && (
-            <p className="text-xs text-zinc-500 mt-0.5 flex items-center gap-2">
-              {deals.length} deals loaded
-              {newCount > 0 && (
-                <span className="text-xs bg-blue-500/20 text-blue-400 border border-blue-500/30 rounded-full px-2 py-0.5 font-mono">
-                  {newCount} new
-                </span>
-              )}
-            </p>
-          )}
-        </div>
+        <div className="flex-1" />
         <button
           onClick={() => exportCSV(visibleDeals)}
-          className="text-xs px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-zinc-50 border border-zinc-700 rounded-md transition-colors font-mono"
+          className="text-[10px] px-2.5 py-1 bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-800 rounded transition-colors"
         >
           Export CSV
         </button>
       </div>
 
-      {/* === TODAY AT A GLANCE STRIP === */}
-      <div className="px-6 pb-4">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-3 flex items-center gap-6 flex-wrap">
-          <div className="flex flex-col">
-            <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono mb-0.5">Capital This Week</span>
-            <span className="font-mono text-2xl font-bold tabular text-emerald-400 amount-glow">
-              {loading ? '—' : formatCapital(weekCapital)}
-            </span>
+      {/* ── Hero stats band ──────────────────────────────────────── */}
+      <div className="terminal-bg border-b border-zinc-800/60 px-6 py-6">
+        <div className="flex items-end justify-between gap-6 flex-wrap">
+          {/* Primary stat: capital */}
+          <div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-mono mb-2">
+              Capital Raised · 7 Days
+            </div>
+            <div className="flex items-end gap-3">
+              <span className="stat-number text-5xl font-black text-emerald-400 amount-glow">
+                {loading ? '—' : weekCapital > 0 ? formatCapital(weekCapital) : '$0'}
+              </span>
+              <span className="text-zinc-600 font-mono text-sm mb-1 pb-0.5">USD</span>
+            </div>
+            <div className="text-xs text-zinc-500 font-mono mt-1.5">
+              {loading ? '…' : `${weekDeals.length} deals`}
+              {kpis?.topSector && kpis.topSector !== '—' && (
+                <span className="ml-2 text-zinc-600">· top sector: <span className="text-zinc-400 capitalize">{kpis.topSector}</span></span>
+              )}
+              {newCount > 0 && (
+                <span className="ml-2 text-blue-400">· {newCount} new since last visit</span>
+              )}
+            </div>
           </div>
-          <div className="w-px h-8 bg-zinc-800" />
-          <div className="flex flex-col">
-            <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono mb-0.5">Deals</span>
-            <span className="font-mono text-2xl font-bold tabular text-zinc-50">
-              {loading ? '—' : weekDeals.length}
-            </span>
-          </div>
-          <div className="w-px h-8 bg-zinc-800" />
-          <div className="flex flex-col">
-            <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono mb-0.5">Top Sector</span>
-            <span className="font-mono text-lg font-bold text-zinc-50 capitalize">
-              {loading ? '—' : (kpis?.topSector ?? '—')}
-            </span>
-          </div>
-          {briefing?.top_company && briefing?.top_amount_usd && (
-            <>
-              <div className="w-px h-8 bg-zinc-800" />
-              <div className="flex flex-col min-w-0">
-                <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono mb-0.5">🔥 Biggest</span>
-                <span className="text-sm font-semibold text-zinc-100 truncate max-w-[180px]">
-                  {briefing.top_company}
-                  <span className="text-emerald-400 font-mono ml-2">{formatCapital(briefing.top_amount_usd)}</span>
-                </span>
+
+          {/* Secondary stats */}
+          <div className="flex items-stretch gap-0 border border-zinc-800 rounded-lg overflow-hidden">
+            {[
+              {
+                label: 'Total Loaded',
+                value: loading ? '—' : String(kpis?.count ?? 0),
+                sub: 'deals',
+                color: 'text-zinc-100',
+              },
+              {
+                label: 'All-Time Capital',
+                value: loading ? '—' : fmtAmount(kpis?.totalCapital),
+                sub: 'USD',
+                color: 'text-zinc-100',
+              },
+              {
+                label: 'Biggest',
+                value: loading ? '—' : (kpis?.biggest ? fmtAmount(kpis.biggest.amount_usd) : '—'),
+                sub: kpis?.biggest?.company_name ?? '',
+                color: 'text-amber-400',
+              },
+            ].map(({ label, value, sub, color }) => (
+              <div key={label} className="bg-zinc-950 px-5 py-3 border-r border-zinc-800 last:border-r-0 min-w-[110px]">
+                <div className="text-[9px] uppercase tracking-widest text-zinc-600 font-mono mb-1.5">{label}</div>
+                <div className={`stat-number text-xl font-bold ${color} tabular`}>{value}</div>
+                {sub && <div className="text-[10px] text-zinc-600 font-mono mt-0.5 truncate max-w-[100px]">{sub}</div>}
               </div>
-            </>
-          )}
-          {briefing?.ai_summary && (
-            <>
-              <div className="w-px h-8 bg-zinc-800 hidden xl:block" />
-              <div className="flex-1 min-w-0 hidden xl:block">
-                <span className="text-[10px] uppercase tracking-wider text-zinc-600 font-mono block mb-0.5">AI Briefing</span>
-                <p className="text-xs text-zinc-400 truncate">{briefing.ai_summary}</p>
-              </div>
-            </>
-          )}
+            ))}
+          </div>
         </div>
+
+        {/* AI Briefing strip */}
+        {briefing?.ai_summary && (
+          <div className="mt-4 flex items-start gap-2 border border-amber-500/20 bg-amber-500/5 rounded-lg px-4 py-2.5">
+            <span className="text-[9px] uppercase tracking-widest text-amber-500 font-mono mt-0.5 shrink-0">AI</span>
+            <p className="text-xs text-zinc-400 leading-relaxed">{briefing.ai_summary}</p>
+          </div>
+        )}
       </div>
 
-      {/* === HERO DEAL CARDS — top 3 by amount === */}
+      {/* ── Hero deal cards ──────────────────────────────────────── */}
+
+      {/* ── Top deals ───────────────────────────────────────────── */}
       {(() => {
         const topDeals = [...deals]
           .filter((d) => d.amount_usd && d.amount_usd > 0)
@@ -469,28 +484,32 @@ export default function DealFeed() {
           .slice(0, 3)
         if (topDeals.length === 0) return null
         return (
-          <div className="px-6 pb-4 grid grid-cols-3 gap-3">
-            {topDeals.map((deal) => {
+          <div className="px-6 pt-4 pb-2 grid grid-cols-3 gap-3">
+            {topDeals.map((deal, i) => {
               const typeKey = deal.deal_type ?? 'unknown'
               const leftBorder = DEAL_TYPE_LEFT_BORDER[typeKey] ?? DEAL_TYPE_LEFT_BORDER['unknown']
               const bgCls = DEAL_TYPE_BG[typeKey] ?? ''
               const roundDisplay = fmtRound(deal.round_label)
+              const isTop = i === 0
               return (
                 <div
                   key={deal.id}
                   onClick={() => deal.company_id && navigate(`/company/${deal.company_id}`)}
-                  className={`border-l-4 ${leftBorder} ${bgCls} border border-zinc-800 rounded-xl p-4 cursor-pointer hover:bg-zinc-800/70 transition-colors`}
+                  className={`relative border-l-[3px] ${leftBorder} ${bgCls} border border-zinc-800 rounded-xl p-4 cursor-pointer hover:border-zinc-700 transition-all duration-150 ${isTop ? 'ring-1 ring-amber-500/20' : ''}`}
                 >
-                  <div className="text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
+                  {isTop && (
+                    <div className="absolute top-2.5 right-2.5 text-[9px] font-mono text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">
+                      #1
+                    </div>
+                  )}
+                  <div className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-2 flex items-center gap-1.5">
                     {roundDisplay !== '—' ? roundDisplay : (deal.deal_type || 'Deal')}
-                    {deal.geo && (
-                      <span className="ml-2">{GEO_FLAGS[deal.geo] ?? ''}</span>
-                    )}
+                    {deal.geo && <span>{GEO_FLAGS[deal.geo] ?? ''}</span>}
                   </div>
-                  <div className="text-base font-semibold text-zinc-100 truncate mb-1">
+                  <div className={`font-semibold truncate mb-1.5 ${isTop ? 'text-lg text-zinc-50' : 'text-base text-zinc-100'}`}>
                     {deal.company_name ?? '—'}
                   </div>
-                  <div className="font-mono text-2xl font-bold text-emerald-400 amount-glow mb-2">
+                  <div className={`font-mono font-black tabular stat-number mb-2.5 ${isTop ? 'text-3xl text-amber-400 mega-glow' : 'text-2xl text-emerald-400 amount-glow'}`}>
                     {deal.amount_usd ? formatAmount(deal.amount_usd) : '—'}
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
@@ -499,7 +518,7 @@ export default function DealFeed() {
                     ))}
                   </div>
                   {deal.lead_investor && (
-                    <div className="text-[11px] text-zinc-500 mt-2 truncate">
+                    <div className="text-[11px] text-zinc-500 mt-2 truncate font-mono">
                       {deal.lead_investor}
                     </div>
                   )}
@@ -511,32 +530,20 @@ export default function DealFeed() {
       })()}
 
       <div className="px-6 pb-6">
-        {/* KPI bar */}
-        {kpis && (
-          <div className="grid grid-cols-4 gap-px bg-zinc-800 border border-zinc-800 rounded-lg overflow-hidden mb-4">
-            {[
-              { label: 'DEALS LOADED', value: String(kpis.count) },
-              { label: 'TOTAL CAPITAL', value: fmtAmount(kpis.totalCapital) },
-              { label: 'BIGGEST DEAL', value: kpis.biggest?.company_name ?? '—' },
-              { label: 'TOP SECTOR', value: kpis.topSector !== '—' ? kpis.topSector.toUpperCase() : '—' },
-            ].map(({ label, value }) => (
-              <div key={label} className="bg-zinc-950 px-4 py-3">
-                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">{label}</div>
-                <div className="text-sm font-semibold text-zinc-100 truncate">{value}</div>
-              </div>
-            ))}
+        {/* Search + controls row */}
+        <div className="pt-4 pb-2 flex items-center gap-3">
+          <div className="relative">
+            <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-600 w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            <input
+              type="text"
+              placeholder="Search company…"
+              value={search}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              className="w-56 bg-zinc-900 border border-zinc-800 text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-amber-500/60 rounded-lg pl-8 pr-3 py-1.5 text-sm transition-colors"
+            />
           </div>
-        )}
-
-        {/* Search */}
-        <div className="px-0 pt-0 pb-2">
-          <input
-            type="text"
-            placeholder="Search company name..."
-            value={search}
-            onChange={(e) => handleSearchChange(e.target.value)}
-            className="w-full max-w-sm bg-zinc-900 border border-zinc-700 text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-amber-500 rounded-md px-3 py-1.5 text-sm"
-          />
         </div>
 
         {/* Filter bar */}
@@ -605,11 +612,11 @@ export default function DealFeed() {
                         key={deal.id}
                         onClick={() => deal.company_id && navigate(`/company/${deal.company_id}`)}
                         className={`
-                          border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors cursor-pointer group
-                          ${tier === 'mega' ? 'border-l-2 border-l-amber-400/70' : ''}
-                          ${tier === 'large' ? 'border-l-2 border-l-zinc-600' : ''}
-                          ${tier === 'normal' ? `border-l-4 ${DEAL_TYPE_LEFT_BORDER[deal.deal_type ?? 'unknown'] ?? DEAL_TYPE_LEFT_BORDER['unknown']}` : ''}
-                          ${lastVisit && deal.created_at && new Date(deal.created_at) > lastVisit ? 'border-r-2 border-r-blue-500/70' : ''}
+                          deal-row border-b border-zinc-800/40 cursor-pointer group
+                          ${tier === 'mega' ? 'mega-deal-row border-l-[3px] border-l-amber-400/80' : ''}
+                          ${tier === 'large' ? 'hover:bg-zinc-800/25 border-l-[3px] border-l-zinc-600/80' : ''}
+                          ${tier === 'normal' ? `hover:bg-zinc-800/25 border-l-[3px] ${DEAL_TYPE_LEFT_BORDER[deal.deal_type ?? 'unknown'] ?? DEAL_TYPE_LEFT_BORDER['unknown']}` : ''}
+                          ${lastVisit && deal.created_at && new Date(deal.created_at) > lastVisit ? 'border-r-2 border-r-blue-500/60' : ''}
                         `}
                       >
                         {/* Company */}

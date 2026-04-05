@@ -71,25 +71,26 @@ export default function Sidebar() {
   }, [])
 
   return (
-    <aside className="fixed top-0 left-0 h-screen w-[220px] bg-zinc-900 border-r border-zinc-800 flex flex-col z-10">
-      {/* Global pulse bar — top 2px */}
-      <div
-        className={`absolute top-0 left-0 right-0 h-[2px] ${
-          ingesting
-            ? 'bg-amber-400 animate-pulse'
-            : 'bg-amber-400/40'
-        }`}
-      />
+    <aside className="fixed top-0 left-0 h-screen w-[220px] bg-zinc-950 border-r border-zinc-800/80 flex flex-col z-10">
+      {/* Top accent bar */}
+      <div className={`absolute top-0 left-0 right-0 h-[2px] amber-accent-top ${ingesting ? 'opacity-100' : 'opacity-30'} transition-opacity`} />
 
       {/* Brand */}
-      <div className="px-5 pt-6 pb-5 border-b border-zinc-800">
-        <div className="flex items-center gap-2">
-          <Radio size={14} className="text-amber-400" strokeWidth={1.5} />
-          <div className="text-amber-400 font-mono font-bold tracking-widest text-sm">
+      <div className="px-5 pt-6 pb-4 border-b border-zinc-800/80">
+        <div className="flex items-center gap-2.5 mb-1">
+          <div className="relative">
+            <Radio size={16} className="text-amber-400" strokeWidth={1.5} />
+            {ingesting && (
+              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
+            )}
+          </div>
+          <div className="text-amber-400 font-mono font-bold tracking-[0.2em] text-sm">
             DEAL RADAR
           </div>
         </div>
-        <div className="text-zinc-600 text-xs mt-0.5 pl-[22px]">Intelligence Platform</div>
+        <div className="text-zinc-600 text-[10px] pl-[26px] font-mono uppercase tracking-widest">
+          Intelligence
+        </div>
       </div>
 
       {/* Cmd+K hint */}
@@ -154,17 +155,21 @@ export default function Sidebar() {
         </NavLink>
       </div>
 
-      {/* Status */}
-      <div className="px-5 py-4 border-t border-zinc-800">
-        <div className="flex items-center gap-2">
-          <span
-            className={`inline-block w-1.5 h-1.5 rounded-full ${
-              ingesting ? 'bg-amber-400 animate-pulse' : 'bg-emerald-400'
-            }`}
-          />
-          <span className="text-xs font-mono text-zinc-500">
-            {ingesting ? 'SYNCING' : `LIVE${lastSync ? ` · ${lastSync}` : ''}`}
-          </span>
+      {/* Status footer */}
+      <div className="px-4 py-3 border-t border-zinc-800/80">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-1.5 w-1.5">
+              {ingesting && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>}
+              <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${ingesting ? 'bg-amber-400' : 'bg-emerald-400'}`} />
+            </span>
+            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
+              {ingesting ? 'Syncing…' : 'Live'}
+            </span>
+          </div>
+          {lastSync && !ingesting && (
+            <span className="text-[10px] font-mono text-zinc-700">{lastSync}</span>
+          )}
         </div>
       </div>
     </aside>

@@ -2,10 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Typography ──────────────────────────────────────────────── */
 body {
   background-color: #09090b;
   color: #fafafa;
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 .mono {
@@ -18,7 +20,111 @@ body {
   font-feature-settings: "tnum";
 }
 
-/* Emerald glow for large amounts */
+/* ─── Premium scrollbar ───────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #3f3f46;
+  border-radius: 2px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #52525b;
+}
+
+/* ─── Glow effects ────────────────────────────────────────────── */
 .amount-glow {
-  filter: drop-shadow(0 0 8px rgba(52, 211, 153, 0.4));
+  filter: drop-shadow(0 0 12px rgba(52, 211, 153, 0.35));
+}
+
+.mega-glow {
+  filter: drop-shadow(0 0 16px rgba(251, 191, 36, 0.45));
+  text-shadow: 0 0 24px rgba(251, 191, 36, 0.3);
+}
+
+.amber-glow {
+  filter: drop-shadow(0 0 8px rgba(251, 191, 36, 0.4));
+}
+
+/* ─── Live indicator animations ──────────────────────────────── */
+@keyframes radar-ping {
+  0% { transform: scale(1); opacity: 0.8; }
+  70% { transform: scale(2.2); opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+.radar-ping::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: currentColor;
+  animation: radar-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+@keyframes ticker-scroll {
+  0% { transform: translateX(100%); }
+  100% { transform: translateX(-100%); }
+}
+
+/* ─── Terminal grid background ────────────────────────────────── */
+.terminal-bg {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ─── Stat number (Bloomberg-style big numbers) ───────────────── */
+.stat-number {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  letter-spacing: -0.03em;
+  line-height: 1;
+}
+
+/* ─── Deal row hover ──────────────────────────────────────────── */
+tr.deal-row {
+  transition: background 0.1s ease;
+}
+
+/* ─── Amber gradient top accent ───────────────────────────────── */
+.amber-accent-top {
+  background: linear-gradient(90deg, #f59e0b 0%, #f97316 50%, #ef4444 100%);
+}
+
+/* ─── Card shimmer for loading states ────────────────────────── */
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #18181b 25%, #27272a 50%, #18181b 75%);
+  background-size: 400px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* ─── Pulse ring ──────────────────────────────────────────────── */
+@keyframes pulse-ring {
+  0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.4); }
+  70% { box-shadow: 0 0 0 6px rgba(251, 191, 36, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); }
+}
+
+.pulse-ring {
+  animation: pulse-ring 2s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+}
+
+/* ─── Mega deal row highlight ─────────────────────────────────── */
+.mega-deal-row {
+  background: linear-gradient(90deg, rgba(251,191,36,0.04) 0%, transparent 40%);
+}
+
+.mega-deal-row:hover {
+  background: linear-gradient(90deg, rgba(251,191,36,0.08) 0%, rgba(39,39,42,0.3) 40%) !important;
 }
