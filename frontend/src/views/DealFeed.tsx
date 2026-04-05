@@ -51,6 +51,72 @@ function formatCapital(usd: number | null | undefined): string {
   return m >= 1000 ? `$${(m / 1000).toFixed(1)}B` : `$${Math.round(m)}M`
 }
 
+const GEO_FLAGS: Record<string, string> = {
+  latam: '🌎', spain: '🇪🇸', europe: '🇪🇺', us: '🇺🇸',
+  asia: '🌏', africa: '🌍', mena: '🕌', global: '🌐',
+}
+
+const DEAL_TYPE_LEFT_BORDER: Record<string, string> = {
+  vc:      'border-l-emerald-500',
+  crypto:  'border-l-violet-500',
+  ma:      'border-l-sky-500',
+  ipo:     'border-l-rose-500',
+  unknown: 'border-l-zinc-700',
+}
+
+const DEAL_TYPE_BG: Record<string, string> = {
+  vc:      'bg-emerald-500/5',
+  crypto:  'bg-violet-500/5',
+  ma:      'bg-sky-500/5',
+  ipo:     'bg-rose-500/5',
+  unknown: 'bg-zinc-900',
+}
+
+// Used in Task 5 table rows
+export const DEAL_TYPE_COLORS: Record<string, string> = {
+  vc:      'border-emerald-500 bg-emerald-500/5',
+  crypto:  'border-violet-500 bg-violet-500/5',
+  ma:      'border-sky-500 bg-sky-500/5',
+  ipo:     'border-rose-500 bg-rose-500/5',
+  unknown: 'border-zinc-700 bg-zinc-900',
+}
+
+const SECTOR_PILL_COLORS: Record<string, string> = {
+  crypto:    'bg-violet-500/15 text-violet-300 border-violet-500/30',
+  fintech:   'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  saas:      'bg-sky-500/15 text-sky-300 border-sky-500/30',
+  healthtech:'bg-rose-500/15 text-rose-300 border-rose-500/30',
+  edtech:    'bg-amber-500/15 text-amber-300 border-amber-500/30',
+  proptech:  'bg-orange-500/15 text-orange-300 border-orange-500/30',
+  other:     'bg-zinc-500/15 text-zinc-400 border-zinc-600/30',
+}
+
+function SectorPill({ sector }: { sector: string }) {
+  const cls = SECTOR_PILL_COLORS[sector.toLowerCase()] ?? SECTOR_PILL_COLORS['other']
+  return (
+    <span className={`text-[10px] px-2 py-0.5 rounded-full border font-mono uppercase tracking-wide ${cls}`}>
+      {sector}
+    </span>
+  )
+}
+
+// Used in Task 5 for company momentum visualization
+export function MomentumDots({ count }: { count: number }) {
+  const filled = Math.min(count, 6)
+  return (
+    <div className="flex gap-0.5 items-center" title={`${count} funding round${count !== 1 ? 's' : ''}`}>
+      {Array.from({ length: 6 }).map((_, i) => (
+        <span
+          key={i}
+          className={`w-1.5 h-1.5 rounded-full transition-colors ${
+            i < filled ? 'bg-emerald-400' : 'bg-zinc-800'
+          }`}
+        />
+      ))}
+    </div>
+  )
+}
+
 function buildParams(f: FilterState): Record<string, string> {
   const params: Record<string, string> = {}
   if (f.dealType) params.deal_type = f.dealType
@@ -276,32 +342,100 @@ export default function DealFeed() {
         </button>
       </div>
 
-      {/* Weekly briefing banner */}
-      {briefing?.ai_summary && (
-        <div className="mx-6 mb-4 bg-zinc-900 border border-blue-500/30 rounded-lg px-4 py-3 text-sm">
-          <span className="text-xs uppercase tracking-widest text-blue-400 font-mono mr-2">
-            WEEKLY BRIEFING
-          </span>
-          <span className="text-zinc-300">{briefing.ai_summary}</span>
-          <span className="text-xs text-zinc-500 ml-2 font-mono">
-            {briefing.deal_count} deals · {formatCapital(briefing.total_capital_usd)}
-          </span>
-        </div>
-      )}
-
-      {/* KPI cards */}
-      <div className="grid grid-cols-3 gap-4 px-6 pb-4">
-        {[
-          { label: 'Deals This Week', value: loading ? '...' : weekDeals.length.toString() },
-          { label: 'Capital Raised', value: loading ? '...' : formatCapital(weekCapital) },
-          { label: 'Top Sector', value: loading ? '...' : topSector ?? '—' },
-        ].map((kpi) => (
-          <div key={kpi.label} className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3">
-            <div className="text-xs uppercase tracking-wider text-zinc-500 mb-1">{kpi.label}</div>
-            <div className="font-mono text-xl font-semibold text-zinc-50">{kpi.value}</div>
+      {/* === TODAY AT A GLANCE STRIP === */}
+      <div className="px-6 pb-4">
+        <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-3 flex items-center gap-6 flex-wrap">
+          <div className="flex flex-col">
+            <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono mb-0.5">Capital This Week</span>
+            <span className="font-mono text-2xl font-bold tabular text-emerald-400 amount-glow">
+              {loading ? '—' : formatCapital(weekCapital)}
+            </span>
           </div>
-        ))}
+          <div className="w-px h-8 bg-zinc-800" />
+          <div className="flex flex-col">
+            <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono mb-0.5">Deals</span>
+            <span className="font-mono text-2xl font-bold tabular text-zinc-50">
+              {loading ? '—' : weekDeals.length}
+            </span>
+          </div>
+          <div className="w-px h-8 bg-zinc-800" />
+          <div className="flex flex-col">
+            <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono mb-0.5">Top Sector</span>
+            <span className="font-mono text-lg font-bold text-zinc-50 capitalize">
+              {loading ? '—' : (topSector ?? '—')}
+            </span>
+          </div>
+          {briefing?.top_company && briefing?.top_amount_usd && (
+            <>
+              <div className="w-px h-8 bg-zinc-800" />
+              <div className="flex flex-col min-w-0">
+                <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono mb-0.5">🔥 Biggest</span>
+                <span className="text-sm font-semibold text-zinc-100 truncate max-w-[180px]">
+                  {briefing.top_company}
+                  <span className="text-emerald-400 font-mono ml-2">{formatCapital(briefing.top_amount_usd)}</span>
+                </span>
+              </div>
+            </>
+          )}
+          {briefing?.ai_summary && (
+            <>
+              <div className="w-px h-8 bg-zinc-800 hidden xl:block" />
+              <div className="flex-1 min-w-0 hidden xl:block">
+                <span className="text-[10px] uppercase tracking-wider text-zinc-600 font-mono block mb-0.5">AI Briefing</span>
+                <p className="text-xs text-zinc-400 truncate">{briefing.ai_summary}</p>
+              </div>
+            </>
+          )}
+        </div>
       </div>
+
+      {/* === HERO DEAL CARDS — top 3 by amount === */}
+      {(() => {
+        const topDeals = [...deals]
+          .filter((d) => d.amount_usd && d.amount_usd > 0)
+          .sort((a, b) => (b.amount_usd ?? 0) - (a.amount_usd ?? 0))
+          .slice(0, 3)
+        if (topDeals.length === 0) return null
+        return (
+          <div className="px-6 pb-4 grid grid-cols-3 gap-3">
+            {topDeals.map((deal) => {
+              const typeKey = deal.deal_type ?? 'unknown'
+              const leftBorder = DEAL_TYPE_LEFT_BORDER[typeKey] ?? DEAL_TYPE_LEFT_BORDER['unknown']
+              const bgCls = DEAL_TYPE_BG[typeKey] ?? ''
+              return (
+                <div
+                  key={deal.id}
+                  onClick={() => deal.company_id && navigate(`/company/${deal.company_id}`)}
+                  className={`border-l-4 ${leftBorder} ${bgCls} border border-zinc-800 rounded-xl p-4 cursor-pointer hover:bg-zinc-800/70 transition-colors`}
+                >
+                  <div className="text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
+                    {deal.round_label || deal.deal_type || 'Deal'}
+                    {deal.geo && (
+                      <span className="ml-2">{GEO_FLAGS[deal.geo] ?? ''}</span>
+                    )}
+                  </div>
+                  <div className="text-base font-semibold text-zinc-100 truncate mb-1">
+                    {deal.company_name ?? '—'}
+                  </div>
+                  <div className="font-mono text-2xl font-bold text-emerald-400 amount-glow mb-2">
+                    {deal.amount_usd ? formatAmount(deal.amount_usd) : '—'}
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {(deal.sector || []).slice(0, 2).map((s) => (
+                      <SectorPill key={s} sector={s} />
+                    ))}
+                  </div>
+                  {deal.lead_investor && (
+                    <div className="text-[11px] text-zinc-500 mt-2 truncate">
+                      {deal.lead_investor}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        )
+      })()}
 
       <div className="px-6 pb-6">
         {/* Search */}
