@@ -26,6 +26,8 @@ class DealResponse(BaseModel):
     geo: Optional[str] = None               # from company
     tech_stack: list[str] = []             # company's tech stack
 
+    company_website: Optional[str] = None
+
     # Kept for backwards-compat with any existing consumers
     currency: Optional[str] = None
     closed_date: Optional[date] = None

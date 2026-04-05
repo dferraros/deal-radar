@@ -24,6 +24,7 @@ interface DealResponse {
   tech_stack?: string[]
   confidence?: number
   created_at?: string | null
+  company_website?: string | null
 }
 
 interface BriefingResponse {
@@ -142,23 +143,6 @@ function SourceBadge({ source }: { source: string | null | undefined }) {
     <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${cls}`}>
       {source.toLowerCase()}
     </span>
-  )
-}
-
-// Used in Task 5 for company momentum visualization
-export function MomentumDots({ count }: { count: number }) {
-  const filled = Math.min(count, 6)
-  return (
-    <div className="flex gap-0.5 items-center" title={`${count} funding round${count !== 1 ? 's' : ''}`}>
-      {Array.from({ length: 6 }).map((_, i) => (
-        <span
-          key={i}
-          className={`w-1.5 h-1.5 rounded-full transition-colors ${
-            i < filled ? 'bg-emerald-400' : 'bg-zinc-800'
-          }`}
-        />
-      ))}
-    </div>
   )
 }
 
@@ -362,8 +346,8 @@ export default function DealFeed() {
   const sortedDeals = useMemo(() => {
     if (!sortKey) return deals
     return [...deals].sort((a, b) => {
-      const av = a[sortKey] ?? ''
-      const bv = b[sortKey] ?? ''
+      const av = sortKey === 'amount_usd' ? (a[sortKey] ?? -1) : (a[sortKey] ?? '')
+      const bv = sortKey === 'amount_usd' ? (b[sortKey] ?? -1) : (b[sortKey] ?? '')
       const cmp = av < bv ? -1 : av > bv ? 1 : 0
       return sortDir === 'desc' ? -cmp : cmp
     })
@@ -591,9 +575,6 @@ export default function DealFeed() {
                         Tech
                       </th>
                       <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
-                        Track
-                      </th>
-                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
                         Geo
                       </th>
                       <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
@@ -608,7 +589,7 @@ export default function DealFeed() {
                     {sortedDeals.map((deal) => {
                       const roundDisplay = fmtRound(deal.round_label)
                       const tier = dealTier(deal.amount_usd)
-                      const favicon = getFaviconUrl(null, deal.source_url)
+                      const favicon = getFaviconUrl(deal.company_website, deal.source_url)
                       return (
                       <tr
                         key={deal.id}
@@ -684,12 +665,6 @@ export default function DealFeed() {
                               <span className="text-[10px] text-zinc-600">+{deal.tech_stack!.length - 3}</span>
                             )}
                           </div>
-                        </td>
-                        {/* Momentum */}
-                        <td className="px-4 py-3">
-                          <MomentumDots count={
-                            deals.filter((d) => d.company_id != null && d.company_id === deal.company_id).length
-                          } />
                         </td>
                         {/* Geo */}
                         <td className="px-4 py-3 text-xs text-zinc-400 uppercase font-mono">

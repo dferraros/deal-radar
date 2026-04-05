@@ -39,6 +39,7 @@ def _build_deal_response(deal: Deal) -> DealResponse:
         sector=company.sector or [] if company else [],
         geo=company.geo if company else None,
         tech_stack=company.tech_stack or [] if company else [],
+        company_website=company.website if company else None,
     )
 
 
