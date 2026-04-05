@@ -302,21 +302,15 @@ export default function DealFeed() {
   })
   const weekCapital = weekDeals.reduce((s, d) => s + (d.amount_usd ?? 0), 0)
 
-  const sectorCounts: Record<string, number> = {}
-  for (const d of deals) {
-    for (const s of d.sector || []) {
-      sectorCounts[s] = (sectorCounts[s] ?? 0) + 1
-    }
-  }
-  const topSector = Object.entries(sectorCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
-
-  const maxDealAmount = Math.max(...visibleDeals.map((d) => d.amount_usd ?? 0), 1)
+const maxDealAmount = Math.max(...visibleDeals.map((d) => d.amount_usd ?? 0), 1)
 
   const kpis = useMemo(() => {
     if (!deals.length) return null
     const totalCapital = deals.reduce((s, d) => s + (d.amount_usd ?? 0), 0)
-    const biggest = deals.reduce((max, d) =>
-      (d.amount_usd ?? 0) > (max.amount_usd ?? 0) ? d : max, deals[0])
+    const dealsWithAmount = deals.filter(d => (d.amount_usd ?? 0) > 0)
+    const biggest = dealsWithAmount.length > 0
+      ? dealsWithAmount.reduce((max, d) => (d.amount_usd ?? 0) > (max.amount_usd ?? 0) ? d : max)
+      : null
     const sectorCounts: Record<string, number> = {}
     deals.forEach(d => (d.sector ?? []).forEach(s => {
       sectorCounts[s] = (sectorCounts[s] ?? 0) + 1
@@ -388,7 +382,7 @@ export default function DealFeed() {
           <div className="flex flex-col">
             <span className="text-[10px] uppercase tracking-wider text-zinc-500 font-mono mb-0.5">Top Sector</span>
             <span className="font-mono text-lg font-bold text-zinc-50 capitalize">
-              {loading ? '—' : (topSector ?? '—')}
+              {loading ? '—' : (kpis?.topSector ?? '—')}
             </span>
           </div>
           {briefing?.top_company && briefing?.top_amount_usd && (
@@ -472,7 +466,7 @@ export default function DealFeed() {
               { label: 'DEALS LOADED', value: String(kpis.count) },
               { label: 'TOTAL CAPITAL', value: fmtAmount(kpis.totalCapital) },
               { label: 'BIGGEST DEAL', value: kpis.biggest?.company_name ?? '—' },
-              { label: 'TOP SECTOR', value: (kpis.topSector).toUpperCase() },
+              { label: 'TOP SECTOR', value: kpis.topSector !== '—' ? kpis.topSector.toUpperCase() : '—' },
             ].map(({ label, value }) => (
               <div key={label} className="bg-zinc-950 px-4 py-3">
                 <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">{label}</div>
