@@ -22,6 +22,12 @@ function formatCapital(usd: number): string {
   return m >= 1000 ? `$${(m / 1000).toFixed(1)}B` : `$${Math.round(m)}M`
 }
 
+function getRankColor(index: number): string {
+  if (index === 0) return 'text-amber-400 font-bold'
+  if (index <= 2) return 'text-zinc-300 font-semibold'
+  return 'text-zinc-600'
+}
+
 export default function InvestorLeaderboard() {
   const [period, setPeriod] = useState<Period>('monthly')
   const [data, setData] = useState<LeaderboardResponse | null>(null)
@@ -47,6 +53,8 @@ export default function InvestorLeaderboard() {
     { key: 'monthly', label: 'Monthly' },
     { key: 'quarterly', label: 'Quarterly' },
   ]
+
+  const maxCapital = Math.max(...(data?.investors ?? []).map((i) => i.total_capital_usd), 1)
 
   return (
     <div className="px-6 pt-6 pb-6">
@@ -109,17 +117,27 @@ export default function InvestorLeaderboard() {
                   key={entry.investor_name}
                   className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors"
                 >
-                  <td className="px-4 py-2.5 font-mono text-zinc-600 text-xs w-8">
-                    {idx + 1}
+                  <td className={`px-4 py-3 font-mono text-sm tabular ${getRankColor(idx)}`}>
+                    #{idx + 1}
                   </td>
                   <td className="px-4 py-2.5 font-medium text-zinc-100">
                     {entry.investor_name}
                   </td>
-                  <td className="px-4 py-2.5 font-mono text-zinc-300 text-sm">
+                  <td className="px-4 py-2.5 font-mono text-zinc-300 text-sm tabular">
                     {entry.deal_count}
                   </td>
-                  <td className="px-4 py-2.5 font-mono text-emerald-400 font-semibold text-sm">
-                    {formatCapital(entry.total_capital_usd)}
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="flex-1 bg-zinc-800 rounded-full h-1.5 max-w-[120px]">
+                        <div
+                          className="h-1.5 rounded-full bg-emerald-500/70"
+                          style={{ width: `${Math.round((entry.total_capital_usd / maxCapital) * 100)}%` }}
+                        />
+                      </div>
+                      <span className="font-mono text-sm tabular text-emerald-400 w-16 text-right">
+                        {formatCapital(entry.total_capital_usd)}
+                      </span>
+                    </div>
                   </td>
                 </tr>
               ))}
