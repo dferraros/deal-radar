@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import axios from 'axios'
 import { LineChart, BarChart } from '@tremor/react'
 import LoadingSpinner from '../components/LoadingSpinner'
@@ -121,7 +121,7 @@ export default function Trends() {
   const lineCategories = ['VC', 'M&A', 'Crypto', 'IPO']
 
   const topSector = data?.top_sectors[0]
-  const topDealType = (() => {
+  const topDealType = useMemo(() => {
     if (!data) return null
     const totals: Record<string, number> = {}
     for (const p of data.weekly_by_type) {
@@ -130,7 +130,7 @@ export default function Trends() {
     }
     const sorted = Object.entries(totals).sort(([,a],[,b]) => b - a)
     return sorted[0] ?? null
-  })()
+  }, [data])
 
   return (
     <div className="pb-6">

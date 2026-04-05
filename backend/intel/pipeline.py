@@ -15,13 +15,20 @@ Usage:
 """
 import logging
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
+
+def _now() -> datetime:
+    return datetime.now(timezone.utc)
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from urllib.parse import urlparse
+
+from sqlalchemy import func
+
 from backend.models import (
-    IntelQueue, IntelSource, IntelSourceChunk,
+    Company, IntelQueue, IntelSource, IntelSourceChunk,
     IntelCompanyProfile, IntelOntologyNode, IntelOntologyAlias,
     IntelObservation, IntelObservationEvidence,
 )
@@ -130,7 +137,7 @@ async def run_intel_pipeline(queue_id: uuid.UUID, db: AsyncSession) -> None:
         logger.error("[Intel] Queue entry %s not found", queue_id)
         return
 
-    queue.started_at = datetime.utcnow()
+    queue.started_at = _now()
     queue.status = "crawling"
     await db.commit()
 
@@ -145,7 +152,7 @@ async def run_intel_pipeline(queue_id: uuid.UUID, db: AsyncSession) -> None:
     if not crawl_results:
         queue.status = "failed"
         queue.error_log = "Crawl returned no pages"
-        queue.completed_at = datetime.utcnow()
+        queue.completed_at = _now()
         await db.commit()
         return
 
@@ -223,7 +230,7 @@ async def run_intel_pipeline(queue_id: uuid.UUID, db: AsyncSession) -> None:
     primitives = await extractor.extract_primitives(profile, context_text)
     if not primitives:
         queue.status = "done"
-        queue.completed_at = datetime.utcnow()
+        queue.completed_at = _now()
         await db.commit()
         return
 
@@ -274,6 +281,120 @@ async def run_intel_pipeline(queue_id: uuid.UUID, db: AsyncSession) -> None:
                 ))
 
     queue.status = "done"
-    queue.completed_at = datetime.utcnow()
+    queue.completed_at = _now()
     await db.commit()
     logger.info("[Intel] Pipeline complete for queue_id=%s (%d primitives)", queue_id, len(primitives))
+
+    # ── Stage 7: Bridge → companies.tech_stack ───────────────────────────────
+    # Write high-confidence primitives back to the deals company record so the
+    # Deal Feed tech_stack column populates automatically after intel analysis.
+    await _bridge_tech_stack_to_company(queue_id, queue.website, queue.company_name, db)
+
+async def _bridge_tech_stack_to_company(
+    queue_id: uuid.UUID,
+    website: str,
+    company_name: str,
+    db: AsyncSession,
+) -> None:
+    """
+    After intel analysis completes, write the top-confidence primitive names
+    to the matching company record in the deals 'companies' table.
+
+    Matching strategy (in order):
+      1. queue.company_id FK if set
+      2. Exact domain match on companies.website
+      3. Case-insensitive company name match
+
+    Only primitives with confidence >= 0.6 are written.
+    Max 20 primitives to keep the column useful in the UI.
+    Never raises — failure here must not break the pipeline.
+    """
+    _MIN_CONFIDENCE = 0.6
+    _MAX_PRIMITIVES = 20
+
+    try:
+        # Fetch high-confidence observations with their canonical node names
+        stmt = (
+            select(IntelOntologyNode.canonical_name, IntelObservation.confidence, IntelObservation.is_explicit)
+            .join(IntelOntologyNode, IntelObservation.node_id == IntelOntologyNode.id)
+            .where(IntelObservation.queue_id == queue_id)
+            .where(IntelOntologyNode.node_type == "primitive")
+        )
+        result = await db.execute(stmt)
+        rows = result.all()
+
+        # Filter, sort by confidence (explicit first, then by score desc)
+        qualified = [
+            (name, float(conf), is_explicit)
+            for name, conf, is_explicit in rows
+            if _safe_float(conf) >= _MIN_CONFIDENCE
+        ]
+        qualified.sort(key=lambda x: (x[2], x[1]), reverse=True)  # explicit > inferred, higher conf first
+        tech_stack = [name for name, _, _ in qualified[:_MAX_PRIMITIVES]]
+
+        if not tech_stack:
+            logger.info("[Bridge] No qualifying primitives for queue_id=%s", queue_id)
+            return
+
+        # Locate the company record
+        company = await _find_company(queue_id, website, company_name, db)
+        if not company:
+            logger.info("[Bridge] No matching company found for %s — tech_stack not written", company_name)
+            return
+
+        # Merge: keep existing entries not already in new list, prepend new ones
+        existing = company.tech_stack or []
+        merged = tech_stack + [t for t in existing if t not in tech_stack]
+        company.tech_stack = merged[:_MAX_PRIMITIVES]
+        await db.commit()
+        logger.info("[Bridge] Wrote %d tech primitives to company=%s", len(company.tech_stack), company.name)
+
+    except Exception as exc:
+        logger.warning("[Bridge] tech_stack bridge failed for queue_id=%s: %s", queue_id, exc)
+
+
+def _safe_float(value: object) -> float:
+    try:
+        return float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return 0.0
+
+
+async def _find_company(
+    queue_id: uuid.UUID,
+    website: str,
+    company_name: str,
+    db: AsyncSession,
+) -> "Company | None":
+    """Try three strategies to find the company row."""
+    # Strategy 1: queue.company_id FK
+    q_result = await db.execute(select(IntelQueue).where(IntelQueue.id == queue_id))
+    queue = q_result.scalars().first()
+    if queue and queue.company_id:
+        c = await db.execute(select(Company).where(Company.id == queue.company_id))
+        company = c.scalars().first()
+        if company:
+            return company
+
+    # Strategy 2: domain match — normalize both sides to bare hostname
+    domain = _extract_domain(website)
+    if domain:
+        stmt = select(Company).where(Company.website.ilike(f"%{domain}%"))
+        c = await db.execute(stmt)
+        company = c.scalars().first()
+        if company:
+            return company
+
+    # Strategy 3: case-insensitive name match
+    stmt = select(Company).where(func.lower(Company.name) == company_name.lower())
+    c = await db.execute(stmt)
+    return c.scalars().first()
+
+
+def _extract_domain(url: str) -> str:
+    """'https://www.stripe.com/payments' → 'stripe.com'"""
+    try:
+        hostname = urlparse(url).hostname or ""
+        return hostname.removeprefix("www.")
+    except Exception:
+        return ""

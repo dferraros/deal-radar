@@ -56,9 +56,10 @@ class GitHubAnalyzer:
         Full analysis: org discovery → repos → SBOM per repo.
         Never raises — returns [] on any failure.
         """
-        # Strip protocol and TLD to get org name candidate
-        # "https://mistral.ai" → "mistral"
+        # Strip protocol, www., and TLD to get org name candidate
+        # "https://www.scale.com" → "scale", "https://mistral.ai" → "mistral"
         clean = domain.replace("https://", "").replace("http://", "").rstrip("/")
+        clean = clean.removeprefix("www.")
         org_candidate = clean.split(".")[0]
 
         try:
@@ -98,14 +99,19 @@ class GitHubAnalyzer:
         return results
 
     async def _find_org(self, name: str) -> str | None:
-        """Search GitHub for an org matching the name. Returns login or None."""
+        """Search GitHub for an org matching the name. Returns login or None.
+        Prefers exact login match over fuzzy first result."""
         url = f"{_GITHUB_API}/search/users?q={name}+type:org"
         async with httpx.AsyncClient(headers=self._headers(), timeout=10) as client:
             r = await client.get(url)
             r.raise_for_status()
             data = r.json()
         items = data.get("items", [])
-        return items[0]["login"] if items else None
+        if not items:
+            return None
+        # Prefer exact case-insensitive login match (e.g. "stripe" not "stripe-archive")
+        exact = next((i["login"] for i in items if i["login"].lower() == name.lower()), None)
+        return exact or items[0]["login"]
 
     async def _get_top_repos(self, org: str) -> list[tuple[str, str | None, str]]:
         """Fetch top repos by stars, excluding forks."""
