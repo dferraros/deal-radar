@@ -15,13 +15,14 @@ interface HeatmapGridProps {
 }
 
 function getColorClass(capital: number, max: number): string {
-  if (max === 0 || capital === 0) return 'bg-zinc-900';
-  const ratio = capital / max;
-  if (ratio < 0.1) return 'bg-blue-500/10';
-  if (ratio < 0.3) return 'bg-blue-500/30';
-  if (ratio < 0.5) return 'bg-blue-500/50';
-  if (ratio < 0.75) return 'bg-blue-500/70';
-  return 'bg-blue-500/90';
+  if (max === 0 || capital === 0) return 'bg-zinc-900 border border-zinc-800'
+  const ratio = capital / max
+  if (ratio < 0.05) return 'bg-emerald-950/30 border border-emerald-900/20'
+  if (ratio < 0.15) return 'bg-emerald-900/50 border border-emerald-800/30'
+  if (ratio < 0.35) return 'bg-emerald-800/60 border border-emerald-700/40'
+  if (ratio < 0.6)  return 'bg-emerald-700/70 border border-emerald-600/50'
+  if (ratio < 0.85) return 'bg-emerald-600/80 border border-emerald-500/60'
+  return 'bg-emerald-500/90 border border-emerald-400/70'
 }
 
 function fmtM(usd: number): string {
