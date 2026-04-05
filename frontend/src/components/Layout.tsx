@@ -4,9 +4,9 @@ import CommandPalette from './CommandPalette'
 
 export default function Layout() {
   return (
-    <div className="flex min-h-screen bg-zinc-950">
+    <div className="flex min-h-screen bg-slate-50">
       <Sidebar />
-      <main className="ml-[220px] flex-1 min-h-screen overflow-auto">
+      <main className="ml-[220px] flex-1 min-h-screen overflow-auto bg-white">
         <Outlet />
       </main>
       <CommandPalette />
