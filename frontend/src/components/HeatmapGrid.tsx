@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 interface HeatmapCell {
   sector: string;
@@ -42,9 +42,29 @@ function colTotal(cells: HeatmapCell[], geo: string): number {
     .reduce((sum, c) => sum + c.total_capital_usd, 0);
 }
 
+interface DrillDeal {
+  id: string
+  company_name: string | null
+  amount_usd: number | null
+  round_label: string | null
+  deal_type: string | null
+  announced_date: string | null
+}
+
 export default function HeatmapGrid({ cells, sectors, geos }: HeatmapGridProps) {
   const [tooltip, setTooltip] = useState<{ text: string; x: number; y: number } | null>(null);
-  const navigate = useNavigate();
+  const [drilldown, setDrilldown] = useState<{ sector: string; geo: string } | null>(null)
+  const [drillDeals, setDrillDeals] = useState<DrillDeal[]>([])
+  const [drillLoading, setDrillLoading] = useState(false)
+
+  function handleCellClick(sector: string, geo: string) {
+    setDrilldown({ sector, geo })
+    setDrillLoading(true)
+    axios.get('/api/deals', { params: { sector, geo, limit: 50 } })
+      .then((r) => setDrillDeals(r.data.deals ?? []))
+      .catch(() => setDrillDeals([]))
+      .finally(() => setDrillLoading(false))
+  }
 
   if (sectors.length === 0) {
     return (
@@ -92,9 +112,7 @@ export default function HeatmapGrid({ cells, sectors, geos }: HeatmapGridProps) 
                 <div
                   key={`${sector}-${geo}`}
                   className={`${colorClass} rounded border border-zinc-800 min-h-[70px] flex flex-col items-center justify-center relative group transition-opacity hover:opacity-90 ${dealCount > 0 ? 'cursor-pointer hover:ring-2 hover:ring-emerald-400' : 'cursor-default'}`}
-                  onClick={() => {
-                    if (dealCount > 0) navigate(`/?sector=${encodeURIComponent(sector)}&geo=${encodeURIComponent(geo)}`)
-                  }}
+                  onClick={() => { if (dealCount > 0) handleCellClick(sector, geo) }}
                   onMouseEnter={(e) => {
                     const rect = e.currentTarget.getBoundingClientRect();
                     const text =
@@ -151,6 +169,50 @@ export default function HeatmapGrid({ cells, sectors, geos }: HeatmapGridProps) 
           }}
         >
           {tooltip.text}
+        </div>
+      )}
+
+      {/* Drilldown modal */}
+      {drilldown && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          onClick={() => setDrilldown(null)}
+        >
+          <div
+            className="bg-zinc-900 border border-zinc-700 rounded-xl w-full max-w-2xl max-h-[80vh] overflow-hidden shadow-2xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
+              <h3 className="font-semibold text-zinc-100 font-mono text-sm uppercase tracking-wide">
+                {drilldown.sector} · {drilldown.geo}
+              </h3>
+              <button
+                onClick={() => setDrilldown(null)}
+                className="text-zinc-500 hover:text-zinc-200 text-lg leading-none"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-[60vh] divide-y divide-zinc-800">
+              {drillLoading ? (
+                <div className="p-8 text-center text-zinc-500 text-sm">Loading...</div>
+              ) : drillDeals.length === 0 ? (
+                <div className="p-8 text-center text-zinc-500 text-sm">No deals found</div>
+              ) : drillDeals.map((d) => (
+                <div key={d.id} className="px-5 py-3 hover:bg-zinc-800/40 transition-colors">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-zinc-100">{d.company_name ?? '—'}</span>
+                    <span className="text-sm font-mono text-amber-400">
+                      {d.amount_usd ? fmtM(d.amount_usd) : '—'}
+                    </span>
+                  </div>
+                  <div className="text-xs text-zinc-500 mt-0.5 font-mono">
+                    {d.round_label || d.deal_type || '—'} · {d.announced_date ?? '—'}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       )}
     </div>

@@ -142,6 +142,43 @@ export default function IntelQueue() {
 
       <div className="flex-1 px-6 pb-6 overflow-auto">
         {loading ? <LoadingSpinner /> : error ? <ErrorBanner message={error} /> : (
+          <>
+          {!loading && queue.length === 0 && (
+            <div className="mt-8 flex flex-col items-center text-center max-w-lg mx-auto">
+              <div className="w-12 h-12 rounded-full bg-amber-400/10 flex items-center justify-center mb-4">
+                <Brain size={24} className="text-amber-400" />
+              </div>
+              <h3 className="text-zinc-100 font-semibold mb-2">No companies analyzed yet</h3>
+              <p className="text-zinc-500 text-sm mb-6 leading-relaxed">
+                Add a funded company to infer which technical primitives they actually build on —
+                from their product pages, docs, blog, and careers listings.
+                Capital-weighted across the portfolio.
+              </p>
+              <div className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-3 font-mono">Try these examples</p>
+                <div className="grid grid-cols-1 gap-2">
+                  {[
+                    { name: 'Mistral AI', website: 'https://mistral.ai' },
+                    { name: 'Cohere', website: 'https://cohere.com' },
+                    { name: 'Scale AI', website: 'https://scale.com' },
+                  ].map(({ name, website }) => (
+                    <button
+                      key={name}
+                      onClick={() => {
+                        setAddForm({ company_name: name, website })
+                        setShowAdd(true)
+                      }}
+                      className="flex items-center justify-between px-3 py-2 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors text-left"
+                    >
+                      <span className="text-sm text-zinc-200">{name}</span>
+                      <span className="text-xs text-zinc-500 font-mono">{website}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+          {queue.length > 0 && (
           <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
             <table className="w-full text-sm">
               <thead>
@@ -197,6 +234,8 @@ export default function IntelQueue() {
               </tbody>
             </table>
           </div>
+          )}
+          </>
         )}
       </div>
     </div>

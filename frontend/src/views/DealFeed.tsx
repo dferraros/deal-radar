@@ -186,6 +186,15 @@ function exportCSV(deals: DealResponse[]) {
 
 // ---- Component ----
 
+async function addToIntel(companyName: string, website: string) {
+  try {
+    await axios.post('/api/intel/queue', { company_name: companyName, website })
+    window.location.href = '/intel'
+  } catch {
+    // silently fail — user will see the queue
+  }
+}
+
 export default function DealFeed() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -583,6 +592,7 @@ export default function DealFeed() {
                       <th onClick={() => toggleSort('announced_date')} className="text-right px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium cursor-pointer hover:text-zinc-300 select-none">
                         Date {sortKey === 'announced_date' ? (sortDir === 'desc' ? '↓' : '↑') : <span className="text-zinc-700">↕</span>}
                       </th>
+                      <th className="px-2 py-3" />
                     </tr>
                   </thead>
                   <tbody>
@@ -684,6 +694,21 @@ export default function DealFeed() {
                                 day: 'numeric',
                               })
                             : '—'}
+                        </td>
+                        {/* Intel quick-add */}
+                        <td className="px-2 py-2">
+                          {deal.company_website && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                addToIntel(deal.company_name ?? '', deal.company_website!)
+                              }}
+                              title="Analyze with Tech Intel"
+                              className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-mono px-2 py-1 rounded border border-zinc-700 text-zinc-500 hover:text-amber-400 hover:border-amber-500/50 whitespace-nowrap"
+                            >
+                              + Intel
+                            </button>
+                          )}
                         </td>
                       </tr>
                     )})}
