@@ -23,3 +23,28 @@ def test_intel_queue_fields():
     assert hasattr(q, 'status')
     assert hasattr(q, 'website')
     assert hasattr(q, 'company_name')
+
+
+from backend.intel.seed import SEED_PRIMITIVES, SEED_ALIASES, seed_ontology
+import inspect
+
+def test_seed_primitives_count():
+    assert len(SEED_PRIMITIVES) == 30
+
+def test_seed_primitives_structure():
+    for entry in SEED_PRIMITIVES:
+        assert len(entry) == 3, f"Expected 3-tuple, got {entry}"
+        name, node_type, description = entry
+        assert isinstance(name, str) and len(name) > 0
+        assert isinstance(description, str)
+
+def test_seed_aliases_count():
+    assert len(SEED_ALIASES) >= 10
+
+def test_seed_aliases_values_are_lists():
+    for key, aliases in SEED_ALIASES.items():
+        assert isinstance(aliases, list), f"Aliases for '{key}' must be list"
+        assert len(aliases) > 0
+
+def test_seed_ontology_is_async():
+    assert inspect.iscoroutinefunction(seed_ontology)
