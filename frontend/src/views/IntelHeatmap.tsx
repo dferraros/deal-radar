@@ -16,23 +16,41 @@ interface ScoreItem {
 
 interface TrendsResponse { items: ScoreItem[] }
 
+interface OntologyNode { id: string; canonical_name: string; layer?: string }
+
+const LAYER_TABS = [
+  { key: 'all', label: 'All' },
+  { key: 'interface', label: 'Interface' },
+  { key: 'application_logic', label: 'App Logic' },
+  { key: 'model', label: 'Models' },
+  { key: 'infra', label: 'Infra' },
+  { key: 'hardware', label: 'Hardware' },
+]
+
 export default function IntelHeatmap() {
   const navigate = useNavigate()
   const [data, setData] = useState<ScoreItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [ontology, setOntology] = useState<Record<string, string>>({})
+  const [ontologyLayer, setOntologyLayer] = useState<Record<string, string>>({})
+  const [activeLayer, setActiveLayer] = useState<string>('all')
 
   useEffect(() => {
     Promise.all([
       axios.get<TrendsResponse>('/api/intel/technologies/trends'),
-      axios.get<Array<{ id: string; canonical_name: string }>>('/api/intel/ontology/nodes'),
+      axios.get<OntologyNode[]>('/api/intel/ontology/nodes'),
     ])
       .then(([trendsRes, ontRes]) => {
         setData(trendsRes.data.items)
         const map: Record<string, string> = {}
-        ontRes.data.forEach((n) => { map[n.id] = n.canonical_name })
+        const layerMap: Record<string, string> = {}
+        ontRes.data.forEach((n: OntologyNode) => {
+          map[n.id] = n.canonical_name
+          if (n.layer) layerMap[n.id] = n.layer
+        })
         setOntology(map)
+        setOntologyLayer(layerMap)
       })
       .catch(() => setError('Could not load trend data.'))
       .finally(() => setLoading(false))
@@ -52,6 +70,10 @@ export default function IntelHeatmap() {
     const sumB = Object.values(pivot[b] || {}).reduce((s, x) => s + x.capital_weighted_score, 0)
     return sumB - sumA
   })
+
+  const filteredNodes = activeLayer === 'all'
+    ? sortedNodes
+    : sortedNodes.filter(id => ontologyLayer[id] === activeLayer)
 
   const maxScore = data.reduce((m, d) => Math.max(m, d.capital_weighted_score), 1)
 
@@ -95,42 +117,85 @@ export default function IntelHeatmap() {
               <p className="text-zinc-500 text-sm">No trend data yet — analyze some companies first.</p>
             </div>
           ) : (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-auto">
-              <table className="text-xs w-full">
-                <thead>
-                  <tr className="border-b border-zinc-800">
-                    <th className="px-4 py-3 text-left font-mono text-zinc-500 sticky left-0 bg-zinc-900 min-w-[220px]">Primitive</th>
-                    {periods.map((p) => (
-                      <th key={p} className="px-3 py-3 text-center font-mono text-zinc-500 min-w-[80px]">{formatPeriod(p)}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedNodes.slice(0, 30).map((nodeId) => (
-                    <tr key={nodeId} className="border-b border-zinc-800/40">
-                      <td className="px-4 py-2 text-zinc-300 sticky left-0 bg-zinc-900 font-medium truncate max-w-[220px]">
-                        {ontology[nodeId] || nodeId}
-                      </td>
-                      {periods.map((period) => {
-                        const cell = pivot[nodeId]?.[period]
-                        const score = cell?.capital_weighted_score || 0
-                        const companies = cell?.company_count || 0
-                        return (
-                          <td key={period} className="px-1 py-1">
-                            <div
-                              title={`${score.toFixed(1)}M capital · ${companies} companies`}
-                              className={`h-8 rounded border text-center flex items-center justify-center cursor-default transition-all hover:ring-1 hover:ring-emerald-400 ${getCellClass(score)}`}
-                            >
-                              {companies > 0 && <span className="text-zinc-100/70 font-mono">{companies}</span>}
-                            </div>
-                          </td>
-                        )
-                      })}
+            <>
+              <div className="flex gap-1 mb-4 flex-wrap">
+                {LAYER_TABS.map(tab => (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveLayer(tab.key)}
+                    className={`text-xs px-3 py-1.5 rounded font-mono transition-colors ${
+                      activeLayer === tab.key
+                        ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
+                        : 'bg-zinc-900 text-zinc-500 border border-zinc-800 hover:text-zinc-300'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
+              </div>
+
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-auto">
+                <table className="text-xs w-full">
+                  <thead>
+                    <tr className="border-b border-zinc-800">
+                      <th className="px-4 py-3 text-left font-mono text-zinc-500 sticky left-0 bg-zinc-900 min-w-[220px]">Primitive</th>
+                      {periods.map((p) => (
+                        <th key={p} className="px-3 py-3 text-center font-mono text-zinc-500 min-w-[80px]">{formatPeriod(p)}</th>
+                      ))}
+                      <th className="px-3 py-3 text-center font-mono text-zinc-500 min-w-[60px]">Δ</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody>
+                    {filteredNodes.slice(0, 30).map((nodeId) => (
+                      <tr key={nodeId} className="border-b border-zinc-800/40">
+                        <td className="px-4 py-2 text-zinc-300 sticky left-0 bg-zinc-900 font-medium truncate max-w-[220px]">
+                          {ontology[nodeId] || nodeId}
+                        </td>
+                        {periods.map((period) => {
+                          const cell = pivot[nodeId]?.[period]
+                          const score = cell?.capital_weighted_score || 0
+                          const companies = cell?.company_count || 0
+                          return (
+                            <td key={period} className="px-1 py-1">
+                              <div
+                                title={cell ? `${ontology[nodeId] || nodeId} · ${cell.company_count} companies · $${cell.capital_weighted_score.toFixed(0)}M capital` : 'No data'}
+                                className={`h-8 rounded border text-center flex items-center justify-center cursor-default transition-all hover:ring-1 hover:ring-emerald-400 ${getCellClass(score)}`}
+                              >
+                                {companies > 0 && <span className="text-zinc-100/70 font-mono">{companies}</span>}
+                              </div>
+                            </td>
+                          )
+                        })}
+                        {(() => {
+                          const sortedPeriods = [...periods].sort()
+                          if (sortedPeriods.length < 2) {
+                            return <td className="px-2 py-1 text-center text-zinc-700 text-xs">—</td>
+                          }
+                          const latest = pivot[nodeId]?.[sortedPeriods[sortedPeriods.length - 1]]
+                          const prev = pivot[nodeId]?.[sortedPeriods[sortedPeriods.length - 2]]
+                          const growthVal = latest?.growth_rate ?? (
+                            latest && prev && prev.capital_weighted_score > 0
+                              ? ((latest.capital_weighted_score - prev.capital_weighted_score) / prev.capital_weighted_score * 100)
+                              : null
+                          )
+                          if (growthVal === null || growthVal === undefined) {
+                            return <td className="px-2 py-1 text-center text-zinc-700 text-xs font-mono">—</td>
+                          }
+                          const isPos = growthVal >= 0
+                          return (
+                            <td className="px-2 py-1 text-center">
+                              <span className={`text-xs font-mono ${isPos ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                {isPos ? '+' : ''}{growthVal.toFixed(0)}%
+                              </span>
+                            </td>
+                          )
+                        })()}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
           )
         }
       </div>

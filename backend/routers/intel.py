@@ -60,6 +60,7 @@ class QueueItem(BaseModel):
     queued_at: datetime
     completed_at: Optional[datetime] = None
     error_log: Optional[str] = None
+    tech_preview: list[str] = []
 
     class Config:
         from_attributes = True
@@ -171,7 +172,38 @@ async def list_queue(db: AsyncSession = Depends(get_session)):
     result = await db.execute(
         select(IntelQueue).order_by(IntelQueue.queued_at.desc()).limit(100)
     )
-    return result.scalars().all()
+    items = result.scalars().all()
+
+    done_ids = [q.id for q in items if q.status == "done"]
+    tech_map: dict[uuid.UUID, list[str]] = {}
+    if done_ids:
+        stmt = (
+            select(IntelObservation.queue_id, IntelOntologyNode.canonical_name, IntelObservation.confidence)
+            .join(IntelOntologyNode, IntelObservation.node_id == IntelOntologyNode.id)
+            .where(IntelObservation.queue_id.in_(done_ids))
+            .where(IntelObservation.confidence >= 0.6)
+            .where(IntelOntologyNode.node_type == "primitive")
+            .order_by(IntelObservation.confidence.desc())
+        )
+        rows = (await db.execute(stmt)).all()
+        for q_id, name, _ in rows:
+            tech_map.setdefault(q_id, [])
+            if len(tech_map[q_id]) < 3 and name not in tech_map[q_id]:
+                tech_map[q_id].append(name)
+
+    return [
+        QueueItem(
+            id=item.id,
+            company_name=item.company_name,
+            website=item.website,
+            status=item.status,
+            queued_at=item.queued_at,
+            completed_at=item.completed_at,
+            error_log=item.error_log,
+            tech_preview=tech_map.get(item.id, []),
+        )
+        for item in items
+    ]
 
 
 @router.delete("/queue/{queue_id}", status_code=status.HTTP_204_NO_CONTENT)

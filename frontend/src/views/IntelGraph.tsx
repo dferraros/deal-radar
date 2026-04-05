@@ -11,6 +11,7 @@ interface GraphNode extends d3.SimulationNodeDatum {
   label: string
   capital_weight: number
   company_count: number
+  layer?: string
 }
 
 interface GraphEdge {
@@ -24,9 +25,20 @@ interface GraphData {
   edges: GraphEdge[]
 }
 
+const LAYER_LEGEND = [
+  { key: 'interface', label: 'Interface' },
+  { key: 'application', label: 'App Logic' },
+  { key: 'model', label: 'Models' },
+  { key: 'infra', label: 'Infra' },
+  { key: 'hardware', label: 'Hardware' },
+]
+
+const LEGEND_COLORS = ['#34d399', '#a78bfa', '#38bdf8', '#fb7185', '#f59e0b']
+
 export default function IntelGraph() {
   const navigate = useNavigate()
   const svgRef = useRef<SVGSVGElement>(null)
+  const zoomRef = useRef<d3.ZoomBehavior<SVGSVGElement, unknown> | null>(null)
   const [data, setData] = useState<GraphData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -49,6 +61,7 @@ export default function IntelGraph() {
     const g = svg.append('g')
 
     const zoom = d3.zoom<SVGSVGElement, unknown>().on('zoom', (e) => g.attr('transform', e.transform))
+    zoomRef.current = zoom
     svg.call(zoom)
 
     const maxCap = data.nodes.reduce((m, n) => Math.max(m, n.capital_weight), 1)
@@ -142,6 +155,35 @@ export default function IntelGraph() {
           ) : (
             <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden h-[600px] relative">
               <svg ref={svgRef} width="100%" height="100%" />
+
+              {/* Layer legend — top-left */}
+              <div className="absolute top-4 left-4 bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-lg p-3 z-10">
+                <div className="text-[10px] text-zinc-600 font-mono uppercase tracking-wider mb-2">Layer</div>
+                {LAYER_LEGEND.map((l, i) => (
+                  <div key={l.key} className="flex items-center gap-2 mb-1.5 last:mb-0">
+                    <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: LEGEND_COLORS[i] }} />
+                    <span className="text-[10px] text-zinc-400 font-mono">{l.label}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Zoom controls — top-right */}
+              <div className="absolute top-4 right-16 flex flex-col gap-1 z-10">
+                <button
+                  onClick={() => { if (svgRef.current && zoomRef.current) d3.select(svgRef.current).transition().duration(300).call(zoomRef.current.scaleBy, 1.5) }}
+                  className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded text-zinc-400 hover:text-zinc-200 text-sm flex items-center justify-center"
+                >+</button>
+                <button
+                  onClick={() => { if (svgRef.current && zoomRef.current) d3.select(svgRef.current).transition().duration(300).call(zoomRef.current.scaleBy, 0.67) }}
+                  className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded text-zinc-400 hover:text-zinc-200 text-sm flex items-center justify-center"
+                >−</button>
+                <button
+                  onClick={() => { if (svgRef.current && zoomRef.current) d3.select(svgRef.current).transition().duration(300).call(zoomRef.current.transform, d3.zoomIdentity) }}
+                  className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded text-zinc-400 hover:text-zinc-200 text-xs flex items-center justify-center font-mono"
+                >↺</button>
+              </div>
+
+              {/* Hover tooltip — top-right (shifts when zoom controls present) */}
               {hovered && (
                 <div className="absolute top-4 right-4 bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-xs min-w-[160px]">
                   <div className="text-zinc-100 font-semibold mb-1">{hovered.label}</div>

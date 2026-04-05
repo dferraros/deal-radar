@@ -17,7 +17,7 @@ interface Dossier {
   total_funding_usd: number | null
 }
 
-const LAYER_ORDER = ['interface','application_logic','model','infra','hardware']
+const LAYER_ORDER = ['interface', 'application_logic', 'model', 'infra', 'hardware']
 const CONFIDENCE_COLOR = (c: number) =>
   c >= 0.75 ? 'text-emerald-400 bg-emerald-950/40 border-emerald-800/40'
   : c >= 0.5  ? 'text-amber-400 bg-amber-950/40 border-amber-800/40'
@@ -36,6 +36,7 @@ export default function IntelDossier() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
+  const [layerExpanded, setLayerExpanded] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     axios.get(`/api/intel/companies/${queueId}/dossier`)
@@ -56,6 +57,9 @@ export default function IntelDossier() {
     interface: 'Interface', application_logic: 'App Logic',
     model: 'Models / Algorithms', infra: 'Infrastructure', hardware: 'Hardware',
   }
+
+  const explicitCount = dossier.primitives.filter(p => p.is_explicit).length
+  const inferredCount = dossier.primitives.filter(p => !p.is_explicit).length
 
   return (
     <div className="flex flex-col h-full overflow-auto">
@@ -87,53 +91,8 @@ export default function IntelDossier() {
           <div className="border-l-4 border-amber-400 bg-amber-950/20 px-4 py-3 rounded-r-lg mb-6">
             <div className="text-xs text-amber-500 font-mono uppercase tracking-wider mb-1">Core Job To Be Done</div>
             <p className="text-sm text-zinc-100 leading-relaxed">{dossier.jtbd}</p>
-            <div className="text-xs text-zinc-600 mt-2 font-mono">
-              Profile confidence: {(dossier.profile_confidence * 100).toFixed(0)}%
-            </div>
           </div>
         )}
-
-        {dossier.summary && (
-          <p className="text-sm text-zinc-400 mb-6 leading-relaxed">{dossier.summary}</p>
-        )}
-
-        <h2 className="text-xs font-mono text-zinc-500 uppercase tracking-wider mb-3">Inferred Technology Stack</h2>
-        <div className="space-y-3 mb-8">
-          {LAYER_ORDER.map((layer) => {
-            const prims = byLayer[layer]
-            if (!prims.length) return null
-            return (
-              <div key={layer} className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-                <div className="text-xs text-zinc-500 font-mono uppercase tracking-wider mb-3">
-                  {LAYER_LABELS[layer]}
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {prims.map((p) => (
-                    <div key={p.canonical_name}>
-                      <button
-                        onClick={() => setExpanded((e) => ({ ...e, [p.canonical_name]: !e[p.canonical_name] }))}
-                        className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border transition-colors ${CONFIDENCE_COLOR(p.confidence)}`}
-                      >
-                        {p.is_explicit ? '●' : '○'} {p.canonical_name}
-                        <span className="font-mono opacity-70">{(p.confidence * 100).toFixed(0)}%</span>
-                        {expanded[p.canonical_name] ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
-                      </button>
-                      {expanded[p.canonical_name] && p.evidence.length > 0 && (
-                        <div className="mt-2 ml-1 space-y-1.5">
-                          {p.evidence.map((ev, i) => (
-                            <div key={i} className="text-xs text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 rounded px-3 py-2 italic">
-                              "{ev.evidence_text}"
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )
-          })}
-        </div>
 
         {dossier.target_user.length > 0 && (
           <div className="mb-6">
@@ -145,6 +104,86 @@ export default function IntelDossier() {
             </div>
           </div>
         )}
+
+        <div className="flex gap-3 mb-6">
+          <div className="flex-1 bg-emerald-950/30 border border-emerald-900/40 rounded-lg px-4 py-3">
+            <div className="text-2xl font-bold text-emerald-400 tabular">{explicitCount}</div>
+            <div className="text-[10px] text-emerald-600 font-mono uppercase tracking-wider mt-0.5">Explicit signals</div>
+            <div className="text-[10px] text-zinc-600 mt-1">from SBOM / ATS</div>
+          </div>
+          <div className="flex-1 bg-amber-950/30 border border-amber-900/40 rounded-lg px-4 py-3">
+            <div className="text-2xl font-bold text-amber-400 tabular">{inferredCount}</div>
+            <div className="text-[10px] text-amber-600 font-mono uppercase tracking-wider mt-0.5">Inferred signals</div>
+            <div className="text-[10px] text-zinc-600 mt-1">from page text</div>
+          </div>
+          <div className="flex-1 bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3">
+            <div className="text-2xl font-bold text-zinc-100 tabular">{(dossier.profile_confidence * 100).toFixed(0)}%</div>
+            <div className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider mt-0.5">Profile confidence</div>
+            <div className="w-full h-1 bg-zinc-800 rounded mt-2">
+              <div className="h-full rounded bg-amber-400" style={{ width: `${dossier.profile_confidence * 100}%` }} />
+            </div>
+          </div>
+        </div>
+
+        {dossier.summary && (
+          <p className="text-sm text-zinc-400 mb-6 leading-relaxed">{dossier.summary}</p>
+        )}
+
+        <h2 className="text-xs font-mono text-zinc-500 uppercase tracking-wider mb-3">Inferred Technology Stack</h2>
+        <div className="space-y-3 mb-8">
+          {LAYER_ORDER.map((layer) => {
+            const prims = byLayer[layer]
+            if (!prims.length) return null
+            const isExpanded = layerExpanded[layer] ?? true
+            return (
+              <div key={layer} className="bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+                <button
+                  onClick={() => setLayerExpanded(e => ({ ...e, [layer]: !(e[layer] ?? true) }))}
+                  className="flex items-center justify-between w-full text-xs text-zinc-500 font-mono uppercase tracking-wider mb-3"
+                >
+                  <span>{LAYER_LABELS[layer]}</span>
+                  <span className="text-zinc-600">{isExpanded ? '▾' : '▸'} {prims.length}</span>
+                </button>
+                {isExpanded && (
+                  <div className="flex flex-wrap gap-2">
+                    {prims.map((p) => (
+                      <div key={p.canonical_name}>
+                        <button
+                          onClick={() => setExpanded((e) => ({ ...e, [p.canonical_name]: !e[p.canonical_name] }))}
+                          className={`inline-flex flex-col items-start gap-1 text-xs px-2.5 py-1.5 rounded border transition-colors ${CONFIDENCE_COLOR(p.confidence)}`}
+                        >
+                          <span className="flex items-center gap-1.5">
+                            {p.is_explicit ? '●' : '○'} {p.canonical_name}
+                            {expanded[p.canonical_name] ? <ChevronDown size={10} /> : <ChevronRight size={10} />}
+                          </span>
+                          <div className="w-8 h-0.5 bg-zinc-700 rounded overflow-hidden">
+                            <div className="h-full rounded" style={{
+                              width: `${p.confidence * 100}%`,
+                              backgroundColor: p.confidence >= 0.75 ? '#34d399' : p.confidence >= 0.5 ? '#fbbf24' : '#71717a'
+                            }} />
+                          </div>
+                        </button>
+                        {expanded[p.canonical_name] && p.evidence.length > 0 && (
+                          <div className="mt-2 ml-1 space-y-1.5">
+                            {p.evidence.map((ev, i) => (
+                              <div key={i} className="text-xs text-zinc-400 bg-zinc-800/60 border border-zinc-700/50 rounded px-3 py-2 italic">
+                                {p.is_explicit
+                                  ? <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-950/60 text-emerald-500 border border-emerald-900/40 font-mono mr-2 not-italic">SBOM/ATS</span>
+                                  : <span className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-500 border border-zinc-700 font-mono mr-2 not-italic">inferred</span>
+                                }
+                                "{ev.evidence_text}"
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
       </div>
     </div>
   )

@@ -13,6 +13,7 @@ interface QueueItem {
   queued_at: string
   completed_at: string | null
   error_log: string | null
+  tech_preview: string[]
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
@@ -22,6 +23,16 @@ const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }>
   normalizing: { label: 'Normalizing',color: 'text-violet-400 bg-violet-950/50',     icon: Loader2 },
   done:        { label: 'Done',        color: 'text-emerald-400 bg-emerald-950/50',  icon: CheckCircle },
   failed:      { label: 'Failed',      color: 'text-rose-400 bg-rose-950/50',        icon: AlertTriangle },
+}
+
+function relativeTime(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime()
+  const mins = Math.floor(diff / 60000)
+  if (mins < 1) return 'just now'
+  if (mins < 60) return `${mins}m ago`
+  const hrs = Math.floor(mins / 60)
+  if (hrs < 24) return `${hrs}h ago`
+  return `${Math.floor(hrs / 24)}d ago`
 }
 
 export default function IntelQueue() {
@@ -75,8 +86,32 @@ export default function IntelQueue() {
     fetchQueue()
   }
 
+  const statCards = [
+    {
+      label: 'Analyzed',
+      value: queue.filter((q) => q.status === 'done').length,
+      color: 'text-emerald-400',
+    },
+    {
+      label: 'Processing',
+      value: queue.filter((q) => ['crawling', 'extracting', 'normalizing'].includes(q.status)).length,
+      color: 'text-amber-400',
+    },
+    {
+      label: 'Queued',
+      value: queue.filter((q) => q.status === 'queued').length,
+      color: 'text-zinc-400',
+    },
+    {
+      label: 'Failed',
+      value: queue.filter((q) => q.status === 'failed').length,
+      color: 'text-rose-400',
+    },
+  ]
+
   return (
     <div className="flex flex-col h-full">
+      {/* Header */}
       <div className="px-6 pt-6 pb-4 flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold text-zinc-50 flex items-center gap-2">
@@ -109,6 +144,7 @@ export default function IntelQueue() {
         </div>
       </div>
 
+      {/* Add modal */}
       {showAdd && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center">
           <div className="bg-zinc-900 border border-zinc-700 rounded-xl p-6 w-full max-w-md">
@@ -144,98 +180,135 @@ export default function IntelQueue() {
       <div className="flex-1 px-6 pb-6 overflow-auto">
         {loading ? <LoadingSpinner /> : error ? <ErrorBanner message={error} /> : (
           <>
-          {!loading && queue.length === 0 && (
-            <div className="mt-8 flex flex-col items-center text-center max-w-lg mx-auto">
-              <div className="w-12 h-12 rounded-full bg-amber-400/10 flex items-center justify-center mb-4">
-                <Brain size={24} className="text-amber-400" />
+            {/* Stats strip */}
+            {queue.length > 0 && (
+              <div className="grid grid-cols-4 gap-3 mb-5">
+                {statCards.map((card) => (
+                  <div
+                    key={card.label}
+                    className="bg-zinc-900 border border-zinc-800 rounded-lg px-4 py-3"
+                  >
+                    <div className={`text-xl font-bold ${card.color}`}>{card.value}</div>
+                    <div className="text-xs text-zinc-500 font-mono uppercase tracking-wider mt-0.5">{card.label}</div>
+                  </div>
+                ))}
               </div>
-              <h3 className="text-zinc-100 font-semibold mb-2">No companies analyzed yet</h3>
-              <p className="text-zinc-500 text-sm mb-6 leading-relaxed">
-                Add a funded company to infer which technical primitives they actually build on —
-                from their product pages, docs, blog, and careers listings.
-                Capital-weighted across the portfolio.
-              </p>
-              <div className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-4">
-                <p className="text-xs text-zinc-500 uppercase tracking-wider mb-3 font-mono">Try these examples</p>
-                <div className="grid grid-cols-1 gap-2">
-                  {[
-                    { name: 'Mistral AI', website: 'https://mistral.ai' },
-                    { name: 'Cohere', website: 'https://cohere.com' },
-                    { name: 'Scale AI', website: 'https://scale.com' },
-                  ].map(({ name, website }) => (
-                    <button
-                      key={name}
-                      onClick={() => {
-                        setAddForm({ company_name: name, website })
-                        setShowAdd(true)
-                      }}
-                      className="flex items-center justify-between px-3 py-2 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors text-left"
-                    >
-                      <span className="text-sm text-zinc-200">{name}</span>
-                      <span className="text-xs text-zinc-500 font-mono">{website}</span>
-                    </button>
-                  ))}
+            )}
+
+            {/* Empty state */}
+            {queue.length === 0 && (
+              <div className="mt-8 flex flex-col items-center text-center max-w-lg mx-auto">
+                <div className="w-12 h-12 rounded-full bg-amber-400/10 flex items-center justify-center mb-4">
+                  <Brain size={24} className="text-amber-400" />
+                </div>
+                <h3 className="text-zinc-100 font-semibold mb-2">No companies analyzed yet</h3>
+                <p className="text-zinc-500 text-sm mb-6 leading-relaxed">
+                  Add a funded company to infer which technical primitives they actually build on —
+                  from their product pages, docs, blog, and careers listings.
+                  Capital-weighted across the portfolio.
+                </p>
+                <div className="w-full bg-zinc-900 border border-zinc-800 rounded-lg p-4">
+                  <p className="text-xs text-zinc-500 uppercase tracking-wider mb-3 font-mono">Try these examples</p>
+                  <div className="grid grid-cols-1 gap-2">
+                    {[
+                      { name: 'Mistral AI', website: 'https://mistral.ai' },
+                      { name: 'Cohere', website: 'https://cohere.com' },
+                      { name: 'Scale AI', website: 'https://scale.com' },
+                    ].map(({ name, website }) => (
+                      <button
+                        key={name}
+                        onClick={() => {
+                          setAddForm({ company_name: name, website })
+                          setShowAdd(true)
+                        }}
+                        className="flex items-center justify-between px-3 py-2 rounded bg-zinc-800 hover:bg-zinc-700 transition-colors text-left"
+                      >
+                        <span className="text-sm text-zinc-200">{name}</span>
+                        <span className="text-xs text-zinc-500 font-mono">{website}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
-          {queue.length > 0 && (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-zinc-800">
-                  <th className="px-4 py-3 text-left text-xs font-mono text-zinc-500 uppercase tracking-wider">Company</th>
-                  <th className="px-4 py-3 text-left text-xs font-mono text-zinc-500 uppercase tracking-wider">Website</th>
-                  <th className="px-4 py-3 text-left text-xs font-mono text-zinc-500 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3 text-left text-xs font-mono text-zinc-500 uppercase tracking-wider">Queued</th>
-                  <th className="px-4 py-3"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {queue.length === 0 && (
-                  <tr><td colSpan={5} className="px-4 py-12 text-center text-zinc-600 text-sm">No companies analyzed yet. Add one above.</td></tr>
-                )}
-                {queue.map((item) => {
+            )}
+
+            {/* Card list */}
+            {queue.length > 0 && (
+              <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+                {queue.map((item, idx) => {
                   const cfg = STATUS_CONFIG[item.status] || STATUS_CONFIG.queued
                   const Icon = cfg.icon
-                  const isActive = ['crawling','extracting','normalizing'].includes(item.status)
+                  const isActive = ['crawling', 'extracting', 'normalizing'].includes(item.status)
+                  const isDone = item.status === 'done'
+
                   return (
-                    <tr key={item.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors">
-                      <td className="px-4 py-3">
+                    <div
+                      key={item.id}
+                      className={[
+                        'flex items-center gap-4 px-4 py-3 transition-colors hover:bg-zinc-800/30',
+                        idx < queue.length - 1 ? 'border-b border-zinc-800/50' : '',
+                        isActive ? 'ring-1 ring-inset ring-amber-500/20 border-l-2 border-amber-500/60' : '',
+                      ].join(' ')}
+                    >
+                      {/* Left: 50% — name + website + tech chips */}
+                      <div className="flex-[5] min-w-0">
                         <button
-                          onClick={() => item.status === 'done' && navigate(`/intel/dossier/${item.id}`)}
-                          className={`font-medium ${item.status === 'done' ? 'text-zinc-100 hover:text-amber-400 cursor-pointer' : 'text-zinc-400 cursor-default'}`}
+                          onClick={() => isDone && navigate(`/intel/dossier/${item.id}`)}
+                          className={[
+                            'font-semibold text-sm truncate block',
+                            isDone ? 'text-zinc-100 hover:text-amber-400 cursor-pointer' : 'text-zinc-400 cursor-default',
+                          ].join(' ')}
                         >
                           {item.company_name}
                         </button>
-                      </td>
-                      <td className="px-4 py-3 text-zinc-500 font-mono text-xs">{item.website}</td>
-                      <td className="px-4 py-3">
+                        <div className="text-xs text-zinc-500 font-mono truncate mt-0.5">{item.website}</div>
+                        {isDone && item.tech_preview.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1.5">
+                            {item.tech_preview.map((tech) => (
+                              <span
+                                key={tech}
+                                className="text-[10px] px-1.5 py-0.5 rounded bg-amber-950/40 text-amber-400 border border-amber-800/30 font-mono"
+                              >
+                                {tech}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Center: 30% — status badge + relative time */}
+                      <div className="flex-[3] flex flex-col items-start gap-1">
                         <span className={`inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded font-mono ${cfg.color}`}>
                           <Icon size={10} className={isActive ? 'animate-spin' : ''} />
                           {cfg.label}
                         </span>
-                      </td>
-                      <td className="px-4 py-3 text-zinc-600 text-xs font-mono">
-                        {new Date(item.queued_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex items-center gap-2 justify-end">
-                          {item.status === 'failed' && (
-                            <button onClick={() => handleRetry(item.id)} className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1">
-                              <RefreshCw size={10} /> Retry
-                            </button>
-                          )}
-                          <button onClick={() => handleDelete(item.id)} className="text-xs text-zinc-600 hover:text-rose-400 transition-colors">✕</button>
-                        </div>
-                      </td>
-                    </tr>
+                        <span className="text-[11px] text-zinc-600 font-mono">
+                          {relativeTime(item.queued_at)}
+                        </span>
+                      </div>
+
+                      {/* Right: 20% — actions */}
+                      <div className="flex-[2] flex items-center gap-2 justify-end">
+                        {item.status === 'failed' && (
+                          <button
+                            onClick={() => handleRetry(item.id)}
+                            className="text-xs text-amber-400 hover:text-amber-300 flex items-center gap-1"
+                          >
+                            <RefreshCw size={10} /> Retry
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDelete(item.id)}
+                          className="text-xs text-zinc-600 hover:text-rose-400 transition-colors"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    </div>
                   )
                 })}
-              </tbody>
-            </table>
-          </div>
-          )}
+              </div>
+            )}
           </>
         )}
       </div>
