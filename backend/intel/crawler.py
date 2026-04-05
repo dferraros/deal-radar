@@ -82,6 +82,9 @@ class ApifyCrawler:
         Crawl a company website. Returns up to MAX_PAGES CrawlResults.
         Never raises — returns [] on any error.
         """
+        if not website.startswith(("http://", "https://")):
+            website = f"https://{website}"
+
         if not self._token:
             logger.warning("[Crawler] APIFY_API_TOKEN not set — skipping crawl for %s", website)
             return []

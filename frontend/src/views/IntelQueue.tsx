@@ -52,8 +52,9 @@ export default function IntelQueue() {
   const handleAdd = async () => {
     if (!addForm.company_name || !addForm.website) return
     setAdding(true)
+    const website = addForm.website.startsWith('http') ? addForm.website : `https://${addForm.website}`
     try {
-      await axios.post('/api/intel/queue', addForm)
+      await axios.post('/api/intel/queue', { ...addForm, website })
       setAddForm({ company_name: '', website: '' })
       setShowAdd(false)
       fetchQueue()
