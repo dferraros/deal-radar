@@ -23,6 +23,7 @@ from backend.ingestion.ai_extractor import AIExtractor
 from backend.ingestion.base import RawDeal
 from backend.ingestion.db_writer import write_deals
 from backend.ingestion.deduplicator import Deduplicator
+from backend.ingestion.crunchbase import CrunchbaseFetcher
 from backend.ingestion.firecrawl import FirecrawlFetcher
 from backend.ingestion.rss import RSSFetcher
 from backend.ingestion.tavily import TavilyFetcher
@@ -107,10 +108,12 @@ async def run_ingestion(
     rss_fetcher = RSSFetcher()
     tavily_fetcher = TavilyFetcher()
     firecrawl_fetcher = FirecrawlFetcher()
+    crunchbase_fetcher = CrunchbaseFetcher()
 
     fetch_tasks = [
         _run_fetcher_safe(rss_fetcher, target_date),
         _run_fetcher_safe(tavily_fetcher, target_date),
+        _run_fetcher_safe(crunchbase_fetcher, target_date),
     ]
 
     fetch_results = await asyncio.gather(*fetch_tasks)
