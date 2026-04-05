@@ -184,6 +184,17 @@ async def export_deals_csv(
     )
 
 
+@router.get("/deals/sectors")
+async def list_deal_sectors(db: AsyncSession = Depends(get_session)):
+    """Return all distinct sector values present in the companies table."""
+    from sqlalchemy import text as sa_text
+    result = await db.execute(
+        sa_text("SELECT DISTINCT unnest(sector) AS s FROM companies WHERE sector IS NOT NULL ORDER BY s")
+    )
+    sectors = [row[0] for row in result.fetchall()]
+    return {"sectors": sectors}
+
+
 @router.get("/deals/{deal_id}", response_model=DealResponse)
 async def get_deal(
     deal_id: UUID,
