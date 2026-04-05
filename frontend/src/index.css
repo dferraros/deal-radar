@@ -2,6 +2,18 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ─── Design tokens ───────────────────────────────────────────────── */
+:root {
+  --surface:       #ffffff;
+  --surface-muted: #f8fafc;
+  --border:        #e2e8f0;
+  --text-primary:  #0f172a;
+  --text-secondary:#475569;
+  --text-muted:    #94a3b8;
+  --accent:        #f59e0b;
+  --accent-soft:   rgba(245,158,11,0.08);
+}
+
 /* ─── Typography ──────────────────────────────────────────────── */
 body {
   background-color: #f8fafc;
