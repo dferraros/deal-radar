@@ -10,11 +10,19 @@ interface PrimitiveItem {
   canonical_name: string; layer: string | null;
   confidence: number; is_explicit: boolean; evidence: EvidenceItem[]
 }
+interface TechnicalBet {
+  bet_index: number
+  thesis: string
+  implication: string | null
+  signals: string[]
+  confidence: number
+}
 interface Dossier {
   queue_id: string; company_name: string; website: string
   jtbd: string | null; summary: string | null; target_user: string[]
   profile_confidence: number; primitives: PrimitiveItem[]
   total_funding_usd: number | null
+  technical_bets: TechnicalBet[]
 }
 
 const LAYER_ORDER = ['interface', 'application_logic', 'model', 'infra', 'hardware']
@@ -37,6 +45,7 @@ export default function IntelDossier() {
   const [error, setError] = useState<string | null>(null)
   const [expanded, setExpanded] = useState<Record<string, boolean>>({})
   const [layerExpanded, setLayerExpanded] = useState<Record<string, boolean>>({})
+  const [betExpanded, setBetExpanded] = useState<Record<number, boolean>>({})
 
   useEffect(() => {
     axios.get(`/api/intel/companies/${queueId}/dossier`)
@@ -106,14 +115,14 @@ export default function IntelDossier() {
         )}
 
         <div className="flex gap-3 mb-6">
-          <div className="flex-1 bg-emerald-950/30 border border-emerald-900/40 rounded-lg px-4 py-3">
-            <div className="text-2xl font-bold text-emerald-400 tabular">{explicitCount}</div>
-            <div className="text-[10px] text-emerald-600 font-mono uppercase tracking-wider mt-0.5">Explicit signals</div>
+          <div className="flex-1 bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-3">
+            <div className="text-2xl font-bold text-emerald-600 tabular">{explicitCount}</div>
+            <div className="text-[10px] text-emerald-700 font-mono uppercase tracking-wider mt-0.5">Explicit signals</div>
             <div className="text-[10px] text-slate-400 mt-1">from SBOM / ATS</div>
           </div>
-          <div className="flex-1 bg-amber-950/30 border border-amber-900/40 rounded-lg px-4 py-3">
-            <div className="text-2xl font-bold text-amber-400 tabular">{inferredCount}</div>
-            <div className="text-[10px] text-amber-600 font-mono uppercase tracking-wider mt-0.5">Inferred signals</div>
+          <div className="flex-1 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3">
+            <div className="text-2xl font-bold text-amber-600 tabular">{inferredCount}</div>
+            <div className="text-[10px] text-amber-700 font-mono uppercase tracking-wider mt-0.5">Inferred signals</div>
             <div className="text-[10px] text-slate-400 mt-1">from page text</div>
           </div>
           <div className="flex-1 bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 shadow-sm">
@@ -127,6 +136,50 @@ export default function IntelDossier() {
 
         {dossier.summary && (
           <p className="text-sm text-slate-600 mb-6 leading-relaxed">{dossier.summary}</p>
+        )}
+
+        {dossier.technical_bets.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-xs font-mono text-slate-500 uppercase tracking-wider mb-3">Technical Bets</h2>
+            <div className="space-y-2">
+              {dossier.technical_bets.map((bet) => (
+                <div key={bet.bet_index} className="bg-white border border-slate-200 rounded-lg shadow-sm overflow-hidden" style={{ borderLeftWidth: '4px', borderLeftColor: '#fbbf24' }}>
+                  <button
+                    onClick={() => setBetExpanded(e => ({ ...e, [bet.bet_index]: !e[bet.bet_index] }))}
+                    className="w-full flex items-center justify-between px-4 py-3 text-left cursor-pointer hover:bg-slate-50 transition-colors"
+                  >
+                    <span className="text-sm font-semibold text-slate-900 pr-4 leading-snug">{bet.thesis}</span>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${
+                        bet.confidence >= 0.75
+                          ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+                          : bet.confidence >= 0.5
+                          ? 'text-amber-700 bg-amber-50 border-amber-200'
+                          : 'text-slate-500 bg-slate-100 border-slate-200'
+                      }`}>
+                        {(bet.confidence * 100).toFixed(0)}%
+                      </span>
+                      {betExpanded[bet.bet_index] ? <ChevronDown size={14} className="text-slate-400" /> : <ChevronRight size={14} className="text-slate-400" />}
+                    </div>
+                  </button>
+                  {betExpanded[bet.bet_index] && (
+                    <div className="px-4 pb-3 border-t border-slate-100">
+                      {bet.implication && (
+                        <p className="text-xs text-slate-600 leading-relaxed mt-3 mb-2">{bet.implication}</p>
+                      )}
+                      {bet.signals.length > 0 && (
+                        <div className="flex flex-wrap gap-1.5 mt-2">
+                          {bet.signals.map((sig, i) => (
+                            <span key={i} className="text-[10px] font-mono px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">{sig}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         )}
 
         <h2 className="text-xs font-mono text-slate-500 uppercase tracking-wider mb-3">Inferred Technology Stack</h2>

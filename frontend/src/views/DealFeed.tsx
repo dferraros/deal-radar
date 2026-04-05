@@ -657,7 +657,7 @@ export default function DealFeed() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-slate-100">
-                    {sortedDeals.map((deal, idx) => {
+                    {sortedDeals.map((deal) => {
                       const tier = dealTier(deal.amount_usd)
                       const favicon = getFaviconUrl(deal.company_website, deal.source_url)
                       const typeKey = deal.deal_type ?? 'unknown'

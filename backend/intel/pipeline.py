@@ -30,10 +30,10 @@ from sqlalchemy import func
 from backend.models import (
     Company, IntelQueue, IntelSource, IntelSourceChunk,
     IntelCompanyProfile, IntelOntologyNode, IntelOntologyAlias,
-    IntelObservation, IntelObservationEvidence,
+    IntelObservation, IntelObservationEvidence, IntelTechnicalBet,
 )
 from backend.intel.crawler import ApifyCrawler, CrawlResult
-from backend.intel.extractors import IntelExtractor
+from backend.intel.extractors import IntelExtractor, TechnicalBet
 from backend.intel.normalizer import OntologyNormalizer
 from backend.intel.job_scraper import JobScraper, JobPosting
 from backend.intel.github_analyzer import GitHubAnalyzer, GitHubResult
@@ -233,6 +233,28 @@ async def run_intel_pipeline(queue_id: uuid.UUID, db: AsyncSession) -> None:
         queue.completed_at = _now()
         await db.commit()
         return
+
+    # ── Stage 4.5: Extract technical bets (Sonnet) ────────────────────────────
+    bets: list[TechnicalBet] = await extractor.extract_bets(
+        company_name=queue.company_name,
+        profile=profile,
+        primitives=primitives,
+        context_text=context_text,
+    )
+    if bets:
+        for idx, bet in enumerate(bets):
+            db.add(IntelTechnicalBet(
+                id=uuid.uuid4(),
+                queue_id=queue.id,
+                bet_index=idx,
+                thesis=bet.thesis,
+                implication=bet.implication,
+                signals=bet.signals,
+                confidence=bet.confidence,
+                model_version="claude-sonnet-4-6",
+            ))
+        await db.commit()
+        logger.info("[Intel] Stored %d technical bets for queue_id=%s", len(bets), queue_id)
 
     # ── Stage 5: Normalize against ontology ──────────────────────────────────
     queue.status = "normalizing"
