@@ -20,6 +20,7 @@ interface DealResponse {
   source_name: string | null
   sector: string[]
   geo: string | null
+  source_url?: string | null
   tech_stack?: string[]
   confidence?: number
   created_at?: string | null
@@ -102,6 +103,48 @@ function SectorPill({ sector }: { sector: string }) {
   )
 }
 
+// ---- Task 3: Amount-based row tier ----
+
+function dealTier(usd: number | null | undefined): 'mega' | 'large' | 'normal' {
+  if (!usd) return 'normal'
+  if (usd >= 1_000_000_000) return 'mega'
+  if (usd >= 100_000_000) return 'large'
+  return 'normal'
+}
+
+// ---- Task 5: Company favicons ----
+
+function getFaviconUrl(website: string | null | undefined, sourceUrl: string | null | undefined): string | null {
+  const url = website || sourceUrl
+  if (!url) return null
+  try {
+    const domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname
+    return `https://t1.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=https://${domain}&size=32`
+  } catch {
+    return null
+  }
+}
+
+// ---- Task 6: Source badge pills ----
+
+const SOURCE_COLORS: Record<string, string> = {
+  crunchbase: 'bg-blue-500/15 text-blue-400 border-blue-500/30',
+  tavily:     'bg-violet-500/15 text-violet-400 border-violet-500/30',
+  rss:        'bg-zinc-700/50 text-zinc-400 border-zinc-600',
+  firecrawl:  'bg-orange-500/15 text-orange-400 border-orange-500/30',
+  manual:     'bg-emerald-500/15 text-emerald-400 border-emerald-500/30',
+}
+
+function SourceBadge({ source }: { source: string | null | undefined }) {
+  if (!source) return null
+  const cls = SOURCE_COLORS[source.toLowerCase()] ?? SOURCE_COLORS.rss
+  return (
+    <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded border ${cls}`}>
+      {source.toLowerCase()}
+    </span>
+  )
+}
+
 // Used in Task 5 for company momentum visualization
 export function MomentumDots({ count }: { count: number }) {
   const filled = Math.min(count, 6)
@@ -119,14 +162,6 @@ export function MomentumDots({ count }: { count: number }) {
   )
 }
 
-function getAmountIntensityClass(amount: number | null, maxAmount: number): string {
-  if (!amount || maxAmount === 0) return ''
-  const ratio = amount / maxAmount
-  if (ratio > 0.8) return 'bg-emerald-950/70'
-  if (ratio > 0.5) return 'bg-emerald-950/50'
-  if (ratio > 0.25) return 'bg-emerald-950/30'
-  return ''
-}
 
 function buildParams(f: FilterState): Record<string, string> {
   const params: Record<string, string> = {}
@@ -197,6 +232,12 @@ export default function DealFeed() {
   const [briefing, setBriefing] = useState<BriefingResponse | null>(null)
   const [lastVisit, setLastVisit] = useState<Date | null>(null)
   const [newCount, setNewCount] = useState(0)
+
+  // Task 4: Sort state
+  type SortKey = 'amount_usd' | 'announced_date' | null
+  type SortDir = 'asc' | 'desc'
+  const [sortKey, setSortKey] = useState<SortKey>(null)
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
 
   const handleSearchChange = (val: string) => {
     setSearch(val)
@@ -302,8 +343,6 @@ export default function DealFeed() {
   })
   const weekCapital = weekDeals.reduce((s, d) => s + (d.amount_usd ?? 0), 0)
 
-const maxDealAmount = Math.max(...visibleDeals.map((d) => d.amount_usd ?? 0), 1)
-
   const kpis = useMemo(() => {
     if (!deals.length) return null
     const totalCapital = deals.reduce((s, d) => s + (d.amount_usd ?? 0), 0)
@@ -318,6 +357,26 @@ const maxDealAmount = Math.max(...visibleDeals.map((d) => d.amount_usd ?? 0), 1)
     const topSector = Object.entries(sectorCounts).sort(([,a],[,b]) => b-a)[0]?.[0] ?? '—'
     return { totalCapital, biggest, topSector, count: deals.length }
   }, [deals])
+
+  // Task 4: Sorted deals
+  const sortedDeals = useMemo(() => {
+    if (!sortKey) return deals
+    return [...deals].sort((a, b) => {
+      const av = a[sortKey] ?? ''
+      const bv = b[sortKey] ?? ''
+      const cmp = av < bv ? -1 : av > bv ? 1 : 0
+      return sortDir === 'desc' ? -cmp : cmp
+    })
+  }, [deals, sortKey, sortDir])
+
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) {
+      setSortDir(d => d === 'desc' ? 'asc' : 'desc')
+    } else {
+      setSortKey(key)
+      setSortDir('desc')
+    }
+  }
 
   return (
     <div>
@@ -522,8 +581,8 @@ const maxDealAmount = Math.max(...visibleDeals.map((d) => d.amount_usd ?? 0), 1)
                       <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
                         Round
                       </th>
-                      <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
-                        Amount
+                      <th onClick={() => toggleSort('amount_usd')} className="text-right px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium cursor-pointer hover:text-zinc-300 select-none">
+                        Amount {sortKey === 'amount_usd' ? (sortDir === 'desc' ? '↓' : '↑') : <span className="text-zinc-700">↕</span>}
                       </th>
                       <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
                         Sector
@@ -540,39 +599,46 @@ const maxDealAmount = Math.max(...visibleDeals.map((d) => d.amount_usd ?? 0), 1)
                       <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
                         Investors
                       </th>
-                      <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
-                        Date
+                      <th onClick={() => toggleSort('announced_date')} className="text-right px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium cursor-pointer hover:text-zinc-300 select-none">
+                        Date {sortKey === 'announced_date' ? (sortDir === 'desc' ? '↓' : '↑') : <span className="text-zinc-700">↕</span>}
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {visibleDeals.map((deal) => {
+                    {sortedDeals.map((deal) => {
                       const roundDisplay = fmtRound(deal.round_label)
+                      const tier = dealTier(deal.amount_usd)
+                      const favicon = getFaviconUrl(null, deal.source_url)
                       return (
                       <tr
                         key={deal.id}
                         onClick={() => deal.company_id && navigate(`/company/${deal.company_id}`)}
-                        className={`border-b border-zinc-800/50 cursor-pointer transition-colors group border-l-4 ${
-                          DEAL_TYPE_LEFT_BORDER[deal.deal_type ?? 'unknown'] ?? DEAL_TYPE_LEFT_BORDER['unknown']
-                        } ${
-                          lastVisit && deal.created_at && new Date(deal.created_at) > lastVisit
-                            ? 'border-r-2 border-r-blue-500/70'
-                            : ''
-                        } hover:bg-zinc-800/30`}
+                        className={`
+                          border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors cursor-pointer group
+                          ${tier === 'mega' ? 'border-l-2 border-l-amber-400/70' : ''}
+                          ${tier === 'large' ? 'border-l-2 border-l-zinc-600' : ''}
+                          ${tier === 'normal' ? `border-l-4 ${DEAL_TYPE_LEFT_BORDER[deal.deal_type ?? 'unknown'] ?? DEAL_TYPE_LEFT_BORDER['unknown']}` : ''}
+                          ${lastVisit && deal.created_at && new Date(deal.created_at) > lastVisit ? 'border-r-2 border-r-blue-500/70' : ''}
+                        `}
                       >
                         {/* Company */}
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-3">
-                            <CompanyAvatar name={deal.company_name ?? '?'} size={28} />
+                        <td className="px-4 py-2.5">
+                          <div className="flex items-center gap-2">
+                            {favicon ? (
+                              <img
+                                src={favicon}
+                                alt=""
+                                className="w-4 h-4 rounded-sm opacity-80 flex-shrink-0"
+                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                              />
+                            ) : (
+                              <CompanyAvatar name={deal.company_name ?? '?'} size={16} />
+                            )}
                             <div className="flex items-center gap-1 min-w-0">
                               <span className="text-sm font-medium text-zinc-100 group-hover:text-white truncate max-w-[130px]">
                                 {deal.company_name ?? '—'}
                               </span>
-                              {deal.source_name && (
-                                <span className="text-[10px] text-zinc-600 font-mono ml-1 shrink-0">
-                                  {deal.source_name}
-                                </span>
-                              )}
+                              <SourceBadge source={deal.source_name} />
                               {deal.confidence !== undefined && deal.confidence < 0.5 && (
                                 <span
                                   title={`AI confidence: ${(deal.confidence * 100).toFixed(0)}%`}
@@ -589,11 +655,10 @@ const maxDealAmount = Math.max(...visibleDeals.map((d) => d.amount_usd ?? 0), 1)
                           </span>
                         </td>
                         {/* Amount */}
-                        <td className={`px-4 py-3 text-right tabular ${getAmountIntensityClass(deal.amount_usd, maxDealAmount)}`}>
+                        <td className={`px-4 py-2.5 font-mono text-sm tabular-nums font-semibold text-right
+                          ${tier === 'mega' ? 'text-amber-400' : 'text-zinc-200'}`}>
                           {deal.amount_usd ? (
-                            <span className="font-mono text-sm text-emerald-400 amount-glow">
-                              {formatAmount(deal.amount_usd)}
-                            </span>
+                            formatAmount(deal.amount_usd)
                           ) : (
                             <span className="text-zinc-600 text-xs font-mono">—</span>
                           )}
