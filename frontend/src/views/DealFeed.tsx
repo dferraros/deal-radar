@@ -39,10 +39,21 @@ interface BriefingResponse {
 
 // ---- Format helpers ----
 
-function formatAmount(usd: number): string {
+function fmtRound(label: string | null | undefined): string {
+  if (!label || label.toUpperCase() === 'UNKNOWN') return '—'
+  return label
+}
+
+function fmtAmount(usd: number | null | undefined): string {
+  if (!usd || usd === 0) return '—'
   const m = usd / 1_000_000
   if (m >= 1000) return `$${(m / 1000).toFixed(1)}B`
-  return m >= 100 ? `$${Math.round(m)}M` : `$${m.toFixed(1)}M`
+  if (m >= 1) return `$${m.toFixed(1)}M`
+  return `$${Math.round(usd / 1000)}K`
+}
+
+function formatAmount(usd: number): string {
+  return fmtAmount(usd)
 }
 
 function formatCapital(usd: number | null | undefined): string {
@@ -411,7 +422,7 @@ export default function DealFeed() {
                   className={`border-l-4 ${leftBorder} ${bgCls} border border-zinc-800 rounded-xl p-4 cursor-pointer hover:bg-zinc-800/70 transition-colors`}
                 >
                   <div className="text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
-                    {deal.round_label || deal.deal_type || 'Deal'}
+                    {fmtRound(deal.round_label) !== '—' ? fmtRound(deal.round_label) : (deal.deal_type || 'Deal')}
                     {deal.geo && (
                       <span className="ml-2">{GEO_FLAGS[deal.geo] ?? ''}</span>
                     )}
@@ -547,7 +558,7 @@ export default function DealFeed() {
                         {/* Round */}
                         <td className="px-4 py-3">
                           <span className="text-xs px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono uppercase tracking-wide border border-zinc-700">
-                            {deal.round_label || deal.deal_type?.toUpperCase() || '—'}
+                            {fmtRound(deal.round_label) !== '—' ? fmtRound(deal.round_label) : (deal.deal_type?.toUpperCase() || '—')}
                           </span>
                         </td>
                         {/* Amount */}
