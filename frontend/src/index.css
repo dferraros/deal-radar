@@ -11,3 +11,14 @@ body {
 .mono {
   font-family: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
 }
+
+/* Tabular numbers — all numeric columns align perfectly */
+.tabular {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Emerald glow for large amounts */
+.amount-glow {
+  filter: drop-shadow(0 0 8px rgba(52, 211, 153, 0.45));
+}
