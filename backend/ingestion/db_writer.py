@@ -68,6 +68,22 @@ async def write_deals(
             skipped_duplicates += 1
             continue
 
+        # Treat amount_usd = 0 as null (undisclosed)
+        if extracted.amount_usd == 0:
+            extracted.amount_usd = None
+
+        # Infer deal_type from round_label if LLM returned "unknown"
+        if extracted.deal_type == "unknown" and extracted.round_label:
+            rl = extracted.round_label.lower()
+            if any(k in rl for k in ("seed", "series", "pre-seed", "venture", "growth")):
+                extracted.deal_type = "vc"
+            elif any(k in rl for k in ("acqui", "merger", "buyout")):
+                extracted.deal_type = "ma"
+            elif any(k in rl for k in ("token", "ido", "ico", "ieo")):
+                extracted.deal_type = "crypto"
+            elif any(k in rl for k in ("ipo", "spac", "listing")):
+                extracted.deal_type = "ipo"
+
         # Safely get matching RawDeal
         raw: RawDeal | None = raw_deals[idx] if idx < len(raw_deals) else None
 

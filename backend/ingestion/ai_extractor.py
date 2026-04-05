@@ -107,7 +107,9 @@ _SYSTEM_PROMPT = (
     "Extract structured deal information from the provided text. "
     "Return only valid JSON — no markdown, no explanation, just the JSON object. "
     "company_name is REQUIRED and must never be null or empty. "
-    "If you cannot identify a clear deal in the text, set confidence below 0.3."
+    "If you cannot identify a clear deal in the text, set confidence below 0.3. "
+    "deal_type MUST be one of: vc, ma, crypto, ipo, unknown — never leave it as unknown if clues exist. "
+    "sector MUST come from the allowed list — never return 'other' if a better fit exists."
 )
 
 _USER_TEMPLATE = """\
@@ -129,16 +131,36 @@ REQUIRED:
 OPTIONAL (use null if not found):
 - company_description (string, 1 sentence max)
 - company_website (string URL)
-- deal_type (one of: vc / ma / crypto / ipo / unknown)
-- amount_usd (integer in USD — convert currencies; null if undisclosed)
+- deal_type: classify using these rules:
+    "vc"     → startup raised funding: Seed, Series A/B/C/D/E, Pre-seed, growth round, venture round
+    "ma"     → acquisition, merger, buyout, takeover — company bought by another
+    "crypto" → token sale, IDO, IEO, ICO, blockchain/Web3/DeFi/NFT project raise
+    "ipo"    → IPO, direct listing, SPAC, going public, stock market debut
+    "unknown"→ only if truly cannot determine from text
+- amount_usd (integer in USD — convert currencies; null if undisclosed; NEVER 0)
 - currency (original currency string, e.g. "EUR", "USD")
 - round_label (e.g. "Seed", "Series A", "Series B", "Acquisition", "Token Sale")
 - announced_date (YYYY-MM-DD)
-- sector (array from: crypto / fintech / saas / healthtech / edtech / proptech / other)
-- geo (one of: latam / spain / europe / us / asia / africa / mena / global)
+- sector: pick from this list using these rules (array, up to 2):
+    "crypto"    → blockchain, Web3, DeFi, NFT, token, crypto exchange, wallet
+    "fintech"   → payments, lending, neobank, insurtech, wealthtech, trading, remittance
+    "saas"      → B2B software, SaaS, AI/ML platform, developer tools, cloud infrastructure
+    "healthtech"→ health, medical, biotech, pharma, genomics, telemedicine, medtech
+    "edtech"    → education, e-learning, online courses, tutoring, skills training
+    "proptech"  → real estate, property, construction tech, smart buildings
+    "other"     → only if none of the above apply
+- geo: pick one:
+    "latam"  → Latin America: Mexico, Brazil, Colombia, Argentina, Chile, Peru, etc.
+    "spain"  → Spain only
+    "europe" → Europe (excluding Spain): UK, France, Germany, Netherlands, etc.
+    "us"     → United States or Canada
+    "asia"   → Asia Pacific: China, India, Japan, Korea, Singapore, SEA, etc.
+    "africa" → Africa
+    "mena"   → Middle East and North Africa
+    "global" → explicitly global/cross-border, or genuinely unclear geography
 - lead_investor (string)
 - all_investors (array of strings)
-- tech_stack (array: technologies/frameworks/platforms used, e.g. ["Solidity","EVM"] or ["Python","AWS"])
+- tech_stack (array: technologies/frameworks/platforms, e.g. ["Solidity","EVM"] or ["Python","AWS"])
 - ai_summary (2-3 sentences describing the deal)
 
 REQUIRED:
