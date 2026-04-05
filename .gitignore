@@ -18,8 +18,8 @@ build/
 
 # Node
 node_modules/
-frontend/dist/
 frontend/.vite/
+# frontend/dist/ intentionally committed so Railway serves pre-built assets
 
 # IDE
 .vscode/
