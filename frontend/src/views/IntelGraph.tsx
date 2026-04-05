@@ -133,15 +133,15 @@ export default function IntelGraph() {
     <div className="flex flex-col h-full">
       <div className="px-6 pt-6 pb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-zinc-50 flex items-center gap-2">
+          <h1 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
             <Cpu size={18} className="text-amber-400" strokeWidth={1.5} />
             Primitive Co-occurrence Graph
           </h1>
-          <p className="text-xs text-zinc-500 mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5">
             Node size = capital weight · Edges = companies using both primitives
           </p>
         </div>
-        <button onClick={() => navigate('/intel')} className="text-xs text-zinc-500 hover:text-zinc-300 flex items-center gap-1">
+        <button onClick={() => navigate('/intel')} className="text-xs text-slate-500 hover:text-slate-700 flex items-center gap-1">
           <ArrowLeft size={12} /> Queue
         </button>
       </div>
@@ -149,20 +149,20 @@ export default function IntelGraph() {
       <div className="flex-1 px-6 pb-6 relative">
         {loading ? <LoadingSpinner /> : error ? <ErrorBanner message={error} /> :
           !data || data.nodes.length === 0 ? (
-            <div className="flex items-center justify-center h-64 bg-zinc-900 border border-zinc-800 rounded-lg">
-              <p className="text-zinc-500 text-sm">No graph data yet — analyze some companies first.</p>
+            <div className="flex items-center justify-center h-64 bg-slate-50 border border-slate-200 rounded-lg shadow-sm">
+              <p className="text-slate-500 text-sm">No graph data yet — analyze some companies first.</p>
             </div>
           ) : (
-            <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden h-[600px] relative">
+            <div className="bg-white border border-slate-200 rounded-xl overflow-hidden h-[600px] relative shadow-sm">
               <svg ref={svgRef} width="100%" height="100%" />
 
               {/* Layer legend — top-left */}
-              <div className="absolute top-4 left-4 bg-zinc-900/80 backdrop-blur-sm border border-zinc-800 rounded-lg p-3 z-10">
-                <div className="text-[10px] text-zinc-600 font-mono uppercase tracking-wider mb-2">Layer</div>
+              <div className="absolute top-4 left-4 bg-slate-50 backdrop-blur-sm border border-slate-200 rounded-lg p-3 z-10 shadow-sm">
+                <div className="text-[10px] text-slate-400 font-mono uppercase tracking-wider mb-2">Layer</div>
                 {LAYER_LEGEND.map((l, i) => (
                   <div key={l.key} className="flex items-center gap-2 mb-1.5 last:mb-0">
                     <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: LEGEND_COLORS[i] }} />
-                    <span className="text-[10px] text-zinc-400 font-mono">{l.label}</span>
+                    <span className="text-[10px] text-slate-600 font-mono">{l.label}</span>
                   </div>
                 ))}
               </div>
@@ -171,24 +171,24 @@ export default function IntelGraph() {
               <div className="absolute top-4 right-16 flex flex-col gap-1 z-10">
                 <button
                   onClick={() => { if (svgRef.current && zoomRef.current) d3.select(svgRef.current).transition().duration(300).call(zoomRef.current.scaleBy, 1.5) }}
-                  className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded text-zinc-400 hover:text-zinc-200 text-sm flex items-center justify-center"
+                  className="w-7 h-7 bg-slate-100 border border-slate-200 rounded text-slate-600 hover:text-slate-800 text-sm flex items-center justify-center"
                 >+</button>
                 <button
                   onClick={() => { if (svgRef.current && zoomRef.current) d3.select(svgRef.current).transition().duration(300).call(zoomRef.current.scaleBy, 0.67) }}
-                  className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded text-zinc-400 hover:text-zinc-200 text-sm flex items-center justify-center"
+                  className="w-7 h-7 bg-slate-100 border border-slate-200 rounded text-slate-600 hover:text-slate-800 text-sm flex items-center justify-center"
                 >−</button>
                 <button
                   onClick={() => { if (svgRef.current && zoomRef.current) d3.select(svgRef.current).transition().duration(300).call(zoomRef.current.transform, d3.zoomIdentity) }}
-                  className="w-7 h-7 bg-zinc-800 border border-zinc-700 rounded text-zinc-400 hover:text-zinc-200 text-xs flex items-center justify-center font-mono"
+                  className="w-7 h-7 bg-slate-100 border border-slate-200 rounded text-slate-600 hover:text-slate-800 text-xs flex items-center justify-center font-mono"
                 >↺</button>
               </div>
 
               {/* Hover tooltip — top-right (shifts when zoom controls present) */}
               {hovered && (
-                <div className="absolute top-4 right-4 bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-xs min-w-[160px]">
-                  <div className="text-zinc-100 font-semibold mb-1">{hovered.label}</div>
-                  <div className="text-zinc-400">Companies: <span className="text-emerald-400">{hovered.company_count}</span></div>
-                  <div className="text-zinc-400">Capital: <span className="text-emerald-400">{formatCap(hovered.capital_weight)}</span></div>
+                <div className="absolute top-4 right-4 bg-white border border-slate-200 rounded-lg p-3 text-xs min-w-[160px] shadow-sm">
+                  <div className="text-slate-900 font-semibold mb-1">{hovered.label}</div>
+                  <div className="text-slate-600">Companies: <span className="text-emerald-500">{hovered.company_count}</span></div>
+                  <div className="text-slate-600">Capital: <span className="text-emerald-500">{formatCap(hovered.capital_weight)}</span></div>
                 </div>
               )}
             </div>
