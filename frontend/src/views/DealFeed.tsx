@@ -52,7 +52,7 @@ function fmtAmount(usd: number | null | undefined): string {
   return `$${Math.round(usd / 1000)}K`
 }
 
-function formatAmount(usd: number): string {
+function formatAmount(usd: number | null | undefined): string {
   return fmtAmount(usd)
 }
 
@@ -415,6 +415,7 @@ export default function DealFeed() {
               const typeKey = deal.deal_type ?? 'unknown'
               const leftBorder = DEAL_TYPE_LEFT_BORDER[typeKey] ?? DEAL_TYPE_LEFT_BORDER['unknown']
               const bgCls = DEAL_TYPE_BG[typeKey] ?? ''
+              const roundDisplay = fmtRound(deal.round_label)
               return (
                 <div
                   key={deal.id}
@@ -422,7 +423,7 @@ export default function DealFeed() {
                   className={`border-l-4 ${leftBorder} ${bgCls} border border-zinc-800 rounded-xl p-4 cursor-pointer hover:bg-zinc-800/70 transition-colors`}
                 >
                   <div className="text-xs font-mono uppercase tracking-wider text-zinc-500 mb-1">
-                    {fmtRound(deal.round_label) !== '—' ? fmtRound(deal.round_label) : (deal.deal_type || 'Deal')}
+                    {roundDisplay !== '—' ? roundDisplay : (deal.deal_type || 'Deal')}
                     {deal.geo && (
                       <span className="ml-2">{GEO_FLAGS[deal.geo] ?? ''}</span>
                     )}
@@ -521,7 +522,9 @@ export default function DealFeed() {
                     </tr>
                   </thead>
                   <tbody>
-                    {visibleDeals.map((deal) => (
+                    {visibleDeals.map((deal) => {
+                      const roundDisplay = fmtRound(deal.round_label)
+                      return (
                       <tr
                         key={deal.id}
                         onClick={() => deal.company_id && navigate(`/company/${deal.company_id}`)}
@@ -558,7 +561,7 @@ export default function DealFeed() {
                         {/* Round */}
                         <td className="px-4 py-3">
                           <span className="text-xs px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono uppercase tracking-wide border border-zinc-700">
-                            {fmtRound(deal.round_label) !== '—' ? fmtRound(deal.round_label) : (deal.deal_type?.toUpperCase() || '—')}
+                            {roundDisplay !== '—' ? roundDisplay : (deal.deal_type?.toUpperCase() || '—')}
                           </span>
                         </td>
                         {/* Amount */}
@@ -619,7 +622,7 @@ export default function DealFeed() {
                             : '—'}
                         </td>
                       </tr>
-                    ))}
+                    )})}
                   </tbody>
                 </table>
               </div>
