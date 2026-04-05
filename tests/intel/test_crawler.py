@@ -48,3 +48,36 @@ async def test_crawl_filters_short_text():
         results = await crawler.crawl("https://example.com")
     assert len(results) == 1
     assert results[0].source_type == "product"
+
+
+def test_classify_trust_center_urls():
+    crawler = ApifyCrawler(api_token="fake")
+    assert crawler._classify_url("https://example.com/security") == "trust_center"
+    assert crawler._classify_url("https://example.com/trust") == "trust_center"
+    assert crawler._classify_url("https://example.com/trust-center") == "trust_center"
+
+
+def test_classify_status_page_urls():
+    crawler = ApifyCrawler(api_token="fake")
+    assert crawler._classify_url("https://status.example.com") == "status_page"
+    assert crawler._classify_url("https://status.mistral.ai/incidents") == "status_page"
+
+
+@pytest.mark.asyncio
+async def test_crawl_includes_extra_start_urls():
+    """Verify trust/status URLs are included in the Apify call."""
+    crawler = ApifyCrawler(api_token="fake")
+    captured = {}
+
+    async def fake_run_actor(start_urls):
+        captured["urls"] = start_urls
+        return []
+
+    with patch.object(crawler, '_run_actor', side_effect=fake_run_actor):
+        await crawler.crawl("https://example.com")
+
+    urls = captured["urls"]
+    assert "https://example.com" in urls
+    assert "https://example.com/security" in urls
+    assert "https://example.com/trust" in urls
+    assert "https://status.example.com" in urls

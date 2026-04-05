@@ -14,6 +14,8 @@ logger = logging.getLogger(__name__)
 
 _SOURCE_TYPE_PATTERNS = {
     "github": ["github.com"],
+    "trust_center": ["/security", "/trust", "/trust-center"],
+    "status_page": ["status."],
     "docs": ["/docs", "/documentation", "/api-reference", "/developers", "/technology"],
     "blog": ["/blog", "/news", "/insights", "/articles", "/press"],
     "careers": ["/careers", "/jobs", "/hiring", "/join-us", "/team"],
@@ -51,7 +53,7 @@ class ApifyCrawler:
                 return source_type
         return "homepage"
 
-    async def _run_actor(self, start_url: str) -> list[dict]:
+    async def _run_actor(self, start_urls: list[str]) -> list[dict]:
         """Run the Apify actor and return raw items. Runs in thread pool to avoid blocking."""
         from apify_client import ApifyClient
 
@@ -59,7 +61,7 @@ class ApifyCrawler:
             client = ApifyClient(self._token)
             run = client.actor(self._ACTOR_ID).call(
                 run_input={
-                    "startUrls": [{"url": start_url}],
+                    "startUrls": [{"url": u} for u in start_urls],
                     "maxCrawlPages": self._MAX_PAGES,
                     "crawlerType": "playwright:adaptive",
                     "readableTextCharThreshold": 100,
@@ -82,6 +84,8 @@ class ApifyCrawler:
         Crawl a company website. Returns up to MAX_PAGES CrawlResults.
         Never raises — returns [] on any error.
         """
+        from urllib.parse import urlparse
+
         if not website.startswith(("http://", "https://")):
             website = f"https://{website}"
 
@@ -89,8 +93,21 @@ class ApifyCrawler:
             logger.warning("[Crawler] APIFY_API_TOKEN not set — skipping crawl for %s", website)
             return []
 
+        # Derive high-signal additional start URLs from the base domain
+        parsed = urlparse(website)
+        domain = parsed.netloc  # e.g. "mistral.ai"
+        base = f"{parsed.scheme}://{domain}"
+        extra_urls = [
+            f"{base}/security",
+            f"{base}/trust",
+            f"{base}/trust-center",
+            f"https://status.{domain}",
+            f"{base}/.well-known/security.txt",
+        ]
+        start_urls = [website] + extra_urls
+
         try:
-            items = await self._run_actor(website)
+            items = await self._run_actor(start_urls)
         except Exception as exc:
             logger.error("[Crawler] Apify actor failed for %s: %s", website, exc)
             return []
