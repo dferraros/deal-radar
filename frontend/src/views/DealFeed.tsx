@@ -72,15 +72,6 @@ const DEAL_TYPE_BG: Record<string, string> = {
   unknown: 'bg-zinc-900',
 }
 
-// Used in Task 5 table rows
-export const DEAL_TYPE_COLORS: Record<string, string> = {
-  vc:      'border-emerald-500 bg-emerald-500/5',
-  crypto:  'border-violet-500 bg-violet-500/5',
-  ma:      'border-sky-500 bg-sky-500/5',
-  ipo:     'border-rose-500 bg-rose-500/5',
-  unknown: 'border-zinc-700 bg-zinc-900',
-}
-
 const SECTOR_PILL_COLORS: Record<string, string> = {
   crypto:    'bg-violet-500/15 text-violet-300 border-violet-500/30',
   fintech:   'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
@@ -527,7 +518,7 @@ export default function DealFeed() {
                           DEAL_TYPE_LEFT_BORDER[deal.deal_type ?? 'unknown'] ?? DEAL_TYPE_LEFT_BORDER['unknown']
                         } ${
                           lastVisit && deal.created_at && new Date(deal.created_at) > lastVisit
-                            ? 'opacity-100'
+                            ? 'border-r-2 border-r-blue-500/70'
                             : ''
                         } hover:bg-zinc-800/30`}
                       >
