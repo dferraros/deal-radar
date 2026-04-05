@@ -176,6 +176,10 @@ thead.sticky tr {
   background: #f8fafc;
   border-top: 1px solid #e2e8f0;
   border-bottom: 1px solid #e2e8f0;
+  scrollbar-width: none;
+}
+.filter-strip::-webkit-scrollbar {
+  display: none;
 }
 
 /* ─── Table amber header accent ──────────────────────────────── */

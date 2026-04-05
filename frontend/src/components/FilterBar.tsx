@@ -103,13 +103,13 @@ export default function FilterBar({
   const activeCount = countActiveFilters(filters);
 
   return (
-    <div className="filter-strip px-6 py-2.5 flex flex-wrap items-center gap-x-5 gap-y-2">
+    <div className="filter-strip px-6 py-2 flex items-center gap-x-4 overflow-x-auto scrollbar-none whitespace-nowrap">
       {/* Terminal label */}
       <SectionLabel label="Screen" />
       <Pipe />
 
       {/* Deal Type */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 shrink-0">
         {(['', 'vc', 'ma', 'crypto', 'ipo'] as const).map((type) => {
           const isActive = filters.dealType === type
           return (
@@ -131,7 +131,7 @@ export default function FilterBar({
       <Pipe />
 
       {/* Sector */}
-      <div className="flex items-center gap-1.5 flex-wrap">
+      <div className="flex items-center gap-1.5 shrink-0">
         {(['', ...sectors] as string[]).map((s) => {
           const isActive = filters.sector === s
           return (
@@ -149,7 +149,7 @@ export default function FilterBar({
       <Pipe />
 
       {/* Geo */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 shrink-0">
         {GEO_OPTIONS.map(({ value, label }) => {
           const isActive = filters.geo === value
           return (
@@ -167,7 +167,7 @@ export default function FilterBar({
       <Pipe />
 
       {/* Size */}
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1.5 shrink-0">
         {AMOUNT_OPTIONS.map(({ value, label }) => {
           const isActive = filters.amountMin === value
           return (
@@ -186,7 +186,7 @@ export default function FilterBar({
       {showDateRange && (
         <>
           <Pipe />
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <SectionLabel label="Window" />
             <input
               type="date"

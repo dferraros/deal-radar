@@ -69,11 +69,11 @@ const DEAL_TYPE_LEFT_BORDER: Record<string, string> = {
 }
 
 const DEAL_TYPE_BG: Record<string, string> = {
-  vc:      'bg-emerald-50',
-  crypto:  'bg-violet-50',
-  ma:      'bg-sky-50',
-  ipo:     'bg-rose-50',
-  unknown: 'bg-slate-50',
+  vc:      '',
+  crypto:  '',
+  ma:      '',
+  ipo:     '',
+  unknown: '',
 }
 
 const DEAL_TYPE_DOT: Record<string, string> = {

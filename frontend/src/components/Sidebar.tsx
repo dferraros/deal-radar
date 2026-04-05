@@ -76,12 +76,12 @@ export default function Sidebar() {
   }, [])
 
   return (
-    <aside className="fixed top-0 left-0 h-screen w-[220px] bg-zinc-950 border-r border-zinc-800/80 flex flex-col z-10">
+    <aside className="fixed top-0 left-0 h-screen w-[220px] bg-slate-900 border-r border-slate-700/60 flex flex-col z-10">
       {/* Top accent bar */}
       <div className={`absolute top-0 left-0 right-0 h-[2px] amber-accent-top ${ingesting ? 'opacity-100' : 'opacity-30'} transition-opacity`} />
 
       {/* Brand */}
-      <div className="px-5 pt-6 pb-4 border-b border-zinc-800/80">
+      <div className="px-5 pt-6 pb-4 border-b border-slate-700/60">
         <div className="flex items-center gap-2.5 mb-1">
           <div className="relative">
             <Radio size={16} className="text-amber-400" strokeWidth={1.5} />
@@ -93,7 +93,7 @@ export default function Sidebar() {
             DEAL RADAR
           </div>
         </div>
-        <div className="text-zinc-600 text-[10px] pl-[26px] font-mono uppercase tracking-widest">
+        <div className="text-slate-400 text-[10px] pl-[26px] font-mono uppercase tracking-widest">
           Intelligence
         </div>
       </div>
@@ -102,10 +102,10 @@ export default function Sidebar() {
       <div className="px-5 pt-3 pb-1">
         <button
           onClick={() => window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT))}
-          className="w-full flex items-center justify-between bg-zinc-800/60 border border-zinc-700/60 rounded-md px-3 py-1.5 text-xs text-zinc-500 hover:border-zinc-600 hover:text-zinc-400 transition-colors"
+          className="w-full flex items-center justify-between bg-slate-800/70 border border-slate-700/50 rounded-md px-3 py-1.5 text-xs text-slate-400 hover:border-slate-600 hover:text-slate-300 transition-colors"
         >
           <span>Search...</span>
-          <span className="font-mono text-[10px] bg-zinc-700/60 px-1.5 py-0.5 rounded">⌘K</span>
+          <span className="font-mono text-[10px] bg-slate-700/60 px-1.5 py-0.5 rounded">⌘K</span>
         </button>
       </div>
 
@@ -124,8 +124,8 @@ export default function Sidebar() {
               className={({ isActive }) =>
                 `flex items-center justify-between px-3 py-2 rounded-md text-sm transition-colors group ${
                   isActive
-                    ? 'border-l-2 border-amber-400 bg-amber-400/5 text-zinc-50 pl-[10px]'
-                    : 'text-zinc-400 hover:text-zinc-50 hover:bg-zinc-800/50 border-l-2 border-transparent'
+                    ? 'border-l-2 border-amber-400 bg-amber-400/8 text-white pl-[10px]'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/60 border-l-2 border-transparent'
                 }`
               }
             >
@@ -150,8 +150,8 @@ export default function Sidebar() {
           className={({ isActive }) =>
             `flex items-center gap-3 px-3 py-2 rounded-md text-xs transition-colors border-l-2 ${
               isActive
-                ? 'border-amber-400 bg-amber-400/5 text-zinc-50 pl-[10px]'
-                : 'border-transparent text-zinc-600 hover:text-zinc-400 hover:bg-zinc-800/50'
+                ? 'border-amber-400 bg-amber-400/8 text-white pl-[10px]'
+                : 'border-transparent text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
             }`
           }
         >
@@ -161,19 +161,19 @@ export default function Sidebar() {
       </div>
 
       {/* Status footer */}
-      <div className="px-4 py-3 border-t border-zinc-800/80">
+      <div className="px-4 py-3 border-t border-slate-700/60">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <span className="relative flex h-1.5 w-1.5">
               {ingesting && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>}
               <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${ingesting ? 'bg-amber-400' : 'bg-emerald-400'}`} />
             </span>
-            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wider">
+            <span className="text-[10px] font-mono text-slate-400 uppercase tracking-wider">
               {ingesting ? 'Syncing…' : 'Live'}
             </span>
           </div>
           {lastSync && !ingesting && (
-            <span className="text-[10px] font-mono text-zinc-700">{lastSync}</span>
+            <span className="text-[10px] font-mono text-slate-500">{lastSync}</span>
           )}
         </div>
       </div>
