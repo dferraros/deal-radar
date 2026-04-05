@@ -17,12 +17,12 @@ interface QueueItem {
 }
 
 const STATUS_CONFIG: Record<string, { label: string; color: string; icon: any }> = {
-  queued:      { label: 'Queued',      color: 'text-slate-500 bg-slate-100',         icon: Clock },
-  crawling:    { label: 'Crawling',    color: 'text-sky-400 bg-sky-950/50',           icon: Loader2 },
-  extracting:  { label: 'Extracting', color: 'text-amber-400 bg-amber-950/50',       icon: Loader2 },
-  normalizing: { label: 'Normalizing',color: 'text-violet-400 bg-violet-950/50',     icon: Loader2 },
-  done:        { label: 'Done',        color: 'text-emerald-400 bg-emerald-950/50',  icon: CheckCircle },
-  failed:      { label: 'Failed',      color: 'text-rose-400 bg-rose-950/50',        icon: AlertTriangle },
+  queued:      { label: 'Queued',      color: 'bg-slate-100 text-slate-600',         icon: Clock },
+  crawling:    { label: 'Crawling',    color: 'bg-sky-100 text-sky-700',             icon: Loader2 },
+  extracting:  { label: 'Extracting', color: 'bg-amber-100 text-amber-700',         icon: Loader2 },
+  normalizing: { label: 'Normalizing',color: 'bg-violet-100 text-violet-700',       icon: Loader2 },
+  done:        { label: 'Done',        color: 'bg-emerald-100 text-emerald-700',    icon: CheckCircle },
+  failed:      { label: 'Failed',      color: 'bg-rose-100 text-rose-700',          icon: AlertTriangle },
 }
 
 function relativeTime(dateStr: string): string {
@@ -77,13 +77,21 @@ export default function IntelQueue() {
   }
 
   const handleRetry = async (id: string) => {
-    await axios.post(`/api/intel/queue/${id}/retry`)
-    fetchQueue()
+    try {
+      await axios.post(`/api/intel/queue/${id}/retry`)
+      fetchQueue()
+    } catch {
+      setError('Failed to retry item. Please try again.')
+    }
   }
 
   const handleDelete = async (id: string) => {
-    await axios.delete(`/api/intel/queue/${id}`)
-    fetchQueue()
+    try {
+      await axios.delete(`/api/intel/queue/${id}`)
+      setQueue(q => q.filter(item => item.id !== id))
+    } catch {
+      setError('Failed to remove item. Please try again.')
+    }
   }
 
   const statCards = [
@@ -267,7 +275,7 @@ export default function IntelQueue() {
                             {item.tech_preview.map((tech) => (
                               <span
                                 key={tech}
-                                className="text-[10px] px-1.5 py-0.5 rounded bg-amber-950/40 text-amber-400 border border-amber-800/30 font-mono"
+                                className="text-[10px] px-1.5 py-0.5 rounded bg-amber-50 text-amber-700 border border-amber-200 font-mono"
                               >
                                 {tech}
                               </span>
