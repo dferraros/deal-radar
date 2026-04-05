@@ -43,6 +43,34 @@ def _build_deal_response(deal: Deal) -> DealResponse:
     )
 
 
+def _apply_deal_filters(
+    stmt,
+    date_from: Optional[date],
+    date_to: Optional[date],
+    deal_type: Optional[str],
+    sector: Optional[str],
+    geo: Optional[str],
+    amount_min: Optional[int],
+    q: Optional[str],
+):
+    """Apply all standard deal filters to a SQLAlchemy select statement."""
+    if date_from is not None:
+        stmt = stmt.where(Deal.announced_date >= date_from)
+    if date_to is not None:
+        stmt = stmt.where(Deal.announced_date <= date_to)
+    if deal_type is not None:
+        stmt = stmt.where(Deal.deal_type == deal_type)
+    if sector is not None:
+        stmt = stmt.where(Company.sector.any(sector))
+    if geo is not None:
+        stmt = stmt.where(Company.geo == geo)
+    if amount_min is not None:
+        stmt = stmt.where(Deal.amount_usd >= amount_min)
+    if q is not None and q.strip():
+        stmt = stmt.where(Company.name.ilike(f"%{q.strip()}%"))
+    return stmt
+
+
 @router.get("/deals", response_model=DealsListResponse)
 async def list_deals(
     date_from: Optional[date] = Query(None),
@@ -58,37 +86,16 @@ async def list_deals(
 ) -> DealsListResponse:
     """Return a paginated, filtered list of deals with company context."""
 
-    # Base query — always join company so we can filter + return company fields
     base_stmt = (
         select(Deal)
         .outerjoin(Company, Deal.company_id == Company.id)
         .options(selectinload(Deal.company))
     )
+    base_stmt = _apply_deal_filters(base_stmt, date_from, date_to, deal_type, sector, geo, amount_min, q)
 
-    # --- Filters ---
-    if date_from is not None:
-        base_stmt = base_stmt.where(Deal.announced_date >= date_from)
-    if date_to is not None:
-        base_stmt = base_stmt.where(Deal.announced_date <= date_to)
-    if deal_type is not None:
-        base_stmt = base_stmt.where(Deal.deal_type == deal_type)
-    if sector is not None:
-        # ARRAY contains: ANY(company.sector) = :sector
-        base_stmt = base_stmt.where(Company.sector.any(sector))
-    if geo is not None:
-        base_stmt = base_stmt.where(Company.geo == geo)
-    if amount_min is not None:
-        base_stmt = base_stmt.where(Deal.amount_usd >= amount_min)
-    if q is not None and q.strip():
-        base_stmt = base_stmt.where(
-            Company.name.ilike(f"%{q.strip()}%")
-        )
-
-    # --- Count total (before pagination) ---
     count_stmt = select(func.count()).select_from(base_stmt.subquery())
     total: int = (await db.execute(count_stmt)).scalar_one()
 
-    # --- Order + paginate ---
     offset = (page - 1) * limit
     rows_stmt = (
         base_stmt
@@ -128,25 +135,9 @@ async def export_deals_csv(
         .outerjoin(Company, Deal.company_id == Company.id)
         .options(selectinload(Deal.company))
     )
-
-    if date_from is not None:
-        stmt = stmt.where(Deal.announced_date >= date_from)
-    if date_to is not None:
-        stmt = stmt.where(Deal.announced_date <= date_to)
-    if deal_type is not None:
-        stmt = stmt.where(Deal.deal_type == deal_type)
-    if sector is not None:
-        stmt = stmt.where(Company.sector.any(sector))
-    if geo is not None:
-        stmt = stmt.where(Company.geo == geo)
-    if amount_min is not None:
-        stmt = stmt.where(Deal.amount_usd >= amount_min)
-    if q is not None and q.strip():
-        stmt = stmt.where(
-            Company.name.ilike(f"%{q.strip()}%")
-        )
-
+    stmt = _apply_deal_filters(stmt, date_from, date_to, deal_type, sector, geo, amount_min, q)
     stmt = stmt.order_by(Deal.announced_date.desc().nullslast(), Deal.created_at.desc())
+
     result = await db.execute(stmt)
     deals = result.scalars().all()
 

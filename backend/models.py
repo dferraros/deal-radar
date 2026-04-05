@@ -1,24 +1,26 @@
 import uuid
-from datetime import date, datetime, timezone
+from datetime import datetime, timezone
 
 from sqlalchemy import (
     BigInteger,
     Boolean,
     Column,
     Date,
+    DateTime,
+    Float,
     ForeignKey,
     Integer,
     String,
     Text,
     ARRAY,
 )
-from sqlalchemy import DateTime
 from sqlalchemy.dialects.postgresql import UUID
-
-TIMESTAMPTZ = DateTime(timezone=True)
 from sqlalchemy.orm import relationship
 
 from backend.database import Base
+
+TIMESTAMPTZ = DateTime(timezone=True)
+_now = lambda: datetime.now(timezone.utc)  # noqa: E731
 
 
 class Company(Base):
@@ -33,7 +35,7 @@ class Company(Base):
     crunchbase_url = Column(Text)
     website = Column(Text)
     founded_year = Column(Integer)
-    created_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+    created_at = Column(TIMESTAMPTZ, default=_now)
 
     deals = relationship("Deal", back_populates="company")
     watchlist_entries = relationship("Watchlist", back_populates="company")
@@ -56,7 +58,7 @@ class Deal(Base):
     source_name = Column(Text)            # 'crunchbase', 'techcrunch', 'tavily', etc.
     raw_text = Column(Text)               # original source text for re-extraction
     ai_summary = Column(Text)             # 2-3 sentence LLM summary
-    created_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+    created_at = Column(TIMESTAMPTZ, default=_now)
 
     company = relationship("Company", back_populates="deals")
 
@@ -75,7 +77,7 @@ class Watchlist(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id"), nullable=False)
-    added_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+    added_at = Column(TIMESTAMPTZ, default=_now)
     notes = Column(Text)
 
     company = relationship("Company", back_populates="watchlist_entries")
@@ -89,7 +91,7 @@ class IngestionRun(Base):
     status = Column(Text)                 # 'success', 'partial', 'failed'
     deals_found = Column(Integer)
     deals_added = Column(Integer)
-    run_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+    run_at = Column(TIMESTAMPTZ, default=_now)
     error_log = Column(Text)
 
 
@@ -124,7 +126,7 @@ class IntelQueue(Base):
     company_name = Column(Text, nullable=False)
     website = Column(Text, nullable=False)
     status = Column(Text, default="queued")  # queued|crawling|extracting|normalizing|done|failed
-    queued_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+    queued_at = Column(TIMESTAMPTZ, default=_now)
     started_at = Column(TIMESTAMPTZ, nullable=True)
     completed_at = Column(TIMESTAMPTZ, nullable=True)
     error_log = Column(Text, nullable=True)
@@ -144,7 +146,7 @@ class IntelSource(Base):
     raw_text = Column(Text)
     clean_text = Column(Text)
     content_hash = Column(Text)
-    fetched_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+    fetched_at = Column(TIMESTAMPTZ, default=_now)
     http_status = Column(Integer, nullable=True)
 
     queue_entry = relationship("IntelQueue", back_populates="sources")
@@ -175,8 +177,8 @@ class IntelCompanyProfile(Base):
     outputs = Column(ARRAY(Text), default=list)
     claimed_differentiators = Column(ARRAY(Text), default=list)
     jtbd = Column(Text)
-    profile_confidence = Column(Text)  # stored as string float e.g. "0.85"
-    generated_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+    profile_confidence = Column(Float)
+    generated_at = Column(TIMESTAMPTZ, default=_now)
     model_version = Column(Text)
 
     queue_entry = relationship("IntelQueue", back_populates="profile")
@@ -191,7 +193,7 @@ class IntelOntologyNode(Base):
     parent_id = Column(UUID(as_uuid=True), ForeignKey("intel_ontology_nodes.id"), nullable=True)
     description = Column(Text)
     status = Column(Text, default="active")  # active|pending_review
-    created_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+    created_at = Column(TIMESTAMPTZ, default=_now)
 
     aliases = relationship("IntelOntologyAlias", back_populates="node", cascade="all, delete-orphan")
     observations = relationship("IntelObservation", back_populates="node")
@@ -216,10 +218,10 @@ class IntelObservation(Base):
     queue_id = Column(UUID(as_uuid=True), ForeignKey("intel_queue.id"), nullable=False)
     node_id = Column(UUID(as_uuid=True), ForeignKey("intel_ontology_nodes.id"), nullable=False)
     layer = Column(Text)  # model|application_logic|infra|interface|hardware
-    confidence = Column(Text)  # stored as string float e.g. "0.78"
+    confidence = Column(Float)
     is_explicit = Column(Boolean, default=False)
     inference_method = Column(Text)
-    generated_at = Column(TIMESTAMPTZ, default=datetime.utcnow)
+    generated_at = Column(TIMESTAMPTZ, default=_now)
     model_version = Column(Text)
 
     queue_entry = relationship("IntelQueue", back_populates="observations")
@@ -248,9 +250,9 @@ class IntelTechnologyScore(Base):
     period_start = Column(Date, nullable=False)
     period_end = Column(Date, nullable=False)
     company_count = Column(Integer, default=0)
-    capital_weighted_score = Column(Text, default="0.0")  # string float
-    growth_rate = Column(Text, default="0.0")
-    novelty_score = Column(Text, default="0.0")
-    co_occurrence_density = Column(Text, default="0.0")
+    capital_weighted_score = Column(Float, default=0.0)
+    growth_rate = Column(Float, default=0.0)
+    novelty_score = Column(Float, default=0.0)
+    co_occurrence_density = Column(Float, default=0.0)
 
     node = relationship("IntelOntologyNode", back_populates="scores")

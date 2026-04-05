@@ -35,12 +35,13 @@ async def get_trends(
             COALESCE(SUM(d.amount_usd), 0)               AS total_capital_usd
         FROM deals d
         WHERE d.announced_date >= :date_from
+          AND d.announced_date <= :date_to
         GROUP BY week_start, d.deal_type
         ORDER BY week_start ASC, d.deal_type
         """
     )
 
-    weekly_result = await session.execute(weekly_sql, {"date_from": date_from})
+    weekly_result = await session.execute(weekly_sql, {"date_from": date_from, "date_to": date_to})
     weekly_rows = weekly_result.fetchall()
 
     weekly_by_type: list[WeekPoint] = [

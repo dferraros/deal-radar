@@ -54,15 +54,6 @@ function fmtAmount(usd: number | null | undefined): string {
   return `$${Math.round(usd / 1000)}K`
 }
 
-function formatAmount(usd: number | null | undefined): string {
-  return fmtAmount(usd)
-}
-
-function formatCapital(usd: number | null | undefined): string {
-  if (usd === null || usd === undefined || isNaN(usd)) return '--'
-  const m = usd / 1_000_000
-  return m >= 1000 ? `$${(m / 1000).toFixed(1)}B` : `$${Math.round(m)}M`
-}
 
 const GEO_FLAGS: Record<string, string> = {
   latam: '🌎', spain: '🇪🇸', europe: '🇪🇺', us: '🇺🇸',
@@ -389,7 +380,7 @@ export default function DealFeed() {
         </span>
         <span>
           <span className="text-emerald-400">
-            {loading ? '…' : todayCapital > 0 ? formatCapital(todayCapital) : '--'}
+            {loading ? '…' : fmtAmount(todayCapital)}
           </span>
         </span>
         {lastSync && (
@@ -419,7 +410,7 @@ export default function DealFeed() {
             </div>
             <div className="flex items-end gap-3">
               <span className="stat-number text-5xl font-black text-emerald-400 amount-glow">
-                {loading ? '—' : weekCapital > 0 ? formatCapital(weekCapital) : '$0'}
+                {loading ? '—' : weekCapital > 0 ? fmtAmount(weekCapital) : '$0'}
               </span>
               <span className="text-zinc-600 font-mono text-sm mb-1 pb-0.5">USD</span>
             </div>
@@ -510,7 +501,7 @@ export default function DealFeed() {
                     {deal.company_name ?? '—'}
                   </div>
                   <div className={`font-mono font-black tabular stat-number mb-2.5 ${isTop ? 'text-3xl text-amber-400 mega-glow' : 'text-2xl text-emerald-400 amount-glow'}`}>
-                    {deal.amount_usd ? formatAmount(deal.amount_usd) : '—'}
+                    {deal.amount_usd ? fmtAmount(deal.amount_usd) : '—'}
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     {(deal.sector || []).slice(0, 2).map((s) => (
@@ -656,7 +647,7 @@ export default function DealFeed() {
                         <td className={`px-4 py-2.5 font-mono text-sm tabular-nums font-semibold text-right
                           ${tier === 'mega' ? 'text-amber-400' : 'text-zinc-200'}`}>
                           {deal.amount_usd ? (
-                            formatAmount(deal.amount_usd)
+                            fmtAmount(deal.amount_usd)
                           ) : (
                             <span className="text-zinc-600 text-xs font-mono">—</span>
                           )}

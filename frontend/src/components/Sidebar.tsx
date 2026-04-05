@@ -57,9 +57,10 @@ export default function Sidebar() {
     }).catch(() => {})
   }, [])
 
-  // Poll for active ingestion run every 10s
+  // Poll for active ingestion run every 10s, paused when tab is hidden
   useEffect(() => {
     const check = () => {
+      if (document.visibilityState === 'hidden') return
       axios.get('/api/admin/runs?limit=1').then((r) => {
         const run = r.data?.[0]
         setIngesting(run?.status === 'running')
@@ -67,7 +68,11 @@ export default function Sidebar() {
     }
     check()
     const id = setInterval(check, 10_000)
-    return () => clearInterval(id)
+    document.addEventListener('visibilitychange', check)
+    return () => {
+      clearInterval(id)
+      document.removeEventListener('visibilitychange', check)
+    }
   }, [])
 
   return (
