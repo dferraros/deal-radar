@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react'
+import { useEffect, useState, useCallback, useRef, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import axios from 'axios'
 import FilterBar, { defaultFilters } from '../components/FilterBar'
@@ -312,6 +312,19 @@ export default function DealFeed() {
 
   const maxDealAmount = Math.max(...visibleDeals.map((d) => d.amount_usd ?? 0), 1)
 
+  const kpis = useMemo(() => {
+    if (!deals.length) return null
+    const totalCapital = deals.reduce((s, d) => s + (d.amount_usd ?? 0), 0)
+    const biggest = deals.reduce((max, d) =>
+      (d.amount_usd ?? 0) > (max.amount_usd ?? 0) ? d : max, deals[0])
+    const sectorCounts: Record<string, number> = {}
+    deals.forEach(d => (d.sector ?? []).forEach(s => {
+      sectorCounts[s] = (sectorCounts[s] ?? 0) + 1
+    }))
+    const topSector = Object.entries(sectorCounts).sort(([,a],[,b]) => b-a)[0]?.[0] ?? '—'
+    return { totalCapital, biggest, topSector, count: deals.length }
+  }, [deals])
+
   return (
     <div>
       {/* Ticker / status bar */}
@@ -452,6 +465,23 @@ export default function DealFeed() {
       })()}
 
       <div className="px-6 pb-6">
+        {/* KPI bar */}
+        {kpis && (
+          <div className="grid grid-cols-4 gap-px bg-zinc-800 border border-zinc-800 rounded-lg overflow-hidden mb-4">
+            {[
+              { label: 'DEALS LOADED', value: String(kpis.count) },
+              { label: 'TOTAL CAPITAL', value: fmtAmount(kpis.totalCapital) },
+              { label: 'BIGGEST DEAL', value: kpis.biggest?.company_name ?? '—' },
+              { label: 'TOP SECTOR', value: (kpis.topSector).toUpperCase() },
+            ].map(({ label, value }) => (
+              <div key={label} className="bg-zinc-950 px-4 py-3">
+                <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mb-1">{label}</div>
+                <div className="text-sm font-semibold text-zinc-100 truncate">{value}</div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Search */}
         <div className="px-0 pt-0 pb-2">
           <input
