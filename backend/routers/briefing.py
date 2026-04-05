@@ -24,12 +24,12 @@ _briefing_cache: dict = {"generated_at": None, "text": None}
 
 
 def _cache_is_fresh() -> bool:
-    """Return True if cached briefing is less than 6 days old."""
+    """Return True if cached briefing is less than 1 hour old."""
     generated_at = _briefing_cache.get("generated_at")
     if generated_at is None:
         return False
     age = datetime.now(timezone.utc) - generated_at
-    return age.total_seconds() < 6 * 24 * 3600
+    return age.total_seconds() < 3600
 
 
 def _should_regenerate() -> bool:
@@ -47,6 +47,7 @@ async def _generate_ai_summary(
     top_amount: Optional[int],
     sectors: list[str],
     geos: list[str],
+    top_5_lines: list[str],
 ) -> Optional[str]:
     """Call Claude Haiku to generate a 3-sentence market summary."""
     api_key = os.environ.get("ANTHROPIC_API_KEY")
@@ -58,18 +59,14 @@ async def _generate_ai_summary(
 
         client = anthropic.Anthropic(api_key=api_key)
 
-        top_amount_b = f"{top_amount / 1_000_000_000:.2f}" if top_amount else "N/A"
-        total_capital_b = f"{total_capital / 1_000_000_000:.2f}"
-        sectors_str = ", ".join(sectors[:5]) if sectors else "N/A"
-        geos_str = ", ".join(geos[:5]) if geos else "N/A"
-        top_company_str = top_company or "N/A"
-
+        top_deals_str = "\n".join(top_5_lines) if top_5_lines else "No deals with disclosed amounts."
         prompt = (
-            f"You are a financial analyst. Summarize this week's deal activity in exactly 3 sentences.\n"
-            f"Data: {total_deals} deals, ${total_capital_b}B raised. "
-            f"Top deal: {top_company_str} raised ${top_amount_b}B. "
-            f"Top sectors: {sectors_str}. Top geos: {geos_str}.\n"
-            f"Return only the 3-sentence summary, no preamble."
+            f"You are a financial analyst writing a weekly deal intelligence briefing.\n"
+            f"This week's data: {total_deals} deals tracked, ${total_capital / 1_000_000_000:.2f}B total capital.\n"
+            f"Top deals by amount:\n{top_deals_str}\n"
+            f"Top sectors: {', '.join(sectors[:5]) or 'N/A'}. Top geos: {', '.join(geos[:5]) or 'N/A'}.\n"
+            f"Write exactly 3 sentences: (1) headline stat, (2) notable deal or sector trend, (3) geographic insight. "
+            f"Be specific. Use company names. No preamble."
         )
 
         message = client.messages.create(
@@ -116,6 +113,17 @@ async def get_latest_briefing(
     elif top_deal:
         top_amount = top_deal.amount_usd
 
+    # Top 5 deals for AI context
+    top_5_deals = sorted(
+        [d for d in deals if d.amount_usd and d.company],
+        key=lambda d: d.amount_usd or 0,
+        reverse=True,
+    )[:5]
+    top_5_lines = [
+        f"- {d.company.name}: ${d.amount_usd / 1_000_000:.0f}M ({d.deal_type or 'deal'}, {', '.join(d.company.sector or ['unknown'])})"
+        for d in top_5_deals
+    ]
+
     # Top sector — flatten company.sector arrays
     sector_counter: Counter = Counter()
     geo_counter: Counter = Counter()
@@ -142,6 +150,7 @@ async def get_latest_briefing(
             top_amount=top_amount,
             sectors=top_sectors,
             geos=top_geos,
+            top_5_lines=top_5_lines,
         )
         if ai_summary:
             _briefing_cache["text"] = ai_summary
