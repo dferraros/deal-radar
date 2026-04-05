@@ -117,6 +117,15 @@ export function MomentumDots({ count }: { count: number }) {
   )
 }
 
+function getAmountIntensityClass(amount: number | null, maxAmount: number): string {
+  if (!amount || maxAmount === 0) return ''
+  const ratio = amount / maxAmount
+  if (ratio > 0.8) return 'bg-emerald-950/70'
+  if (ratio > 0.5) return 'bg-emerald-950/50'
+  if (ratio > 0.25) return 'bg-emerald-950/30'
+  return ''
+}
+
 function buildParams(f: FilterState): Record<string, string> {
   const params: Record<string, string> = {}
   if (f.dealType) params.deal_type = f.dealType
@@ -298,6 +307,8 @@ export default function DealFeed() {
     }
   }
   const topSector = Object.entries(sectorCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? null
+
+  const maxDealAmount = Math.max(...visibleDeals.map((d) => d.amount_usd ?? 0), 1)
 
   return (
     <div>
@@ -494,6 +505,9 @@ export default function DealFeed() {
                         Tech
                       </th>
                       <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
+                        Track
+                      </th>
+                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
                         Geo
                       </th>
                       <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
@@ -508,14 +522,14 @@ export default function DealFeed() {
                     {visibleDeals.map((deal) => (
                       <tr
                         key={deal.id}
-                        onClick={() =>
-                          deal.company_id && navigate(`/company/${deal.company_id}`)
-                        }
-                        className={`border-b border-zinc-800/50 hover:bg-zinc-800/30 cursor-pointer transition-colors group ${
+                        onClick={() => deal.company_id && navigate(`/company/${deal.company_id}`)}
+                        className={`border-b border-zinc-800/50 cursor-pointer transition-colors group border-l-4 ${
+                          DEAL_TYPE_LEFT_BORDER[deal.deal_type ?? 'unknown'] ?? DEAL_TYPE_LEFT_BORDER['unknown']
+                        } ${
                           lastVisit && deal.created_at && new Date(deal.created_at) > lastVisit
-                            ? 'border-l-2 border-l-blue-500'
+                            ? 'opacity-100'
                             : ''
-                        }`}
+                        } hover:bg-zinc-800/30`}
                       >
                         {/* Company */}
                         <td className="px-4 py-3">
@@ -546,9 +560,9 @@ export default function DealFeed() {
                           </span>
                         </td>
                         {/* Amount */}
-                        <td className="px-4 py-3 text-right">
+                        <td className={`px-4 py-3 text-right tabular ${getAmountIntensityClass(deal.amount_usd, maxDealAmount)}`}>
                           {deal.amount_usd ? (
-                            <span className="font-mono text-sm tabular-nums text-emerald-400">
+                            <span className="font-mono text-sm text-emerald-400 amount-glow">
                               {formatAmount(deal.amount_usd)}
                             </span>
                           ) : (
@@ -556,8 +570,13 @@ export default function DealFeed() {
                           )}
                         </td>
                         {/* Sector */}
-                        <td className="px-4 py-3 text-xs text-zinc-400">
-                          {(deal.sector || []).join(', ') || '—'}
+                        <td className="px-4 py-3">
+                          <div className="flex gap-1 flex-wrap">
+                            {(deal.sector || []).slice(0, 2).map((s) => (
+                              <SectorPill key={s} sector={s} />
+                            ))}
+                            {(deal.sector || []).length === 0 && <span className="text-zinc-600 text-xs">—</span>}
+                          </div>
                         </td>
                         {/* Tech Stack */}
                         <td className="px-4 py-3">
@@ -572,9 +591,17 @@ export default function DealFeed() {
                             )}
                           </div>
                         </td>
+                        {/* Momentum */}
+                        <td className="px-4 py-3">
+                          <MomentumDots count={
+                            deals.filter((d) => d.company_id != null && d.company_id === deal.company_id).length
+                          } />
+                        </td>
                         {/* Geo */}
-                        <td className="px-4 py-3 text-xs text-zinc-400 uppercase">
-                          {deal.geo ?? '—'}
+                        <td className="px-4 py-3 text-xs text-zinc-400 uppercase font-mono">
+                          {deal.geo ? (
+                            <span>{GEO_FLAGS[deal.geo] ?? ''} {deal.geo}</span>
+                          ) : <span className="text-zinc-600">—</span>}
                         </td>
                         {/* Investors */}
                         <td className="px-4 py-3 text-xs text-zinc-400 truncate max-w-[160px]">

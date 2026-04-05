@@ -61,31 +61,52 @@ export default function FilterBar({
   return (
     <div className="flex flex-wrap gap-2 items-center py-3">
       {/* Deal Type */}
-      <select
-        value={filters.dealType}
-        onChange={(e) => update({ dealType: e.target.value })}
-        className={selectClass}
-      >
-        <option value="">All Types</option>
-        <option value="vc">VC</option>
-        <option value="ma">M&A</option>
-        <option value="crypto">Crypto</option>
-        <option value="ipo">IPO</option>
-      </select>
+      <div className="flex items-center gap-1 flex-wrap">
+        {(['', 'vc', 'ma', 'crypto', 'ipo'] as const).map((type) => {
+          const label = type === '' ? 'All' : type.toUpperCase()
+          const isActive = filters.dealType === type
+          const activeColors: Record<string, string> = {
+            vc:     'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+            ma:     'bg-sky-500/20 text-sky-300 border-sky-500/40',
+            crypto: 'bg-violet-500/20 text-violet-300 border-violet-500/40',
+            ipo:    'bg-rose-500/20 text-rose-300 border-rose-500/40',
+          }
+          return (
+            <button
+              key={type}
+              onClick={() => onFilterChange({ ...filters, dealType: type })}
+              className={`text-xs px-3 py-1 rounded-full border font-mono transition-colors ${
+                isActive
+                  ? (activeColors[type] ?? 'bg-amber-500/20 text-amber-300 border-amber-500/40')
+                  : 'text-zinc-500 border-zinc-700 hover:text-zinc-300 hover:border-zinc-600'
+              }`}
+            >
+              {label}
+            </button>
+          )
+        })}
+      </div>
 
       {/* Sector */}
-      <select
-        value={filters.sector}
-        onChange={(e) => update({ sector: e.target.value })}
-        className={selectClass}
-      >
-        <option value="">All Sectors</option>
-        {sectors.map((s) => (
-          <option key={s} value={s}>
-            {s}
-          </option>
-        ))}
-      </select>
+      <div className="flex items-center gap-1 flex-wrap">
+        {(['', ...sectors] as string[]).map((s) => {
+          const label = s === '' ? 'All sectors' : s
+          const isActive = filters.sector === s
+          return (
+            <button
+              key={s}
+              onClick={() => onFilterChange({ ...filters, sector: s })}
+              className={`text-xs px-3 py-1 rounded-full border font-mono transition-colors capitalize ${
+                isActive
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                  : 'text-zinc-500 border-zinc-700 hover:text-zinc-300 hover:border-zinc-600'
+              }`}
+            >
+              {label}
+            </button>
+          )
+        })}
+      </div>
 
       {/* Geo */}
       <select
