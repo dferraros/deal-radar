@@ -76,6 +76,28 @@ const DEAL_TYPE_BG: Record<string, string> = {
   unknown: 'bg-zinc-900',
 }
 
+const DEAL_TYPE_DOT: Record<string, string> = {
+  vc:      'bg-emerald-400',
+  crypto:  'bg-violet-400',
+  ma:      'bg-sky-400',
+  ipo:     'bg-rose-400',
+  unknown: 'bg-zinc-600',
+}
+
+const DEAL_TYPE_TEXT: Record<string, string> = {
+  vc:      'text-emerald-400',
+  crypto:  'text-violet-400',
+  ma:      'text-sky-400',
+  ipo:     'text-rose-400',
+  unknown: 'text-zinc-500',
+}
+
+const AMOUNT_BAR_COLOR: Record<string, string> = {
+  mega:   'bg-gradient-to-r from-amber-400 to-orange-400',
+  large:  'bg-gradient-to-r from-emerald-500 to-emerald-400',
+  normal: 'bg-gradient-to-r from-zinc-500 to-zinc-400',
+}
+
 const SECTOR_PILL_COLORS: Record<string, string> = {
   crypto:    'bg-violet-500/15 text-violet-300 border-violet-500/30',
   fintech:   'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
@@ -342,6 +364,11 @@ export default function DealFeed() {
     return { totalCapital, biggest, topSector, count: deals.length }
   }, [deals])
 
+  const maxAmount = useMemo(() => {
+    const amounts = deals.filter(d => (d.amount_usd ?? 0) > 0).map(d => d.amount_usd!)
+    return amounts.length > 0 ? Math.max(...amounts) : 1
+  }, [deals])
+
   // Task 4: Sorted deals
   const sortedDeals = useMemo(() => {
     if (!sortKey) return deals
@@ -401,56 +428,42 @@ export default function DealFeed() {
       </div>
 
       {/* ── Hero stats band ──────────────────────────────────────── */}
-      <div className="terminal-bg border-b border-zinc-800/60 px-6 py-6">
-        <div className="flex items-end justify-between gap-6 flex-wrap">
-          {/* Primary stat: capital */}
+      <div className="terminal-bg border-b border-zinc-800/60 px-6 py-5">
+        <div className="flex items-center gap-8 flex-wrap">
+          {/* Primary: 7D Capital */}
           <div>
-            <div className="text-[10px] uppercase tracking-[0.2em] text-zinc-500 font-mono mb-2">
-              Capital Raised · 7 Days
-            </div>
-            <div className="flex items-end gap-3">
-              <span className="stat-number text-5xl font-black text-emerald-400 amount-glow">
-                {loading ? '—' : weekCapital > 0 ? fmtAmount(weekCapital) : '$0'}
+            <div className="text-[9px] uppercase tracking-[0.25em] text-zinc-600 font-mono mb-1">Capital · 7D</div>
+            <div className="flex items-baseline gap-1.5">
+              <span className="stat-number text-[2.6rem] font-black text-emerald-400 amount-glow leading-none">
+                {loading ? '—' : (weekCapital > 0 ? fmtAmount(weekCapital) : '$0')}
               </span>
-              <span className="text-zinc-600 font-mono text-sm mb-1 pb-0.5">USD</span>
+              <span className="text-zinc-700 font-mono text-xs">USD</span>
             </div>
-            <div className="text-xs text-zinc-500 font-mono mt-1.5">
-              {loading ? '…' : `${weekDeals.length} deals`}
+            <div className="text-[10px] text-zinc-600 font-mono mt-1 flex items-center gap-2">
+              <span>{loading ? '…' : `${weekDeals.length} deals`}</span>
               {kpis?.topSector && kpis.topSector !== '—' && (
-                <span className="ml-2 text-zinc-600">· top sector: <span className="text-zinc-400 capitalize">{kpis.topSector}</span></span>
+                <span className="text-zinc-700">· <span className="text-zinc-500 capitalize">{kpis.topSector}</span></span>
               )}
               {newCount > 0 && (
-                <span className="ml-2 text-blue-400">· {newCount} new since last visit</span>
+                <span className="text-blue-500/80">· {newCount} new</span>
               )}
             </div>
           </div>
 
-          {/* Secondary stats */}
-          <div className="flex items-stretch gap-0 border border-zinc-800 rounded-lg overflow-hidden">
+          {/* Divider */}
+          <div className="h-10 w-px bg-zinc-800 self-center" />
+
+          {/* Secondary stats — compact horizontal strip */}
+          <div className="flex items-center gap-6">
             {[
-              {
-                label: 'Total Loaded',
-                value: loading ? '—' : String(kpis?.count ?? 0),
-                sub: 'deals',
-                color: 'text-zinc-100',
-              },
-              {
-                label: 'All-Time Capital',
-                value: loading ? '—' : fmtAmount(kpis?.totalCapital),
-                sub: 'USD',
-                color: 'text-zinc-100',
-              },
-              {
-                label: 'Biggest',
-                value: loading ? '—' : (kpis?.biggest ? fmtAmount(kpis.biggest.amount_usd) : '—'),
-                sub: kpis?.biggest?.company_name ?? '',
-                color: 'text-amber-400',
-              },
-            ].map(({ label, value, sub, color }) => (
-              <div key={label} className="bg-zinc-950 px-5 py-3 border-r border-zinc-800 last:border-r-0 min-w-[110px]">
-                <div className="text-[9px] uppercase tracking-widest text-zinc-600 font-mono mb-1.5">{label}</div>
-                <div className={`stat-number text-xl font-bold ${color} tabular`}>{value}</div>
-                {sub && <div className="text-[10px] text-zinc-600 font-mono mt-0.5 truncate max-w-[100px]">{sub}</div>}
+              { label: 'Deals', value: loading ? '—' : String(kpis?.count ?? 0), color: 'text-zinc-200' },
+              { label: 'All-Time', value: loading ? '—' : fmtAmount(kpis?.totalCapital), color: 'text-zinc-200' },
+              { label: 'Biggest', value: loading ? '—' : (kpis?.biggest ? fmtAmount(kpis.biggest.amount_usd) : '—'), color: 'text-amber-400', sub: kpis?.biggest?.company_name },
+            ].map(({ label, value, color, sub }) => (
+              <div key={label}>
+                <div className="text-[9px] uppercase tracking-widest text-zinc-700 font-mono mb-0.5">{label}</div>
+                <div className={`stat-number text-lg font-bold ${color} tabular-nums leading-tight`}>{value}</div>
+                {sub && <div className="text-[9px] text-zinc-600 font-mono truncate max-w-[90px]">{sub}</div>}
               </div>
             ))}
           </div>
@@ -458,9 +471,9 @@ export default function DealFeed() {
 
         {/* AI Briefing strip */}
         {briefing?.ai_summary && (
-          <div className="mt-4 flex items-start gap-2 border border-amber-500/20 bg-amber-500/5 rounded-lg px-4 py-2.5">
-            <span className="text-[9px] uppercase tracking-widest text-amber-500 font-mono mt-0.5 shrink-0">AI</span>
-            <p className="text-xs text-zinc-400 leading-relaxed">{briefing.ai_summary}</p>
+          <div className="mt-4 flex items-start gap-2.5 border border-amber-500/15 bg-amber-500/[0.04] rounded-lg px-4 py-2.5">
+            <span className="text-[9px] uppercase tracking-widest text-amber-500/80 font-mono mt-0.5 shrink-0">AI</span>
+            <p className="text-[11px] text-zinc-500 leading-relaxed">{briefing.ai_summary}</p>
           </div>
         )}
       </div>
@@ -562,167 +575,167 @@ export default function DealFeed() {
             </div>
           ) : (
             <>
-              <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+              <div className="border border-zinc-800 rounded-lg overflow-hidden">
                 <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-zinc-800">
-                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium w-[200px]">
-                        Company
+                  <thead className="sticky top-0 z-10">
+                    <tr className="bg-zinc-900/95 backdrop-blur border-b border-zinc-800">
+                      <th className="text-left px-4 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium w-[200px]">Company</th>
+                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium w-[100px]">Type</th>
+                      <th onClick={() => toggleSort('amount_usd')} className="text-right px-4 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium cursor-pointer hover:text-zinc-400 select-none w-[200px]">
+                        Amount {sortKey === 'amount_usd' ? (sortDir === 'desc' ? '↓' : '↑') : <span className="text-zinc-800">↕</span>}
                       </th>
-                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
-                        Round
+                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium">Sector</th>
+                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium">Tech</th>
+                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium">Geo</th>
+                      <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium">Lead Investor</th>
+                      <th onClick={() => toggleSort('announced_date')} className="text-right px-4 py-2 text-[10px] uppercase tracking-widest text-zinc-600 font-medium cursor-pointer hover:text-zinc-400 select-none">
+                        Date {sortKey === 'announced_date' ? (sortDir === 'desc' ? '↓' : '↑') : <span className="text-zinc-800">↕</span>}
                       </th>
-                      <th onClick={() => toggleSort('amount_usd')} className="text-right px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium cursor-pointer hover:text-zinc-300 select-none">
-                        Amount {sortKey === 'amount_usd' ? (sortDir === 'desc' ? '↓' : '↑') : <span className="text-zinc-700">↕</span>}
-                      </th>
-                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
-                        Sector
-                      </th>
-                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
-                        Tech
-                      </th>
-                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
-                        Geo
-                      </th>
-                      <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
-                        Investors
-                      </th>
-                      <th onClick={() => toggleSort('announced_date')} className="text-right px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium cursor-pointer hover:text-zinc-300 select-none">
-                        Date {sortKey === 'announced_date' ? (sortDir === 'desc' ? '↓' : '↑') : <span className="text-zinc-700">↕</span>}
-                      </th>
-                      <th className="px-2 py-3" />
+                      <th className="px-2 py-2 w-[60px]" />
                     </tr>
                   </thead>
-                  <tbody>
-                    {sortedDeals.map((deal) => {
-                      const roundDisplay = fmtRound(deal.round_label)
+                  <tbody className="bg-zinc-950">
+                    {sortedDeals.map((deal, idx) => {
                       const tier = dealTier(deal.amount_usd)
                       const favicon = getFaviconUrl(deal.company_website, deal.source_url)
+                      const typeKey = deal.deal_type ?? 'unknown'
+                      const barPct = deal.amount_usd ? Math.min(100, (deal.amount_usd / maxAmount) * 100) : 0
+                      const isNew = lastVisit && deal.created_at && new Date(deal.created_at) > lastVisit
                       return (
-                      <tr
-                        key={deal.id}
-                        onClick={() => deal.company_id && navigate(`/company/${deal.company_id}`)}
-                        className={`
-                          deal-row border-b border-zinc-800/40 cursor-pointer group
-                          ${tier === 'mega' ? 'mega-deal-row border-l-[3px] border-l-amber-400/80' : ''}
-                          ${tier === 'large' ? 'hover:bg-zinc-800/25 border-l-[3px] border-l-zinc-600/80' : ''}
-                          ${tier === 'normal' ? `hover:bg-zinc-800/25 border-l-[3px] ${DEAL_TYPE_LEFT_BORDER[deal.deal_type ?? 'unknown'] ?? DEAL_TYPE_LEFT_BORDER['unknown']}` : ''}
-                          ${lastVisit && deal.created_at && new Date(deal.created_at) > lastVisit ? 'border-r-2 border-r-blue-500/60' : ''}
-                        `}
-                      >
-                        {/* Company */}
-                        <td className="px-4 py-2.5">
-                          <div className="flex items-center gap-2">
-                            {favicon ? (
-                              <img
-                                src={favicon}
-                                alt=""
-                                className="w-4 h-4 rounded-sm opacity-80 flex-shrink-0"
-                                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
-                              />
-                            ) : (
-                              <CompanyAvatar name={deal.company_name ?? '?'} size={16} />
-                            )}
-                            <div className="flex items-center gap-1 min-w-0">
-                              <span className="text-sm font-medium text-zinc-100 group-hover:text-white truncate max-w-[130px]">
+                        <tr
+                          key={deal.id}
+                          onClick={() => deal.company_id && navigate(`/company/${deal.company_id}`)}
+                          className={`
+                            deal-row border-b border-zinc-800/30 cursor-pointer group
+                            ${idx % 2 === 1 ? 'bg-zinc-900/20' : ''}
+                            ${tier === 'mega' ? 'mega-deal-row border-l-2 border-l-amber-400/70' : `border-l-2 ${DEAL_TYPE_LEFT_BORDER[typeKey]}`}
+                            ${isNew ? 'border-r-2 border-r-blue-500/50' : ''}
+                          `}
+                        >
+                          {/* Company */}
+                          <td className="px-4 py-2">
+                            <div className="flex items-center gap-2 min-w-0">
+                              {favicon ? (
+                                <img src={favicon} alt="" className="w-3.5 h-3.5 rounded-sm opacity-70 flex-shrink-0"
+                                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                              ) : (
+                                <CompanyAvatar name={deal.company_name ?? '?'} size={14} />
+                              )}
+                              <span className="text-[13px] font-medium text-zinc-100 group-hover:text-white truncate max-w-[140px]">
                                 {deal.company_name ?? '—'}
                               </span>
-                              <SourceBadge source={deal.source_name} />
+                              {deal.source_name && (
+                                <SourceBadge source={deal.source_name} />
+                              )}
                               {deal.confidence !== undefined && deal.confidence < 0.5 && (
-                                <span
-                                  title={`AI confidence: ${(deal.confidence * 100).toFixed(0)}%`}
-                                  className="w-1.5 h-1.5 rounded-full bg-amber-500/60 inline-block ml-1 shrink-0"
-                                />
+                                <span title={`AI confidence: ${(deal.confidence * 100).toFixed(0)}%`}
+                                  className="w-1.5 h-1.5 rounded-full bg-amber-500/60 shrink-0" />
                               )}
                             </div>
-                          </div>
-                        </td>
-                        {/* Round */}
-                        <td className="px-4 py-3">
-                          <span className="text-xs px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 font-mono uppercase tracking-wide border border-zinc-700">
-                            {roundDisplay !== '—' ? roundDisplay : (deal.deal_type?.toUpperCase() || '—')}
-                          </span>
-                        </td>
-                        {/* Amount */}
-                        <td className={`px-4 py-2.5 font-mono text-sm tabular-nums font-semibold text-right
-                          ${tier === 'mega' ? 'text-amber-400' : 'text-zinc-200'}`}>
-                          {deal.amount_usd ? (
-                            fmtAmount(deal.amount_usd)
-                          ) : (
-                            <span className="text-zinc-600 text-xs font-mono">—</span>
-                          )}
-                        </td>
-                        {/* Sector */}
-                        <td className="px-4 py-3">
-                          <div className="flex gap-1 flex-wrap">
-                            {(deal.sector || []).slice(0, 2).map((s) => (
-                              <SectorPill key={s} sector={s} />
-                            ))}
-                            {(deal.sector || []).length === 0 && <span className="text-zinc-600 text-xs">—</span>}
-                          </div>
-                        </td>
-                        {/* Tech Stack */}
-                        <td className="px-4 py-3">
-                          <div className="flex flex-wrap gap-1">
-                            {(deal.tech_stack || []).slice(0, 3).map(tech => (
-                              <span key={tech} className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 border border-zinc-700 font-mono">
-                                {tech}
+                          </td>
+
+                          {/* Type + Round */}
+                          <td className="px-3 py-2">
+                            <span className={`flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-wider font-semibold ${DEAL_TYPE_TEXT[typeKey] ?? DEAL_TYPE_TEXT['unknown']}`}>
+                              <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${DEAL_TYPE_DOT[typeKey] ?? DEAL_TYPE_DOT['unknown']}`} />
+                              {fmtRound(deal.round_label) !== '—'
+                                ? fmtRound(deal.round_label)
+                                : (deal.deal_type?.toUpperCase() || '—')}
+                            </span>
+                          </td>
+
+                          {/* Amount + heat bar */}
+                          <td className="px-4 py-2 w-[200px]">
+                            <div className="flex items-center gap-2">
+                              {/* heat bar track */}
+                              <div className="flex-1 h-[3px] bg-zinc-800 rounded-full overflow-hidden">
+                                {barPct > 0 && (
+                                  <div
+                                    className={`h-full rounded-full ${AMOUNT_BAR_COLOR[tier]}`}
+                                    style={{ width: `${barPct}%` }}
+                                  />
+                                )}
+                              </div>
+                              <span className={`font-mono text-xs tabular-nums font-semibold w-[56px] text-right ${
+                                tier === 'mega' ? 'text-amber-400' :
+                                tier === 'large' ? 'text-emerald-400' : 'text-zinc-300'
+                              }`}>
+                                {deal.amount_usd ? fmtAmount(deal.amount_usd) : <span className="text-zinc-700">—</span>}
                               </span>
-                            ))}
-                            {(deal.tech_stack || []).length > 3 && (
-                              <span className="text-[10px] text-zinc-600">+{deal.tech_stack!.length - 3}</span>
+                            </div>
+                          </td>
+
+                          {/* Sector */}
+                          <td className="px-3 py-2">
+                            <div className="flex gap-1">
+                              {(deal.sector || []).slice(0, 2).map((s) => (
+                                <SectorPill key={s} sector={s} />
+                              ))}
+                              {(deal.sector || []).length === 0 && <span className="text-zinc-700 text-xs">—</span>}
+                            </div>
+                          </td>
+
+                          {/* Tech Stack */}
+                          <td className="px-3 py-2">
+                            <div className="flex flex-wrap gap-1">
+                              {(deal.tech_stack || []).slice(0, 2).map(tech => (
+                                <span key={tech} className="text-[10px] px-1.5 py-0.5 rounded bg-zinc-800/80 text-zinc-500 border border-zinc-700/60 font-mono">
+                                  {tech}
+                                </span>
+                              ))}
+                              {(deal.tech_stack || []).length > 2 && (
+                                <span className="text-[10px] text-zinc-700 font-mono">+{deal.tech_stack!.length - 2}</span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Geo */}
+                          <td className="px-3 py-2">
+                            {deal.geo
+                              ? <span className="text-[11px] text-zinc-400 uppercase font-mono">{GEO_FLAGS[deal.geo] ?? ''} {deal.geo}</span>
+                              : <span className="text-zinc-700 text-xs">—</span>}
+                          </td>
+
+                          {/* Lead Investor */}
+                          <td className="px-3 py-2 text-[11px] text-zinc-500 font-mono truncate max-w-[150px]">
+                            {deal.lead_investor ?? <span className="text-zinc-700">—</span>}
+                          </td>
+
+                          {/* Date */}
+                          <td className="px-4 py-2 text-right font-mono text-[11px] text-zinc-600 tabular-nums">
+                            {deal.announced_date
+                              ? new Date(deal.announced_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+                              : '—'}
+                          </td>
+
+                          {/* Intel quick-add */}
+                          <td className="px-2 py-2">
+                            {deal.company_website && (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); addToIntel(deal.company_name ?? '', deal.company_website!) }}
+                                title="Analyze with Tech Intel"
+                                className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-mono px-2 py-0.5 rounded border border-zinc-700 text-zinc-600 hover:text-amber-400 hover:border-amber-500/50"
+                              >
+                                + Intel
+                              </button>
                             )}
-                          </div>
-                        </td>
-                        {/* Geo */}
-                        <td className="px-4 py-3 text-xs text-zinc-400 uppercase font-mono">
-                          {deal.geo ? (
-                            <span>{GEO_FLAGS[deal.geo] ?? ''} {deal.geo}</span>
-                          ) : <span className="text-zinc-600">—</span>}
-                        </td>
-                        {/* Investors */}
-                        <td className="px-4 py-3 text-xs text-zinc-400 truncate max-w-[160px]">
-                          {deal.lead_investor ?? '—'}
-                        </td>
-                        {/* Date */}
-                        <td className="px-4 py-3 text-right font-mono text-xs text-zinc-500">
-                          {deal.announced_date
-                            ? new Date(deal.announced_date).toLocaleDateString('en-US', {
-                                month: 'short',
-                                day: 'numeric',
-                              })
-                            : '—'}
-                        </td>
-                        {/* Intel quick-add */}
-                        <td className="px-2 py-2">
-                          {deal.company_website && (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                addToIntel(deal.company_name ?? '', deal.company_website!)
-                              }}
-                              title="Analyze with Tech Intel"
-                              className="opacity-0 group-hover:opacity-100 transition-opacity text-[10px] font-mono px-2 py-1 rounded border border-zinc-700 text-zinc-500 hover:text-amber-400 hover:border-amber-500/50 whitespace-nowrap"
-                            >
-                              + Intel
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    )})}
+                          </td>
+                        </tr>
+                      )
+                    })}
                   </tbody>
                 </table>
               </div>
 
               {/* Load more */}
               {hasMore && (
-                <div className="mt-4 text-center">
+                <div className="mt-4 flex justify-center">
                   <button
                     onClick={loadMore}
                     disabled={loadingMore}
-                    className="text-xs text-blue-400 hover:text-blue-300 underline disabled:opacity-50 font-mono"
+                    className="text-xs font-mono px-4 py-1.5 rounded border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-600 disabled:opacity-40 transition-colors"
                   >
-                    {loadingMore ? 'Loading...' : 'Load more deals'}
+                    {loadingMore ? 'Loading…' : `Load more deals ↓`}
                   </button>
                 </div>
               )}

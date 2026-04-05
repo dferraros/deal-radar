@@ -128,3 +128,13 @@ tr.deal-row {
 .mega-deal-row:hover {
   background: linear-gradient(90deg, rgba(251,191,36,0.08) 0%, rgba(39,39,42,0.3) 40%) !important;
 }
+
+/* ─── Deal row hover (non-mega) ──────────────────────────────── */
+tr.deal-row:not(.mega-deal-row):hover {
+  background-color: rgba(39,39,42,0.4) !important;
+}
+
+/* ─── Table sticky header shadow ─────────────────────────────── */
+thead.sticky tr {
+  box-shadow: 0 1px 0 rgba(63,63,70,0.8);
+}
