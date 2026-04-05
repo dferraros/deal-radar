@@ -25,14 +25,44 @@ from backend.models import (
     IntelCompanyProfile, IntelOntologyNode, IntelOntologyAlias,
     IntelObservation, IntelObservationEvidence,
 )
-from backend.intel.crawler import ApifyCrawler
+from backend.intel.crawler import ApifyCrawler, CrawlResult
 from backend.intel.extractors import IntelExtractor
 from backend.intel.normalizer import OntologyNormalizer
+from backend.intel.job_scraper import JobScraper, JobPosting
+from backend.intel.github_analyzer import GitHubAnalyzer, GitHubResult
 
 logger = logging.getLogger(__name__)
 
 _CHUNK_SIZE = 500   # words per chunk
-_PRIORITY_SOURCE_TYPES = ["product", "docs", "homepage", "blog", "careers", "github", "other"]
+_PRIORITY_SOURCE_TYPES = [
+    "github",        # explicit dependency signals — highest confidence
+    "trust_center",  # vendor/subprocessor lists — ground truth
+    "job_posting",   # tech stack from JD requirements
+    "product", "docs", "homepage", "blog", "careers", "status_page", "other",
+]
+
+
+def _job_posting_to_crawl_result(jp: JobPosting) -> CrawlResult:
+    """Convert a JobPosting to a CrawlResult for uniform pipeline processing."""
+    return CrawlResult(
+        url=jp.url,
+        source_type="job_posting",
+        clean_text=f"JOB POSTING: {jp.title}\n\n{jp.description}",
+    )
+
+
+def _github_result_to_crawl_result(gr: GitHubResult) -> CrawlResult:
+    """Convert a GitHubResult to a CrawlResult for uniform pipeline processing."""
+    parts = [f"GITHUB REPO: {gr.org}/{gr.repo}"]
+    if gr.language:
+        parts.append(f"Primary language: {gr.language}")
+    if gr.sbom_text:
+        parts.append(f"\nDependencies (SBOM):\n{gr.sbom_text}")
+    return CrawlResult(
+        url=gr.url or f"https://github.com/{gr.org}/{gr.repo}",
+        source_type="github",
+        clean_text="\n".join(parts),
+    )
 
 
 def _chunk_text(text: str, chunk_size: int = _CHUNK_SIZE) -> list[str]:
@@ -118,6 +148,26 @@ async def run_intel_pipeline(queue_id: uuid.UUID, db: AsyncSession) -> None:
         queue.completed_at = datetime.utcnow()
         await db.commit()
         return
+
+    # ── Stage 1b: Enrich with job postings (Phase A) ─────────────────────────
+    try:
+        job_scraper = JobScraper()
+        job_postings = await job_scraper.detect_and_scrape(crawl_results)
+        if job_postings:
+            logger.info("[Intel] Found %d job postings for %s", len(job_postings), queue.website)
+            crawl_results.extend(_job_posting_to_crawl_result(jp) for jp in job_postings)
+    except Exception as exc:
+        logger.warning("[Intel] JobScraper failed for %s: %s", queue.website, exc)
+
+    # ── Stage 1c: Enrich with GitHub SBOM (Phase B) ──────────────────────────
+    try:
+        github_analyzer = GitHubAnalyzer()
+        github_results = await github_analyzer.analyze(queue.website)
+        if github_results:
+            logger.info("[Intel] Found %d GitHub repos for %s", len(github_results), queue.website)
+            crawl_results.extend(_github_result_to_crawl_result(gr) for gr in github_results)
+    except Exception as exc:
+        logger.warning("[Intel] GitHubAnalyzer failed for %s: %s", queue.website, exc)
 
     # ── Stage 2: Store sources + chunks ──────────────────────────────────────
     queue.status = "extracting"
