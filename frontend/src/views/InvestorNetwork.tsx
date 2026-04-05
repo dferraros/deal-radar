@@ -71,6 +71,17 @@ export default function InvestorNetwork() {
     const maxWeight = d3.max(data.edges, (e) => e.weight) || 1
     const strokeW = d3.scaleLinear().domain([1, maxWeight]).range([1, 4])
 
+    // Quartile computation for node coloring
+    const sortedCounts = [...data.nodes].sort((a, b) => a.deal_count - b.deal_count)
+    const q1 = sortedCounts[Math.floor(sortedCounts.length * 0.25)]?.deal_count ?? 1
+    const q3 = sortedCounts[Math.floor(sortedCounts.length * 0.75)]?.deal_count ?? 1
+
+    function nodeColor(deal_count: number): string {
+      if (deal_count >= q3) return '#34d399'  // emerald-400 — high
+      if (deal_count >= q1) return '#f59e0b'  // amber-400 — mid
+      return '#52525b'                         // zinc-600 — low
+    }
+
     const simulation = d3
       .forceSimulation(data.nodes as d3.SimulationNodeDatum[])
       .force('link', d3.forceLink(data.edges).id((d: any) => d.id).distance(80))
@@ -83,7 +94,8 @@ export default function InvestorNetwork() {
       .selectAll('line')
       .data(data.edges)
       .join('line')
-      .attr('stroke', '#3f3f46')
+      .attr('stroke', (d) => d.weight >= 3 ? '#f59e0b' : '#3f3f46')
+      .attr('stroke-opacity', (d) => d.weight >= 3 ? 0.6 : 0.4)
       .attr('stroke-width', (d) => strokeW(d.weight))
 
     const node = g
@@ -92,12 +104,12 @@ export default function InvestorNetwork() {
       .data(data.nodes)
       .join('circle')
       .attr('r', (d) => r(d.deal_count))
-      .attr('fill', '#f59e0b')
+      .attr('fill', (d) => nodeColor(d.deal_count))
       .attr('fill-opacity', 0.8)
       .attr('stroke', '#78716c')
       .attr('stroke-width', 1)
       .call(
-        d3
+        (d3
           .drag<SVGCircleElement, Node>()
           .on('start', (event, d) => {
             if (!event.active) simulation.alphaTarget(0.3).restart()
@@ -112,8 +124,31 @@ export default function InvestorNetwork() {
             if (!event.active) simulation.alphaTarget(0)
             d.fx = null
             d.fy = null
-          })
+          })) as any
       )
+
+    // Focus mode on node hover
+    node
+      .on('mouseover', (_event, d) => {
+        link.attr('stroke-opacity', (e: any) => {
+          const src = typeof e.source === 'object' ? (e.source as any).id : e.source
+          const tgt = typeof e.target === 'object' ? (e.target as any).id : e.target
+          return (src === d.id || tgt === d.id) ? 0.8 : 0.05
+        })
+        node.attr('fill-opacity', (n) => {
+          if (n.id === d.id) return 1
+          const connected = data.edges.some((e) => {
+            const src = typeof e.source === 'object' ? (e.source as any).id : e.source
+            const tgt = typeof e.target === 'object' ? (e.target as any).id : e.target
+            return (src === d.id && tgt === n.id) || (tgt === d.id && src === n.id)
+          })
+          return connected ? 0.9 : 0.15
+        })
+      })
+      .on('mouseout', () => {
+        link.attr('stroke-opacity', (d: any) => d.weight >= 3 ? 0.6 : 0.4)
+        node.attr('fill-opacity', 0.8)
+      })
 
     const label = g
       .append('g')
@@ -138,7 +173,7 @@ export default function InvestorNetwork() {
       label.attr('x', (d: any) => d.x).attr('y', (d: any) => d.y)
     })
 
-    return () => simulation.stop()
+    return () => { simulation.stop() }
   }, [data])
 
   return (
