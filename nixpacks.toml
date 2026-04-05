@@ -1,3 +1,8 @@
+[providers]
+# Only use Python provider — frontend is pre-built and committed to dist/
+# Prevents nixpacks from auto-detecting Node.js and running npm run build
+only = ["python"]
+
 [phases.setup]
 nixPkgs = ["python311", "gcc"]
 
