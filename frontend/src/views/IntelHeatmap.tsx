@@ -78,7 +78,7 @@ export default function IntelHeatmap() {
   const maxScore = data.reduce((m, d) => Math.max(m, d.capital_weighted_score), 1)
 
   function getCellClass(score: number): string {
-    if (score === 0 || !score) return 'bg-zinc-900 border-zinc-800'
+    if (score === 0 || !score) return 'bg-white border-slate-200'
     const r = score / maxScore
     if (r < 0.05) return 'bg-emerald-950 border-emerald-900/40'
     if (r < 0.15) return 'bg-emerald-900 border-emerald-800/50'
@@ -97,15 +97,15 @@ export default function IntelHeatmap() {
     <div className="flex flex-col h-full overflow-auto">
       <div className="px-6 pt-6 pb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-zinc-50 flex items-center gap-2">
+          <h1 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
             <BarChart2 size={18} className="text-amber-400" strokeWidth={1.5} />
             Technology Trend Heatmap
           </h1>
-          <p className="text-xs text-zinc-500 mt-0.5">
+          <p className="text-xs text-slate-400 mt-0.5">
             Capital-weighted primitive adoption over time
           </p>
         </div>
-        <button onClick={() => navigate('/intel')} className="text-xs text-zinc-500 hover:text-zinc-300 flex items-center gap-1">
+        <button onClick={() => navigate('/intel')} className="text-xs text-slate-400 hover:text-slate-700 flex items-center gap-1">
           <ArrowLeft size={12} /> Queue
         </button>
       </div>
@@ -113,8 +113,8 @@ export default function IntelHeatmap() {
       <div className="flex-1 px-6 pb-6">
         {loading ? <LoadingSpinner /> : error ? <ErrorBanner message={error} /> :
           sortedNodes.length === 0 ? (
-            <div className="flex items-center justify-center h-64 bg-zinc-900 border border-zinc-800 rounded-lg">
-              <p className="text-zinc-500 text-sm">No trend data yet — analyze some companies first.</p>
+            <div className="flex items-center justify-center h-64 bg-white border border-slate-200 rounded-lg">
+              <p className="text-slate-400 text-sm">No trend data yet — analyze some companies first.</p>
             </div>
           ) : (
             <>
@@ -126,7 +126,7 @@ export default function IntelHeatmap() {
                     className={`text-xs px-3 py-1.5 rounded font-mono transition-colors ${
                       activeLayer === tab.key
                         ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                        : 'bg-zinc-900 text-zinc-500 border border-zinc-800 hover:text-zinc-300'
+                        : 'bg-white text-slate-400 border border-slate-200 hover:text-slate-700'
                     }`}
                   >
                     {tab.label}
@@ -134,21 +134,21 @@ export default function IntelHeatmap() {
                 ))}
               </div>
 
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl overflow-auto">
+              <div className="bg-white border border-slate-200 rounded-xl overflow-auto">
                 <table className="text-xs w-full">
                   <thead>
-                    <tr className="border-b border-zinc-800">
-                      <th className="px-4 py-3 text-left font-mono text-zinc-500 sticky left-0 bg-zinc-900 min-w-[220px]">Primitive</th>
+                    <tr className="border-b border-slate-200">
+                      <th className="px-4 py-3 text-left font-mono text-slate-400 sticky left-0 bg-white min-w-[220px]">Primitive</th>
                       {periods.map((p) => (
-                        <th key={p} className="px-3 py-3 text-center font-mono text-zinc-500 min-w-[80px]">{formatPeriod(p)}</th>
+                        <th key={p} className="px-3 py-3 text-center font-mono text-slate-400 min-w-[80px]">{formatPeriod(p)}</th>
                       ))}
-                      <th className="px-3 py-3 text-center font-mono text-zinc-500 min-w-[60px]">Δ</th>
+                      <th className="px-3 py-3 text-center font-mono text-slate-400 min-w-[60px]">Δ</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredNodes.slice(0, 30).map((nodeId) => (
-                      <tr key={nodeId} className="border-b border-zinc-800/40">
-                        <td className="px-4 py-2 text-zinc-300 sticky left-0 bg-zinc-900 font-medium truncate max-w-[220px]">
+                      <tr key={nodeId} className="border-b border-slate-200/60">
+                        <td className="px-4 py-2 text-slate-700 sticky left-0 bg-white font-medium truncate max-w-[220px]">
                           {ontology[nodeId] || nodeId}
                         </td>
                         {periods.map((period) => {
@@ -161,7 +161,7 @@ export default function IntelHeatmap() {
                                 title={cell ? `${ontology[nodeId] || nodeId} · ${cell.company_count} companies · $${cell.capital_weighted_score.toFixed(0)}M capital` : 'No data'}
                                 className={`h-8 rounded border text-center flex items-center justify-center cursor-default transition-all hover:ring-1 hover:ring-emerald-400 ${getCellClass(score)}`}
                               >
-                                {companies > 0 && <span className="text-zinc-100/70 font-mono">{companies}</span>}
+                                {companies > 0 && <span className="text-slate-900/70 font-mono">{companies}</span>}
                               </div>
                             </td>
                           )
