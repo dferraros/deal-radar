@@ -90,6 +90,39 @@ EVIDENCE_TEXT:
 _MODEL = "claude-haiku-4-5-20251001"
 _MAX_TOKENS = 1200
 
+_BETS_MODEL = "claude-sonnet-4-6"
+_BETS_MAX_TOKENS = 1200
+
+_BETS_SYSTEM = (
+    "You are a senior software engineer doing competitive technical intelligence. "
+    "Analyze companies from first principles to understand what technical theses "
+    "they are executing — not what tools they use, but what bets they are making "
+    "about how software and systems should be built. "
+    "Return valid JSON only. No markdown, no explanation."
+)
+
+_BETS_USER = """\
+Company: {company_name}
+Job to be done: {jtbd}
+Summary: {summary}
+Primitives detected (by layer):
+{primitives_text}
+
+Context from crawled sources:
+{context_text}
+
+Identify 3-5 technical bets this company is making.
+A "technical bet" is an architectural thesis — the reasoning behind a system design decision.
+
+For each bet return:
+- thesis: one crisp sentence stating the bet
+- implication: 2-3 sentences on what this means architecturally and competitively
+- signals: 2-4 specific pieces of evidence from primitives or context
+- confidence: 0.0-1.0
+
+Return JSON: {{"bets": [{{"thesis": "...", "implication": "...", "signals": ["..."], "confidence": 0.85}}]}}
+"""
+
 
 @dataclass
 class IntelProfile:
@@ -110,6 +143,14 @@ class IntelPrimitive:
     explicit_vs_inferred: str = "inferred"
     confidence: float = 0.0
     evidence_snippets: list = field(default_factory=list)
+
+
+@dataclass
+class TechnicalBet:
+    thesis: str = ""
+    implication: str = ""
+    signals: list = field(default_factory=list)
+    confidence: float = 0.0
 
 
 class IntelExtractor:
@@ -184,4 +225,52 @@ class IntelExtractor:
             return primitives
         except Exception as exc:
             logger.error("[IntelExtractor] Primitive extraction failed: %s", exc)
+            return []
+
+    async def extract_bets(
+        self,
+        company_name: str,
+        profile: "IntelProfile",
+        primitives: list["IntelPrimitive"],
+        context_text: str,
+    ) -> list[TechnicalBet]:
+        """Extract 3-5 architectural theses using Sonnet. Never raises."""
+        import anthropic
+        by_layer: dict[str, list[str]] = {}
+        for p in primitives:
+            by_layer.setdefault(p.layer or "other", []).append(p.name)
+        primitives_text = "\n".join(
+            f"  {layer}: {', '.join(names)}" for layer, names in by_layer.items()
+        )
+        try:
+            client = anthropic.AsyncAnthropic(api_key=self._api_key)
+            message = await client.messages.create(
+                model=_BETS_MODEL,
+                max_tokens=_BETS_MAX_TOKENS,
+                system=_BETS_SYSTEM,
+                messages=[{"role": "user", "content": _BETS_USER.format(
+                    company_name=company_name,
+                    jtbd=profile.jtbd or "",
+                    summary=profile.summary or "",
+                    primitives_text=primitives_text,
+                    context_text=context_text[:4000],
+                )}],
+            )
+            text = message.content[0].text.strip()
+            if text.startswith("```"):
+                text = text.split("```")[1]
+                if text.startswith("json"):
+                    text = text[4:]
+            data = json.loads(text)
+            bets = []
+            for b in data.get("bets", []):
+                bets.append(TechnicalBet(
+                    thesis=str(b.get("thesis", "")),
+                    implication=str(b.get("implication", "")),
+                    signals=b.get("signals", []),
+                    confidence=float(b.get("confidence", 0.0)),
+                ))
+            return bets
+        except Exception as exc:
+            logger.error("[IntelExtractor] Bets extraction failed: %s", exc)
             return []
