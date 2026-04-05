@@ -17,24 +17,29 @@ branch_labels = None
 depends_on = None
 
 
+def _alter_if_text(table: str, column: str) -> str:
+    """DO block: clean bad values and alter column only if it's still TEXT."""
+    return f"""
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_name = '{table}' AND column_name = '{column}'
+      AND data_type IN ('text', 'character varying')
+  ) THEN
+    UPDATE {table} SET {column} = NULL
+    WHERE {column} IS NOT NULL AND {column}::text !~ '^[0-9]+(\\.[0-9]+)?$';
+    EXECUTE 'ALTER TABLE {table} ALTER COLUMN {column} TYPE double precision USING {column}::double precision';
+  END IF;
+END $$;
+"""
+
+
 def upgrade() -> None:
-    op.execute("SET lock_timeout = '5s'")
-
-    # Null out any non-numeric strings before casting — safer than USING CASE
-    op.execute("UPDATE intel_observations SET confidence = NULL WHERE confidence !~ '^[0-9]+(\\.[0-9]+)?$'")
-    op.execute("UPDATE intel_company_profiles SET profile_confidence = NULL WHERE profile_confidence !~ '^[0-9]+(\\.[0-9]+)?$'")
+    op.execute(_alter_if_text("intel_observations", "confidence"))
+    op.execute(_alter_if_text("intel_company_profiles", "profile_confidence"))
     for col in ("capital_weighted_score", "growth_rate", "novelty_score", "co_occurrence_density"):
-        op.execute(f"UPDATE intel_technology_scores SET {col} = NULL WHERE {col} !~ '^[0-9]+(\\.[0-9]+)?$'")
-
-    op.execute("ALTER TABLE intel_observations ALTER COLUMN confidence TYPE double precision USING confidence::double precision")
-    op.execute("ALTER TABLE intel_company_profiles ALTER COLUMN profile_confidence TYPE double precision USING profile_confidence::double precision")
-    op.execute("""
-        ALTER TABLE intel_technology_scores
-            ALTER COLUMN capital_weighted_score TYPE double precision USING capital_weighted_score::double precision,
-            ALTER COLUMN growth_rate TYPE double precision USING growth_rate::double precision,
-            ALTER COLUMN novelty_score TYPE double precision USING novelty_score::double precision,
-            ALTER COLUMN co_occurrence_density TYPE double precision USING co_occurrence_density::double precision
-    """)
+        op.execute(_alter_if_text("intel_technology_scores", col))
 
 
 def downgrade() -> None:
