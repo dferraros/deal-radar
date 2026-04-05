@@ -15,4 +15,5 @@ COPY . .
 
 EXPOSE 8000
 
-CMD ["/bin/sh", "-c", "python -m alembic upgrade head && uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+# Use a shell script so errors from uvicorn startup appear in logs
+CMD ["/bin/sh", "-c", "set -e && echo '=== starting alembic ===' && python -m alembic upgrade head && echo '=== alembic done, starting uvicorn ===' && exec uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
