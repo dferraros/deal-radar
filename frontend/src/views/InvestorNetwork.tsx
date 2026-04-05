@@ -176,11 +176,11 @@ export default function InvestorNetwork() {
     <div className="flex flex-col h-full">
       <div className="px-6 pt-6 pb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-zinc-50 flex items-center gap-2">
+          <h1 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
             <Network size={18} className="text-amber-400" strokeWidth={1.5} />
             Investor Network
           </h1>
-          <p className="text-xs text-zinc-500 mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5">
             Co-investment relationships — node size = deal count
           </p>
         </div>
@@ -192,7 +192,7 @@ export default function InvestorNetwork() {
               className={`text-xs px-3 py-1.5 rounded font-mono transition-colors ${
                 period === p
                   ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30'
-                  : 'text-zinc-500 hover:text-zinc-300 border border-zinc-800'
+                  : 'text-slate-500 hover:text-slate-700 border border-slate-200'
               }`}
             >
               {p.charAt(0).toUpperCase() + p.slice(1)}
@@ -207,11 +207,11 @@ export default function InvestorNetwork() {
         ) : error ? (
           <ErrorBanner message={error} />
         ) : !data || data.nodes.length === 0 ? (
-          <div className="flex items-center justify-center h-64 bg-zinc-900 border border-zinc-800 rounded-lg">
+          <div className="flex items-center justify-center h-64 bg-white border border-slate-200 shadow-sm rounded-lg">
             <p className="text-zinc-500 text-sm">No co-investment data for this period.</p>
           </div>
         ) : (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden h-[600px]">
+          <div className="bg-white border border-slate-200 shadow-sm rounded-lg overflow-hidden h-[600px]">
             <svg ref={svgRef} width="100%" height="100%" />
           </div>
         )}

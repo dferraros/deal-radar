@@ -81,9 +81,9 @@ export default function Heatmap() {
       {/* Page header */}
       <div className="mb-4 flex items-end justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-zinc-50">Sector Heatmap</h1>
+          <h1 className="text-lg font-semibold text-slate-900">Sector Heatmap</h1>
           {data && grandTotal > 0 && (
-            <p className="text-xs text-zinc-500 mt-0.5 font-mono">
+            <p className="text-xs text-slate-500 mt-0.5 font-mono">
               {fmtCapital(grandTotal)} across{' '}
               {data.cells.reduce((s, c) => s + c.deal_count, 0)} deals
             </p>
@@ -91,15 +91,15 @@ export default function Heatmap() {
         </div>
 
         {/* Period toggle */}
-        <div className="flex border border-zinc-700 rounded-md overflow-hidden">
+        <div className="flex border border-slate-200 rounded-md overflow-hidden">
           {(['weekly', 'monthly', 'quarterly'] as Period[]).map((p) => (
             <button
               key={p}
               onClick={() => setPeriod(p)}
               className={`px-4 py-1.5 text-xs font-semibold uppercase tracking-wide transition-colors ${
                 period === p
-                  ? 'bg-zinc-800 text-zinc-50'
-                  : 'text-zinc-400 hover:text-zinc-200 bg-transparent'
+                  ? 'bg-slate-100 text-slate-900'
+                  : 'text-slate-500 hover:text-slate-700 bg-transparent'
               }`}
             >
               {p.charAt(0).toUpperCase() + p.slice(1)}
@@ -119,10 +119,10 @@ export default function Heatmap() {
 
       {!loading && !error && data && (
         <>
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6 overflow-x-auto">
+          <div className="bg-white border border-slate-200 shadow-sm rounded-lg p-6 overflow-x-auto">
             <HeatmapGrid cells={data.cells} sectors={data.sectors} geos={data.geos} />
           </div>
-          <p className="text-xs text-zinc-600 mt-3 font-mono">
+          <p className="text-xs text-slate-400 mt-3 font-mono">
             {data.period} · {data.date_from} &rarr; {data.date_to}
           </p>
         </>
