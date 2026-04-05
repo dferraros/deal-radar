@@ -1,0 +1,5 @@
+[build]
+builder = "dockerfile"
+
+[deploy]
+startCommand = "/bin/sh -c 'set -e && echo \"=== starting alembic ===\" && python -m alembic upgrade head 2>&1 && echo \"=== alembic done, starting uvicorn ===\" && exec uvicorn backend.main:app --host 0.0.0.0 --port ${PORT:-8000} 2>&1'"
