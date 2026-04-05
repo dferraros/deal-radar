@@ -24,8 +24,8 @@ function formatCapital(usd: number): string {
 
 function getRankColor(index: number): string {
   if (index === 0) return 'text-amber-400 font-bold'
-  if (index <= 2) return 'text-zinc-300 font-semibold'
-  return 'text-zinc-500'
+  if (index <= 2) return 'text-slate-600 font-semibold'
+  return 'text-slate-500'
 }
 
 export default function InvestorLeaderboard() {
@@ -61,24 +61,24 @@ export default function InvestorLeaderboard() {
       {/* Page header */}
       <div className="flex items-end justify-between mb-4">
         <div>
-          <h1 className="text-lg font-semibold text-zinc-50">Investor Leaderboard</h1>
+          <h1 className="text-lg font-semibold text-slate-900">Investor Leaderboard</h1>
           {data && (
-            <p className="text-xs text-zinc-500 mt-0.5 font-mono">
+            <p className="text-xs text-slate-500 mt-0.5 font-mono">
               {data.date_from} — {data.date_to}
             </p>
           )}
         </div>
 
         {/* Period toggle */}
-        <div className="flex items-center border border-zinc-700 rounded-md overflow-hidden">
+        <div className="flex items-center border border-slate-200 rounded-md overflow-hidden">
           {periods.map(({ key, label }) => (
             <button
               key={key}
               onClick={() => setPeriod(key)}
               className={`px-3 py-1.5 text-xs font-mono font-semibold uppercase tracking-wide transition-colors ${
                 period === key
-                  ? 'bg-zinc-800 text-zinc-50'
-                  : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50'
+                  ? 'bg-slate-100 text-slate-900'
+                  : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50'
               }`}
             >
               {label}
@@ -89,22 +89,22 @@ export default function InvestorLeaderboard() {
 
       {/* Content */}
       {loading ? (
-        <div className="text-zinc-400 font-mono text-sm py-10 text-center">Loading...</div>
+        <div className="text-slate-500 font-mono text-sm py-10 text-center">Loading...</div>
       ) : error ? (
         <div className="text-red-400 text-sm py-10 text-center">{error}</div>
       ) : !data || data.investors.length === 0 ? (
-        <div className="text-zinc-400 font-mono text-sm py-10 text-center">
+        <div className="text-slate-500 font-mono text-sm py-10 text-center">
           No investor data for this period
         </div>
       ) : (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="border-b border-zinc-800">
+              <tr className="border-b border-slate-200">
                 {['Rank', 'Investor', 'Deals', 'Total Capital'].map((h) => (
                   <th
                     key={h}
-                    className="text-left text-xs uppercase tracking-wider text-zinc-500 px-4 py-3 font-medium"
+                    className="text-left text-xs uppercase tracking-wider text-slate-500 px-4 py-3 font-medium"
                   >
                     {h}
                   </th>
@@ -115,15 +115,15 @@ export default function InvestorLeaderboard() {
               {data.investors.map((entry, idx) => (
                 <tr
                   key={entry.investor_name}
-                  className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors"
+                  className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
                 >
                   <td className={`px-4 py-3 font-mono text-sm tabular ${getRankColor(idx)}`}>
                     #{idx + 1}
                   </td>
-                  <td className="px-4 py-2.5 font-medium text-zinc-100">
+                  <td className="px-4 py-2.5 font-medium text-slate-800">
                     {entry.investor_name}
                   </td>
-                  <td className="px-4 py-2.5 font-mono text-zinc-300 text-sm tabular">
+                  <td className="px-4 py-2.5 font-mono text-slate-600 text-sm tabular">
                     {entry.deal_count}
                   </td>
                   <td className="px-4 py-3 text-right">

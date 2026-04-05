@@ -11,14 +11,14 @@ interface IngestionRun {
 }
 
 function StatusText({ status }: { status: string | null }) {
-  if (!status) return <span className="text-zinc-500">unknown</span>
+  if (!status) return <span className="text-slate-500">unknown</span>
   if (status === 'success')
     return <span className="text-emerald-400 font-mono text-xs">SUCCESS</span>
   if (status === 'failed')
     return <span className="text-red-400 font-mono text-xs">FAILED</span>
   if (status === 'partial')
     return <span className="text-amber-400 font-mono text-xs">PARTIAL</span>
-  return <span className="text-zinc-400 font-mono text-xs uppercase">{status}</span>
+  return <span className="text-slate-500 font-mono text-xs uppercase">{status}</span>
 }
 
 function formatRunAt(runAt: string | null): string {
@@ -67,7 +67,7 @@ export default function Admin() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-24 text-zinc-500 font-mono text-sm">
+      <div className="flex items-center justify-center py-24 text-slate-500 font-mono text-sm">
         Loading run history...
       </div>
     )
@@ -85,27 +85,27 @@ export default function Admin() {
     <div className="px-6 pt-6 pb-6 space-y-4">
       {/* Page header */}
       <div>
-        <h1 className="text-lg font-semibold text-zinc-50">Ingestion Run Log</h1>
-        <p className="text-xs text-zinc-500 mt-0.5 font-mono">
+        <h1 className="text-lg font-semibold text-slate-900">Ingestion Run Log</h1>
+        <p className="text-xs text-slate-500 mt-0.5 font-mono">
           Last {runs.length} pipeline runs — newest first
         </p>
       </div>
 
       {runs.length === 0 ? (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-8 text-center">
-          <p className="text-sm text-zinc-400 font-mono">
+        <div className="bg-slate-50 border border-slate-200 rounded-lg p-8 text-center shadow-sm">
+          <p className="text-sm text-slate-600 font-mono">
             No ingestion runs yet. Trigger via POST /api/ingest/run
           </p>
         </div>
       ) : (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="border-b border-zinc-800">
+              <tr className="border-b border-slate-200">
                 {['Run Time', 'Source', 'Status', 'Found', 'Added', 'Error'].map((h) => (
                   <th
                     key={h}
-                    className="text-left text-xs uppercase tracking-wider text-zinc-500 py-3 px-4 font-medium"
+                    className="text-left text-xs uppercase tracking-wider text-slate-500 py-3 px-4 font-medium"
                   >
                     {h}
                   </th>
@@ -117,21 +117,21 @@ export default function Admin() {
                 <>
                   <tr
                     key={run.id}
-                    className="border-b border-zinc-800/50 hover:bg-zinc-800/30 transition-colors"
+                    className="border-b border-slate-100 hover:bg-slate-50 transition-colors"
                   >
-                    <td className="py-2.5 px-4 font-mono text-xs text-zinc-500 whitespace-nowrap">
+                    <td className="py-2.5 px-4 font-mono text-xs text-slate-500 whitespace-nowrap">
                       {formatRunAt(run.run_at)}
                     </td>
                     <td className="py-2.5 px-4">
-                      <span className="font-mono text-xs text-zinc-300">{run.source ?? '—'}</span>
+                      <span className="font-mono text-xs text-slate-600">{run.source ?? '—'}</span>
                     </td>
                     <td className="py-2.5 px-4">
                       <StatusText status={run.status} />
                     </td>
-                    <td className="py-2.5 px-4 font-mono text-xs text-zinc-400 text-right">
+                    <td className="py-2.5 px-4 font-mono text-xs text-slate-500 text-right">
                       {run.deals_found ?? '—'}
                     </td>
-                    <td className="py-2.5 px-4 font-mono text-xs text-zinc-400 text-right">
+                    <td className="py-2.5 px-4 font-mono text-xs text-slate-500 text-right">
                       {run.deals_added ?? '—'}
                     </td>
                     <td className="py-2.5 px-4 max-w-xs">
@@ -145,7 +145,7 @@ export default function Admin() {
                             : run.error_log.slice(0, 50) + (run.error_log.length > 50 ? '…' : '')}
                         </button>
                       ) : (
-                        <span className="text-zinc-700 text-xs font-mono">—</span>
+                        <span className="text-slate-300 text-xs font-mono">—</span>
                       )}
                     </td>
                   </tr>
@@ -153,7 +153,7 @@ export default function Admin() {
                   {expanded.has(run.id) && run.error_log && (
                     <tr
                       key={`${run.id}-expanded`}
-                      className="border-b border-zinc-800/50"
+                      className="border-b border-slate-100"
                     >
                       <td colSpan={6} className="px-4 pb-2">
                         <pre className="font-mono text-xs text-red-300 bg-red-950/20 p-2 rounded mt-1 overflow-x-auto whitespace-pre-wrap">

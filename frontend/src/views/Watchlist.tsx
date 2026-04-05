@@ -115,9 +115,9 @@ export default function Watchlist() {
     <div className="px-6 pt-6 pb-6">
       {/* Page header */}
       <div className="mb-4">
-        <h1 className="text-lg font-semibold text-zinc-50">Watchlist</h1>
+        <h1 className="text-lg font-semibold text-slate-900">Watchlist</h1>
         {!loading && (
-          <p className="text-xs text-zinc-500 mt-0.5">{watchlist.length} companies tracked</p>
+          <p className="text-xs text-slate-500 mt-0.5">{watchlist.length} companies tracked</p>
         )}
       </div>
 
@@ -132,8 +132,8 @@ export default function Watchlist() {
       {!loading && error && <ErrorBanner message={error} />}
       {!loading && !error && watchlist.length === 0 && (
         <div className="text-center py-16">
-          <p className="text-base font-semibold text-zinc-300">Your watchlist is empty</p>
-          <p className="text-sm text-zinc-500 mt-2">
+          <p className="text-base font-semibold text-slate-600">Your watchlist is empty</p>
+          <p className="text-sm text-slate-500 mt-2">
             Visit a company profile and click &apos;Add to Watchlist&apos; to track their deals
             here.
           </p>
@@ -141,15 +141,15 @@ export default function Watchlist() {
       )}
 
       {!loading && !error && watchlist.length > 0 && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden mt-2">
+        <div className="bg-white border border-slate-200 rounded-lg overflow-hidden mt-2 shadow-sm">
           <table className="w-full text-sm border-collapse">
             <thead>
-              <tr className="border-b border-zinc-800">
+              <tr className="border-b border-slate-200">
                 {['Date', 'Company', 'Round', 'Amount', 'Sector', 'Geo', 'Investors', 'Notes', 'Last Activity', ''].map(
                   (h, i) => (
                     <th
                       key={i}
-                      className={`text-xs uppercase tracking-wider text-zinc-500 py-3 px-4 font-medium ${h === 'Last Activity' ? 'text-right' : 'text-left'}`}
+                      className={`text-xs uppercase tracking-wider text-slate-500 py-3 px-4 font-medium ${h === 'Last Activity' ? 'text-right' : 'text-left'}`}
                     >
                       {h}
                     </th>
@@ -165,7 +165,7 @@ export default function Watchlist() {
                     <tr key={`${item.id}-confirm`}>
                       <td colSpan={10} className="py-2 px-4">
                         <div className="flex items-center gap-3 text-xs">
-                          <span className="text-zinc-300">
+                          <span className="text-slate-600">
                             Remove {item._companyName}? This will delete your notes for this
                             company.
                           </span>
@@ -179,7 +179,7 @@ export default function Watchlist() {
                           </button>
                           <button
                             onClick={() => setConfirmRemove(null)}
-                            className="text-zinc-400 hover:text-zinc-200"
+                            className="text-slate-500 hover:text-slate-700"
                           >
                             Cancel
                           </button>
@@ -212,16 +212,16 @@ export default function Watchlist() {
                 return (
                   <tr
                     key={item.id}
-                    className="border-b border-zinc-800/50 border-l-4 border-l-amber-400/40 hover:bg-zinc-800/30 cursor-pointer transition-colors group"
+                    className="border-b border-slate-100 border-l-4 border-l-amber-400/40 hover:bg-slate-50 cursor-pointer transition-colors group"
                     onClick={() => navigate(`/company/${item._companyId}`)}
                   >
-                    <td className="py-3 px-4 font-mono text-zinc-500 text-xs whitespace-nowrap">
+                    <td className="py-3 px-4 font-mono text-slate-500 text-xs whitespace-nowrap">
                       {dateStr}
                     </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <CompanyAvatar name={item._companyName} size={24} />
-                        <span className="text-sm font-medium text-zinc-100 group-hover:text-white">
+                        <span className="text-sm font-medium text-slate-800 group-hover:text-slate-900">
                           {item._companyName}
                         </span>
                       </div>
@@ -238,29 +238,29 @@ export default function Watchlist() {
                           {amt}
                         </span>
                       ) : (
-                        <span className="text-zinc-600 italic text-xs">Undisclosed</span>
+                        <span className="text-slate-400 italic text-xs">Undisclosed</span>
                       )}
                     </td>
-                    <td className="py-3 px-4 text-zinc-400 text-xs">
+                    <td className="py-3 px-4 text-slate-500 text-xs">
                       {item.sector.join(', ') || '\u2014'}
                     </td>
-                    <td className="py-3 px-4 text-zinc-400 text-xs uppercase">
+                    <td className="py-3 px-4 text-slate-500 text-xs uppercase">
                       {item.geo ?? '\u2014'}
                     </td>
-                    <td className="py-3 px-4 text-zinc-400 text-xs">{investorDisplay}</td>
+                    <td className="py-3 px-4 text-slate-500 text-xs">{investorDisplay}</td>
                     <td className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
                       <InlineNoteEditor
                         watchlistItemId={item._watchlistItemId}
                         initialNote={item._notes}
                       />
                     </td>
-                    <td className="px-4 py-3 text-right font-mono text-xs text-zinc-500">
+                    <td className="px-4 py-3 text-right font-mono text-xs text-slate-500">
                       {daysSince(item.announced_date)}
                     </td>
                     <td className="py-3 px-4" onClick={(e) => e.stopPropagation()}>
                       <button
                         onClick={() => setConfirmRemove(item._watchlistItemId)}
-                        className="text-zinc-600 hover:text-red-400 transition-colors text-base leading-none"
+                        className="text-slate-400 hover:text-red-400 transition-colors text-base leading-none"
                         aria-label="Remove from watchlist"
                         title="Remove from watchlist"
                       >
