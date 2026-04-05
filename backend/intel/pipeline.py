@@ -221,7 +221,7 @@ async def run_intel_pipeline(queue_id: uuid.UUID, db: AsyncSession) -> None:
         outputs=profile.outputs,
         claimed_differentiators=profile.claimed_differentiators,
         jtbd=profile.jtbd,
-        profile_confidence=float(profile.confidence),
+        profile_confidence=str(profile.confidence),
         model_version="claude-haiku-4-5-20251001",
     ))
     await db.commit()
@@ -263,7 +263,7 @@ async def run_intel_pipeline(queue_id: uuid.UUID, db: AsyncSession) -> None:
             queue_id=queue.id,
             node_id=node_id,
             layer=primitive.layer,
-            confidence=float(primitive.confidence),
+            confidence=str(primitive.confidence),
             is_explicit=(primitive.explicit_vs_inferred == "explicit"),
             inference_method=norm.match_type,
             model_version="claude-haiku-4-5-20251001",
