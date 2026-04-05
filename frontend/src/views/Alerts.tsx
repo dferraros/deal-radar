@@ -130,11 +130,11 @@ export default function Alerts() {
       {/* Page header */}
       <div className="px-6 pt-6 pb-4 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-zinc-50 flex items-center gap-2">
+          <h1 className="text-lg font-semibold text-slate-900 flex items-center gap-2">
             <Bell size={18} className="text-amber-400" strokeWidth={1.5} />
             Alert Rules
           </h1>
-          <p className="text-xs text-zinc-500 mt-0.5">
+          <p className="text-xs text-slate-500 mt-0.5">
             Get notified via webhook when new deals match your criteria
           </p>
         </div>
@@ -149,12 +149,12 @@ export default function Alerts() {
 
       {/* New alert form */}
       {showForm && (
-        <div className="mx-6 mb-4 bg-zinc-900 border border-zinc-700 rounded-lg p-4">
+        <div className="mx-6 mb-4 bg-white border border-slate-200 rounded-lg p-4 shadow-sm">
           <div className="flex items-center justify-between mb-3">
-            <span className="text-sm font-medium text-zinc-200">Create Alert Rule</span>
+            <span className="text-sm font-medium text-slate-800">Create Alert Rule</span>
             <button
               onClick={() => { setShowForm(false); setForm(defaultForm); setFormError(null) }}
-              className="text-zinc-500 hover:text-zinc-300"
+              className="text-slate-500 hover:text-slate-700"
             >
               <X size={15} />
             </button>
@@ -168,30 +168,30 @@ export default function Alerts() {
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-zinc-500 mb-1 uppercase tracking-wider">Label</label>
+              <label className="block text-xs text-slate-500 mb-1 uppercase tracking-wider">Label</label>
               <input
                 placeholder="e.g. Big LatAm VC rounds"
-                className="w-full bg-zinc-800 border border-zinc-700 text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-emerald-500 rounded px-3 py-1.5 text-sm"
+                className="w-full bg-white border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-400 rounded px-3 py-1.5 text-sm"
                 value={form.label}
                 onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
               />
             </div>
 
             <div>
-              <label className="block text-xs text-zinc-500 mb-1 uppercase tracking-wider">Min Amount ($M)</label>
+              <label className="block text-xs text-slate-500 mb-1 uppercase tracking-wider">Min Amount ($M)</label>
               <input
                 type="number"
                 placeholder="e.g. 10 for $10M+"
-                className="w-full bg-zinc-800 border border-zinc-700 text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-emerald-500 rounded px-3 py-1.5 text-sm"
+                className="w-full bg-white border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-400 rounded px-3 py-1.5 text-sm"
                 value={form.min_amount_usd}
                 onChange={(e) => setForm((f) => ({ ...f, min_amount_usd: e.target.value }))}
               />
             </div>
 
             <div>
-              <label className="block text-xs text-zinc-500 mb-1 uppercase tracking-wider">Deal Type</label>
+              <label className="block text-xs text-slate-500 mb-1 uppercase tracking-wider">Deal Type</label>
               <select
-                className="w-full bg-zinc-800 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-emerald-500 rounded px-3 py-1.5 text-sm"
+                className="w-full bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-amber-400 rounded px-3 py-1.5 text-sm"
                 value={form.deal_type}
                 onChange={(e) => setForm((f) => ({ ...f, deal_type: e.target.value }))}
               >
@@ -203,9 +203,9 @@ export default function Alerts() {
             </div>
 
             <div>
-              <label className="block text-xs text-zinc-500 mb-1 uppercase tracking-wider">Geo</label>
+              <label className="block text-xs text-slate-500 mb-1 uppercase tracking-wider">Geo</label>
               <select
-                className="w-full bg-zinc-800 border border-zinc-700 text-zinc-200 focus:outline-none focus:border-emerald-500 rounded px-3 py-1.5 text-sm"
+                className="w-full bg-white border border-slate-200 text-slate-800 focus:outline-none focus:border-amber-400 rounded px-3 py-1.5 text-sm"
                 value={form.geo}
                 onChange={(e) => setForm((f) => ({ ...f, geo: e.target.value }))}
               >
@@ -217,30 +217,30 @@ export default function Alerts() {
             </div>
 
             <div>
-              <label className="block text-xs text-zinc-500 mb-1 uppercase tracking-wider">Sector</label>
+              <label className="block text-xs text-slate-500 mb-1 uppercase tracking-wider">Sector</label>
               <input
                 placeholder="e.g. fintech, crypto, saas"
-                className="w-full bg-zinc-800 border border-zinc-700 text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-emerald-500 rounded px-3 py-1.5 text-sm"
+                className="w-full bg-white border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-400 rounded px-3 py-1.5 text-sm"
                 value={form.sector}
                 onChange={(e) => setForm((f) => ({ ...f, sector: e.target.value }))}
               />
             </div>
 
             <div>
-              <label className="block text-xs text-zinc-500 mb-1 uppercase tracking-wider">Investor Name</label>
+              <label className="block text-xs text-slate-500 mb-1 uppercase tracking-wider">Investor Name</label>
               <input
                 placeholder="e.g. Sequoia Capital"
-                className="w-full bg-zinc-800 border border-zinc-700 text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-emerald-500 rounded px-3 py-1.5 text-sm"
+                className="w-full bg-white border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-400 rounded px-3 py-1.5 text-sm"
                 value={form.investor_name}
                 onChange={(e) => setForm((f) => ({ ...f, investor_name: e.target.value }))}
               />
             </div>
 
             <div className="col-span-2">
-              <label className="block text-xs text-zinc-500 mb-1 uppercase tracking-wider">Webhook URL</label>
+              <label className="block text-xs text-slate-500 mb-1 uppercase tracking-wider">Webhook URL</label>
               <input
                 placeholder="https://hooks.slack.com/... or https://your-server.com/hook"
-                className="w-full bg-zinc-800 border border-zinc-700 text-zinc-200 placeholder-zinc-600 focus:outline-none focus:border-emerald-500 rounded px-3 py-1.5 text-sm"
+                className="w-full bg-white border border-slate-200 text-slate-800 placeholder-slate-400 focus:outline-none focus:border-amber-400 rounded px-3 py-1.5 text-sm"
                 value={form.webhook_url}
                 onChange={(e) => setForm((f) => ({ ...f, webhook_url: e.target.value }))}
               />
@@ -250,7 +250,7 @@ export default function Alerts() {
           <div className="flex justify-end gap-2 mt-4">
             <button
               onClick={() => { setShowForm(false); setForm(defaultForm); setFormError(null) }}
-              className="text-xs px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-zinc-200 border border-zinc-700 rounded transition-colors"
+              className="text-xs px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-700 border border-slate-200 rounded transition-colors"
             >
               Cancel
             </button>
@@ -272,10 +272,10 @@ export default function Alerts() {
         ) : error ? (
           <ErrorBanner message={error} />
         ) : rules.length === 0 ? (
-          <div className="text-center py-20 bg-zinc-900 border border-zinc-800 rounded-lg">
-            <Bell size={32} className="mx-auto text-zinc-700 mb-3" strokeWidth={1} />
-            <p className="text-base font-semibold text-zinc-300">No alert rules yet</p>
-            <p className="text-sm text-zinc-500 mt-2">
+          <div className="text-center py-20 bg-white border border-slate-200 rounded-lg shadow-sm">
+            <Bell size={32} className="mx-auto text-slate-300 mb-3" strokeWidth={1} />
+            <p className="text-base font-semibold text-slate-600">No alert rules yet</p>
+            <p className="text-sm text-slate-500 mt-2">
               Create a rule to get notified via webhook when matching deals are ingested.
             </p>
             <button
@@ -286,43 +286,43 @@ export default function Alerts() {
             </button>
           </div>
         ) : (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg overflow-hidden">
+          <div className="bg-white border border-slate-200 rounded-lg overflow-hidden shadow-sm">
             <table className="w-full">
               <thead>
-                <tr className="border-b border-zinc-800">
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
+                <tr className="border-b border-slate-200">
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-slate-500 font-medium">
                     Label
                   </th>
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-slate-500 font-medium">
                     Filters
                   </th>
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-slate-500 font-medium">
                     Webhook
                   </th>
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-slate-500 font-medium">
                     Status
                   </th>
-                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
+                  <th className="text-left px-4 py-3 text-xs uppercase tracking-wider text-slate-500 font-medium">
                     Last Triggered
                   </th>
-                  <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-zinc-500 font-medium">
+                  <th className="text-right px-4 py-3 text-xs uppercase tracking-wider text-slate-500 font-medium">
                     Actions
                   </th>
                 </tr>
               </thead>
               <tbody>
                 {rules.map((rule) => (
-                  <tr key={rule.id} className="border-b border-zinc-800/50 hover:bg-zinc-800/20 transition-colors">
+                  <tr key={rule.id} className="border-b border-slate-100 hover:bg-slate-50 transition-colors">
                     {/* Label */}
                     <td className="px-4 py-3">
-                      <span className="text-sm font-medium text-zinc-100">
-                        {rule.label || <span className="text-zinc-600 italic">Unnamed</span>}
+                      <span className="text-sm font-medium text-slate-800">
+                        {rule.label || <span className="text-slate-400 italic">Unnamed</span>}
                       </span>
                     </td>
 
                     {/* Filters */}
                     <td className="px-4 py-3">
-                      <span className="text-xs text-zinc-400 font-mono">
+                      <span className="text-xs text-slate-500 font-mono">
                         {buildFilterSummary(rule)}
                       </span>
                     </td>
@@ -330,12 +330,12 @@ export default function Alerts() {
                     {/* Webhook */}
                     <td className="px-4 py-3 max-w-[200px]">
                       {rule.webhook_url ? (
-                        <span className="text-xs text-zinc-400 font-mono truncate block" title={rule.webhook_url}>
+                        <span className="text-xs text-slate-500 font-mono truncate block" title={rule.webhook_url}>
                           {rule.webhook_url.replace(/^https?:\/\//, '').substring(0, 40)}
                           {rule.webhook_url.length > 50 ? '…' : ''}
                         </span>
                       ) : (
-                        <span className="text-xs text-zinc-600 italic">No webhook</span>
+                        <span className="text-xs text-slate-400 italic">No webhook</span>
                       )}
                     </td>
 
@@ -344,8 +344,8 @@ export default function Alerts() {
                       <span
                         className={`text-xs px-2 py-0.5 rounded-full font-mono border ${
                           rule.is_active
-                            ? 'bg-emerald-900/30 text-emerald-400 border-emerald-800/50'
-                            : 'bg-zinc-800 text-zinc-500 border-zinc-700'
+                            ? 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                            : 'bg-slate-100 text-slate-500 border-slate-200'
                         }`}
                       >
                         {rule.is_active ? 'ACTIVE' : 'PAUSED'}
@@ -353,7 +353,7 @@ export default function Alerts() {
                     </td>
 
                     {/* Last Triggered */}
-                    <td className="px-4 py-3 text-xs font-mono text-zinc-500">
+                    <td className="px-4 py-3 text-xs font-mono text-slate-500">
                       {rule.last_triggered_at
                         ? new Date(rule.last_triggered_at).toLocaleString('en-US', {
                             month: 'short',
@@ -371,7 +371,7 @@ export default function Alerts() {
                         <button
                           onClick={() => handleToggle(rule.id)}
                           title={rule.is_active ? 'Pause rule' : 'Activate rule'}
-                          className="text-zinc-500 hover:text-emerald-400 transition-colors"
+                          className="text-slate-400 hover:text-emerald-500 transition-colors"
                         >
                           {rule.is_active ? (
                             <ToggleRight size={18} strokeWidth={1.5} className="text-emerald-400" />
@@ -382,7 +382,7 @@ export default function Alerts() {
                         <button
                           onClick={() => handleDelete(rule.id)}
                           title="Delete rule"
-                          className="text-zinc-600 hover:text-red-400 transition-colors"
+                          className="text-slate-400 hover:text-red-500 transition-colors"
                         >
                           <Trash2 size={14} strokeWidth={1.5} />
                         </button>
