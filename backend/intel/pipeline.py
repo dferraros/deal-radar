@@ -221,7 +221,7 @@ async def run_intel_pipeline(queue_id: uuid.UUID, db: AsyncSession) -> None:
         outputs=profile.outputs,
         claimed_differentiators=profile.claimed_differentiators,
         jtbd=profile.jtbd,
-        profile_confidence=str(profile.confidence),
+        profile_confidence=profile.confidence,
         model_version="claude-haiku-4-5-20251001",
     ))
     await db.commit()
@@ -263,7 +263,7 @@ async def run_intel_pipeline(queue_id: uuid.UUID, db: AsyncSession) -> None:
             queue_id=queue.id,
             node_id=node_id,
             layer=primitive.layer,
-            confidence=str(primitive.confidence),
+            confidence=primitive.confidence,
             is_explicit=(primitive.explicit_vs_inferred == "explicit"),
             inference_method=norm.match_type,
             model_version="claude-haiku-4-5-20251001",
@@ -325,9 +325,9 @@ async def _bridge_tech_stack_to_company(
 
         # Filter, sort by confidence (explicit first, then by score desc)
         qualified = [
-            (name, float(conf), is_explicit)
+            (name, conf or 0.0, is_explicit)
             for name, conf, is_explicit in rows
-            if _safe_float(conf) >= _MIN_CONFIDENCE
+            if (conf or 0.0) >= _MIN_CONFIDENCE
         ]
         qualified.sort(key=lambda x: (x[2], x[1]), reverse=True)  # explicit > inferred, higher conf first
         tech_stack = [name for name, _, _ in qualified[:_MAX_PRIMITIVES]]
@@ -352,12 +352,6 @@ async def _bridge_tech_stack_to_company(
     except Exception as exc:
         logger.warning("[Bridge] tech_stack bridge failed for queue_id=%s: %s", queue_id, exc)
 
-
-def _safe_float(value: object) -> float:
-    try:
-        return float(value)  # type: ignore[arg-type]
-    except (TypeError, ValueError):
-        return 0.0
 
 
 async def _find_company(

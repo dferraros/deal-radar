@@ -247,7 +247,7 @@ async def get_dossier(queue_id: uuid.UUID, db: AsyncSession = Depends(get_sessio
         primitives.append(PrimitiveItem(
             canonical_name=node_name,
             layer=obs.layer,
-            confidence=float(obs.confidence or 0),
+            confidence=obs.confidence or 0.0,
             is_explicit=obs.is_explicit or False,
             evidence=[
                 EvidenceItem(
@@ -265,7 +265,7 @@ async def get_dossier(queue_id: uuid.UUID, db: AsyncSession = Depends(get_sessio
         jtbd=profile.jtbd if profile else None,
         summary=profile.summary if profile else None,
         target_user=profile.target_user if profile else [],
-        profile_confidence=float(profile.profile_confidence or 0) if profile else 0.0,
+        profile_confidence=(profile.profile_confidence or 0.0) if profile else 0.0,
         primitives=primitives,
         total_funding_usd=total_funding,
     )
@@ -288,7 +288,7 @@ async def get_stack(queue_id: uuid.UUID, db: AsyncSession = Depends(get_session)
             layers[layer] = []
         layers[layer].append({
             "canonical_name": obs.node.canonical_name if obs.node else "Unknown",
-            "confidence": float(obs.confidence or 0),
+            "confidence": obs.confidence or 0.0,
             "is_explicit": obs.is_explicit,
         })
     return {"layers": layers}
@@ -335,7 +335,7 @@ async def get_tech_graph(db: AsyncSession = Depends(get_session)):
 
     for obs in all_obs:
         nid = str(obs.node_id)
-        conf = float(obs.confidence or 0.5)
+        conf = obs.confidence or 0.5
         capital = queue_funding.get(str(obs.queue_id), 0)
         node_capital[nid] = node_capital.get(nid, 0) + capital * conf
 

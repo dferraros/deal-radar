@@ -78,7 +78,7 @@ async def run_intel_aggregation() -> None:
 
         for node_id_str, observations in node_obs.items():
             capital_score = sum(
-                queue_funding.get(str(o.queue_id), 0) * float(o.confidence or 0.5)
+                queue_funding.get(str(o.queue_id), 0) * (o.confidence or 0.5)
                 for o in observations
             )
             company_count = len({str(o.queue_id) for o in observations})

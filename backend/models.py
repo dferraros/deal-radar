@@ -7,6 +7,7 @@ from sqlalchemy import (
     Column,
     Date,
     DateTime,
+    Float,
     ForeignKey,
     Integer,
     String,
@@ -176,7 +177,7 @@ class IntelCompanyProfile(Base):
     outputs = Column(ARRAY(Text), default=list)
     claimed_differentiators = Column(ARRAY(Text), default=list)
     jtbd = Column(Text)
-    profile_confidence = Column(Text)  # stored as string float e.g. "0.85"
+    profile_confidence = Column(Float)
     generated_at = Column(TIMESTAMPTZ, default=_now)
     model_version = Column(Text)
 
@@ -217,7 +218,7 @@ class IntelObservation(Base):
     queue_id = Column(UUID(as_uuid=True), ForeignKey("intel_queue.id"), nullable=False)
     node_id = Column(UUID(as_uuid=True), ForeignKey("intel_ontology_nodes.id"), nullable=False)
     layer = Column(Text)  # model|application_logic|infra|interface|hardware
-    confidence = Column(Text)  # stored as string float e.g. "0.78"
+    confidence = Column(Float)
     is_explicit = Column(Boolean, default=False)
     inference_method = Column(Text)
     generated_at = Column(TIMESTAMPTZ, default=_now)
@@ -249,9 +250,9 @@ class IntelTechnologyScore(Base):
     period_start = Column(Date, nullable=False)
     period_end = Column(Date, nullable=False)
     company_count = Column(Integer, default=0)
-    capital_weighted_score = Column(Text, default="0.0")
-    growth_rate = Column(Text, default="0.0")
-    novelty_score = Column(Text, default="0.0")
-    co_occurrence_density = Column(Text, default="0.0")
+    capital_weighted_score = Column(Float, default=0.0)
+    growth_rate = Column(Float, default=0.0)
+    novelty_score = Column(Float, default=0.0)
+    co_occurrence_density = Column(Float, default=0.0)
 
     node = relationship("IntelOntologyNode", back_populates="scores")
