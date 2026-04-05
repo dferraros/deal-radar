@@ -196,7 +196,7 @@ export default function FilterBar({
               }
               className={dateInputClass}
             />
-            <span className="text-zinc-700 text-[9px] font-mono">→</span>
+            <span className="text-slate-500 text-[9px] font-mono">→</span>
             <input
               type="date"
               value={filters.dateTo?.toISOString().slice(0, 10) ?? ""}

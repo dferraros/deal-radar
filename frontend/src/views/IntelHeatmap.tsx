@@ -169,7 +169,7 @@ export default function IntelHeatmap() {
                         {(() => {
                           const sortedPeriods = [...periods].sort()
                           if (sortedPeriods.length < 2) {
-                            return <td className="px-2 py-1 text-center text-zinc-700 text-xs">—</td>
+                            return <td className="px-2 py-1 text-center text-slate-500 text-xs">—</td>
                           }
                           const latest = pivot[nodeId]?.[sortedPeriods[sortedPeriods.length - 1]]
                           const prev = pivot[nodeId]?.[sortedPeriods[sortedPeriods.length - 2]]
@@ -179,7 +179,7 @@ export default function IntelHeatmap() {
                               : null
                           )
                           if (growthVal === null || growthVal === undefined) {
-                            return <td className="px-2 py-1 text-center text-zinc-700 text-xs font-mono">—</td>
+                            return <td className="px-2 py-1 text-center text-slate-500 text-xs font-mono">—</td>
                           }
                           const isPos = growthVal >= 0
                           return (
