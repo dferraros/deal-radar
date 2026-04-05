@@ -12,6 +12,7 @@ import {
   Radio,
 } from 'lucide-react'
 import axios from 'axios'
+import { OPEN_COMMAND_PALETTE_EVENT } from '../lib/events'
 
 const navItems = [
   { to: '/', label: 'Deal Feed', icon: LayoutDashboard, end: true },
@@ -92,7 +93,7 @@ export default function Sidebar() {
       {/* Cmd+K hint */}
       <div className="px-5 pt-3 pb-1">
         <button
-          onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}
+          onClick={() => window.dispatchEvent(new CustomEvent(OPEN_COMMAND_PALETTE_EVENT))}
           className="w-full flex items-center justify-between bg-zinc-800/60 border border-zinc-700/60 rounded-md px-3 py-1.5 text-xs text-zinc-500 hover:border-zinc-600 hover:text-zinc-400 transition-colors"
         >
           <span>Search...</span>
