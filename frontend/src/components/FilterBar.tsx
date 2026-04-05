@@ -76,7 +76,7 @@ const AMOUNT_OPTIONS = [
   { value: '500000000',  label: '$500M+' },
 ]
 
-const pillBase = 'text-[10px] px-2.5 py-1 rounded-full border font-mono transition-colors cursor-pointer'
+const pillBase = 'text-[10px] px-2.5 py-1 rounded-full border font-mono transition-colors cursor-pointer focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-1'
 const pillInactive = 'text-slate-500 border-slate-200 hover:text-slate-700 hover:border-slate-300 bg-white'
 const pillActive = 'bg-amber-50 text-amber-700 border-amber-300'
 

@@ -633,12 +633,13 @@ export default function DealFeed() {
               <div className="border border-slate-200 rounded-lg overflow-hidden shadow-sm">
                 {/* Amber gradient accent line above header */}
                 <div className="table-header-accent h-px w-full" />
+                <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead className="sticky top-0 z-10">
                     <tr className="bg-slate-50 border-b border-slate-200">
                       <th className="text-left px-4 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium w-[200px]">Company</th>
                       <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium w-[100px]">Type</th>
-                      <th onClick={() => toggleSort('amount_usd')} className="text-right px-4 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium cursor-pointer hover:text-amber-600 select-none w-[200px]">
+                      <th onClick={() => toggleSort('amount_usd')} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && toggleSort('amount_usd')} className="text-right px-4 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium cursor-pointer hover:text-amber-600 select-none w-[200px] focus:outline-none focus:bg-amber-50">
                         Amount · USD {sortKey === 'amount_usd'
                           ? <span className="text-amber-600 ml-0.5">{sortDir === 'desc' ? '▼' : '▲'}</span>
                           : <span className="text-slate-300 ml-0.5 text-[8px]">⊞</span>}
@@ -647,7 +648,7 @@ export default function DealFeed() {
                       <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium">Tech</th>
                       <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium">Geo</th>
                       <th className="text-left px-3 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium">Lead Inv.</th>
-                      <th onClick={() => toggleSort('announced_date')} className="text-right px-4 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium cursor-pointer hover:text-amber-600 select-none">
+                      <th onClick={() => toggleSort('announced_date')} tabIndex={0} onKeyDown={(e) => e.key === 'Enter' && toggleSort('announced_date')} className="text-right px-4 py-2 text-[10px] uppercase tracking-widest text-slate-500 font-medium cursor-pointer hover:text-amber-600 select-none focus:outline-none focus:bg-amber-50">
                         Date {sortKey === 'announced_date'
                           ? <span className="text-amber-600 ml-0.5">{sortDir === 'desc' ? '▼' : '▲'}</span>
                           : <span className="text-slate-300 ml-0.5 text-[8px]">⊞</span>}
@@ -786,6 +787,7 @@ export default function DealFeed() {
                     })}
                   </tbody>
                 </table>
+                </div>
               </div>
 
               {/* Load more */}

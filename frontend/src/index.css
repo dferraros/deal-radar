@@ -170,3 +170,15 @@ thead.sticky tr {
 .table-header-accent {
   background: linear-gradient(90deg, rgba(245,158,11,0.5) 0%, rgba(245,158,11,0.2) 30%, transparent 70%);
 }
+
+/* ─── Respect reduced-motion preference ──────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  .radar-ping::before,
+  .shimmer,
+  .pulse-ring {
+    animation: none;
+  }
+  * {
+    transition-duration: 0.01ms !important;
+  }
+}
