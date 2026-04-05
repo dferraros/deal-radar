@@ -256,3 +256,17 @@ class IntelTechnologyScore(Base):
     co_occurrence_density = Column(Float, default=0.0)
 
     node = relationship("IntelOntologyNode", back_populates="scores")
+
+
+class IntelTechnicalBet(Base):
+    __tablename__ = "intel_technical_bets"
+
+    id            = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    queue_id      = Column(UUID(as_uuid=True), ForeignKey("intel_queue.id", ondelete="CASCADE"), nullable=False, index=True)
+    bet_index     = Column(Integer, nullable=False)
+    thesis        = Column(Text, nullable=False)
+    implication   = Column(Text, nullable=True)
+    signals       = Column(ARRAY(Text), nullable=True)
+    confidence    = Column(Float, nullable=True)
+    model_version = Column(String(100), nullable=True)
+    created_at    = Column(TIMESTAMPTZ, default=_now)
