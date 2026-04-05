@@ -208,7 +208,7 @@ export default function InvestorNetwork() {
           <ErrorBanner message={error} />
         ) : !data || data.nodes.length === 0 ? (
           <div className="flex items-center justify-center h-64 bg-white border border-slate-200 shadow-sm rounded-lg">
-            <p className="text-zinc-500 text-sm">No co-investment data for this period.</p>
+            <p className="text-slate-500 text-sm">No co-investment data for this period.</p>
           </div>
         ) : (
           <div className="bg-white border border-slate-200 shadow-sm rounded-lg overflow-hidden h-[600px]">
